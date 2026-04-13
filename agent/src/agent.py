@@ -1,5 +1,4 @@
 import logging
-import os
 
 from dotenv import load_dotenv
 from livekit import rtc
@@ -9,7 +8,6 @@ from livekit.agents import (
     AgentServer,
     JobContext,
     cli,
-    mcp,
     room_io,
 )
 from livekit.plugins import (
@@ -20,14 +18,6 @@ from livekit.plugins import (
 logger = logging.getLogger("english-tutor")
 
 load_dotenv(".env.local")
-
-DOKKI_MCP_URL = os.getenv(
-    "DOKKI_MCP_URL", "https://dokki.one/api/mcp"
-)
-DOKKI_API_KEY = os.getenv(
-    "DOKKI_API_KEY",
-    "dk_18e7383ea15bd2e11e96a99bc148d93eba0009b9",
-)
 
 
 class EnglishTutor(Agent):
@@ -99,27 +89,6 @@ They hear the correct form naturally. Don't point it out.
 - Don't drill vocabulary. Let it emerge from real conversation.
 - If they use a word incorrectly, model it correctly in your response (recast).
 
-# Dokki — Learning Profile Management
-You have access to Dokki (knowledge management) via MCP tools to track each learner's progress.
-
-**Finding the learner**: Use `list_workspaces` to look for a workspace starting with "English - {username}".
-Do NOT use `knowledge_search`. Navigate via `list_workspaces` → `list_resources` → `doc_read` / `table_read`.
-
-**New learner (no workspace found)**:
-- After the first few turns (once you know their name), use `create_workspace` to create "English - {name}"
-- Create a document "Learning Profile" with: observed level, interests/topics they enjoy, native language (if apparent), recurring mistakes
-- Create a table "Session Log" with columns: Date (date), Topic (text), Key Corrections (text), New Vocabulary (text), Notes (text)
-
-**Returning learner**:
-- Read their Learning Profile and recent Session Log to personalize the conversation
-- Use their interests for topics, revisit past corrections, build on vocabulary from previous sessions
-
-**End of session**:
-- Log the session in Session Log: what you talked about, corrections made, new words introduced
-- Update Learning Profile if you learned something new about them
-
-**IMPORTANT**: Do all Dokki operations silently in the background. Never mention "your profile" or "I'm logging this" to the learner. It should feel like you just magically remember them.
-
 # Personality
 - Curious, warm, slightly playful
 - React genuinely — laugh, express surprise, share brief opinions
@@ -133,26 +102,6 @@ Do NOT use `knowledge_search`. Navigate via `list_workspaces` → `list_resource
 - ALWAYS end your turn with a question or prompt that invites them to speak.
 - This is a conversation, not a class. Act accordingly.
 """,
-            mcp_servers=[
-                mcp.MCPServerHTTP(
-                    url=DOKKI_MCP_URL,
-                    headers={"Authorization": f"Bearer {DOKKI_API_KEY}"},
-                    timeout=15,
-                    allowed_tools=[
-                        "list_workspaces",
-                        "create_workspace",
-                        "list_resources",
-                        "create_document",
-                        "create_table",
-                        "doc_read",
-                        "doc_replace",
-                        "doc_insert",
-                        "table_read",
-                        "table_add_rows",
-                        "table_update_cells",
-                    ],
-                ),
-            ],
         )
 
     async def on_enter(self):
@@ -162,19 +111,10 @@ Do NOT use `knowledge_search`. Navigate via `list_workspaces` → `list_resource
         if user_name:
             await self.session.generate_reply(
                 instructions=f"""
-The user's name is {user_name}. Use list_workspaces to check if a workspace starting with "English - " exists for them.
-
-If they are a RETURNING student:
-- Read their Learning Profile and recent Session Log
-- Open with something personal from their history: a topic they enjoyed, something they mentioned last time, or follow up on a correction from before
-- Keep it to ONE warm sentence + ONE question. Example: "Hey {user_name}! Last time you were telling me about your trip to Japan — did you end up trying that street food you mentioned?"
-
-If they are a NEW student:
-- Don't introduce yourself or explain anything
-- Just ask ONE fun, easy question to get them talking immediately
-- Example: "Hey {user_name}! So random question — what's the best meal you've had recently?"
-
-Do NOT use knowledge_search. Navigate via list_workspaces → list_resources → doc_read / table_read.
+Don't introduce yourself or explain anything.
+Just ask {user_name} ONE fun, easy question to get them talking immediately.
+Example: "Hey {user_name}! So random question — what's the best meal you've had recently?"
+Keep it to one short question. Nothing else.
 """,
                 allow_interruptions=True,
             )
