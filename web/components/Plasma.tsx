@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Renderer, Program, Mesh, Triangle } from 'ogl';
+import { Mesh, Program, Renderer, Triangle } from 'ogl';
 
 interface PlasmaProps {
   color?: string;
@@ -13,7 +13,11 @@ interface PlasmaProps {
 const hexToRgb = (hex: string): [number, number, number] => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return [1, 0.5, 0.2];
-  return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
+  return [
+    parseInt(result[1], 16) / 255,
+    parseInt(result[2], 16) / 255,
+    parseInt(result[3], 16) / 255,
+  ];
 };
 
 const vertex = `#version 300 es
@@ -94,7 +98,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
   direction = 'forward',
   scale = 1,
   opacity = 1,
-  mouseInteractive = true
+  mouseInteractive = true,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mousePos = useRef({ x: 0, y: 0 });
@@ -111,7 +115,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
       webgl: 2,
       alpha: true,
       antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
+      dpr: Math.min(window.devicePixelRatio || 1, 2),
     });
     const gl = renderer.gl;
     const canvas = gl.canvas as HTMLCanvasElement;
@@ -135,8 +139,8 @@ export const Plasma: React.FC<PlasmaProps> = ({
         uScale: { value: scale },
         uOpacity: { value: opacity },
         uMouse: { value: new Float32Array([0, 0]) },
-        uMouseInteractive: { value: mouseInteractive ? 1.0 : 0.0 }
-      }
+        uMouseInteractive: { value: mouseInteractive ? 1.0 : 0.0 },
+      },
     });
 
     const mesh = new Mesh(gl, { geometry, program });
@@ -179,7 +183,9 @@ export const Plasma: React.FC<PlasmaProps> = ({
         const isForward = Math.floor(timeValue / pingpongDuration) % 2 === 0;
         const u = segmentTime / pingpongDuration;
         const smooth = u * u * (3 - 2 * u);
-        const pingpongTime = isForward ? smooth * pingpongDuration : (1 - smooth) * pingpongDuration;
+        const pingpongTime = isForward
+          ? smooth * pingpongDuration
+          : (1 - smooth) * pingpongDuration;
         (program.uniforms.uDirection as any).value = 1.0;
         (program.uniforms.iTime as any).value = pingpongTime;
       } else {
@@ -202,7 +208,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
     };
   }, [color, speed, direction, scale, opacity, mouseInteractive]);
 
-  return <div ref={containerRef} className="w-full h-full relative overflow-hidden" />;
+  return <div ref={containerRef} className="relative h-full w-full overflow-hidden" />;
 };
 
 export default Plasma;

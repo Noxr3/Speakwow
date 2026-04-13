@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useId } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 
 export interface GlassSurfaceProps {
   children?: React.ReactNode;
@@ -78,7 +78,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   yChannel = 'G',
   mixBlendMode = 'difference',
   className = '',
-  style = {}
+  style = {},
 }) => {
   const uniqueId = useId().replace(/:/g, '-');
   const filterId = `glass-filter-${uniqueId}`;
@@ -133,7 +133,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     [
       { ref: redChannelRef, offset: redOffset },
       { ref: greenChannelRef, offset: greenOffset },
-      { ref: blueChannelRef, offset: blueOffset }
+      { ref: blueChannelRef, offset: blueOffset },
     ].forEach(({ ref, offset }) => {
       if (ref.current) {
         ref.current.setAttribute('scale', (distortionScale + offset).toString());
@@ -158,7 +158,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     blueOffset,
     xChannel,
     yChannel,
-    mixBlendMode
+    mixBlendMode,
   ]);
 
   useEffect(() => {
@@ -227,7 +227,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       height: typeof height === 'number' ? `${height}px` : height,
       borderRadius: `${borderRadius}px`,
       '--glass-frost': backgroundOpacity,
-      '--glass-saturation': saturation
+      '--glass-saturation': saturation,
     } as React.CSSProperties;
 
     const backdropFilterSupported = supportsBackdropFilter();
@@ -235,7 +235,9 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     if (svgSupported) {
       return {
         ...baseStyles,
-        background: isDarkMode ? `hsl(0 0% 0% / ${backgroundOpacity})` : `hsl(0 0% 100% / ${backgroundOpacity})`,
+        background: isDarkMode
+          ? `hsl(0 0% 0% / ${backgroundOpacity})`
+          : `hsl(0 0% 100% / ${backgroundOpacity})`,
         backdropFilter: `url(#${filterId}) saturate(${saturation})`,
         boxShadow: isDarkMode
           ? `0 0 2px 1px color-mix(in oklch, white, transparent 65%) inset,
@@ -253,7 +255,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
              0px 16px 56px rgba(17, 17, 26, 0.05),
              0px 4px 16px rgba(17, 17, 26, 0.05) inset,
              0px 8px 24px rgba(17, 17, 26, 0.05) inset,
-             0px 16px 56px rgba(17, 17, 26, 0.05) inset`
+             0px 16px 56px rgba(17, 17, 26, 0.05) inset`,
       };
     } else {
       if (isDarkMode) {
@@ -263,7 +265,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             background: 'rgba(0, 0, 0, 0.4)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.1)`
+                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.1)`,
           };
         } else {
           return {
@@ -273,7 +275,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             WebkitBackdropFilter: 'blur(12px) saturate(1.8) brightness(1.2)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.1)`
+                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.1)`,
           };
         }
       } else {
@@ -283,7 +285,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             background: 'rgba(255, 255, 255, 0.4)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
-                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.3)`
+                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.3)`,
           };
         } else {
           return {
@@ -295,7 +297,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.2),
                         0 2px 16px 0 rgba(31, 38, 135, 0.1),
                         inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
-                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.2)`
+                        inset 0 -1px 0 0 rgba(255, 255, 255, 0.2)`,
           };
         }
       }
@@ -316,14 +318,35 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       style={getContainerStyles()}
     >
       <svg
-        className="w-full h-full pointer-events-none absolute inset-0 opacity-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <filter id={filterId} colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
-            <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
+          <filter
+            id={filterId}
+            colorInterpolationFilters="sRGB"
+            x="0%"
+            y="0%"
+            width="100%"
+            height="100%"
+          >
+            <feImage
+              ref={feImageRef}
+              x="0"
+              y="0"
+              width="100%"
+              height="100%"
+              preserveAspectRatio="none"
+              result="map"
+            />
 
-            <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" id="redchannel" result="dispRed" />
+            <feDisplacementMap
+              ref={redChannelRef}
+              in="SourceGraphic"
+              in2="map"
+              id="redchannel"
+              result="dispRed"
+            />
             <feColorMatrix
               in="dispRed"
               type="matrix"
@@ -351,7 +374,13 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
               result="green"
             />
 
-            <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" id="bluechannel" result="dispBlue" />
+            <feDisplacementMap
+              ref={blueChannelRef}
+              in="SourceGraphic"
+              in2="map"
+              id="bluechannel"
+              result="dispBlue"
+            />
             <feColorMatrix
               in="dispBlue"
               type="matrix"
@@ -369,7 +398,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         </defs>
       </svg>
 
-      <div className="w-full h-full flex items-center justify-center p-2 rounded-[inherit] relative z-10">
+      <div className="relative z-10 flex h-full w-full items-center justify-center rounded-[inherit] p-2">
         {children}
       </div>
     </div>

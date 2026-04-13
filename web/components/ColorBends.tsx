@@ -124,7 +124,7 @@ export default function ColorBends({
   warpStrength = 1,
   mouseInfluence = 1,
   parallax = 0.5,
-  noise = 0.1
+  noise = 0.1,
 }: ColorBendsProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -161,10 +161,10 @@ export default function ColorBends({
         uPointer: { value: new THREE.Vector2(0, 0) },
         uMouseInfluence: { value: mouseInfluence },
         uParallax: { value: parallax },
-        uNoise: { value: noise }
+        uNoise: { value: noise },
       },
       premultipliedAlpha: true,
-      transparent: true
+      transparent: true,
     });
     materialRef.current = material;
 
@@ -174,7 +174,7 @@ export default function ColorBends({
     const renderer = new THREE.WebGLRenderer({
       antialias: false,
       powerPreference: 'high-performance',
-      alpha: true
+      alpha: true,
     });
     rendererRef.current = renderer;
     (renderer as any).outputColorSpace = (THREE as any).SRGBColorSpace;
@@ -283,7 +283,7 @@ export default function ColorBends({
     parallax,
     noise,
     colors,
-    transparent
+    transparent,
   ]);
 
   useEffect(() => {
@@ -304,5 +304,11 @@ export default function ColorBends({
     };
   }, []);
 
-  return <div ref={containerRef} className={`w-full h-full relative overflow-hidden ${className}`} style={style} />;
+  return (
+    <div
+      ref={containerRef}
+      className={`relative h-full w-full overflow-hidden ${className}`}
+      style={style}
+    />
+  );
 }

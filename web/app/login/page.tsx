@@ -57,7 +57,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-foreground text-3xl font-bold">{isSignUp ? 'Create Account' : 'Welcome Back'}</h1>
+          <h1 className="text-foreground text-3xl font-bold">
+            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          </h1>
           <p className="text-muted-foreground mt-2">
             {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
           </p>
@@ -76,7 +78,7 @@ export default function LoginPage() {
               required
               className={cn(
                 'border-input bg-background text-foreground placeholder:text-muted-foreground w-full rounded-md border px-3 py-2',
-                'focus:border-primary focus:ring-primary focus:outline-none focus:ring-1'
+                'focus:border-primary focus:ring-primary focus:ring-1 focus:outline-none'
               )}
               placeholder="you@example.com"
             />
@@ -95,7 +97,7 @@ export default function LoginPage() {
               minLength={6}
               className={cn(
                 'border-input bg-background text-foreground placeholder:text-muted-foreground w-full rounded-md border px-3 py-2',
-                'focus:border-primary focus:ring-primary focus:outline-none focus:ring-1'
+                'focus:border-primary focus:ring-primary focus:ring-1 focus:outline-none'
               )}
               placeholder="••••••••"
             />
@@ -123,12 +125,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={handleGoogleSignIn}
-        >
+        <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
               fill="currentColor"

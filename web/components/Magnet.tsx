@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactNode, HTMLAttributes } from 'react';
+import React, { HTMLAttributes, ReactNode, useEffect, useRef, useState } from 'react';
 
 interface MagnetProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -73,7 +73,7 @@ const Magnet: React.FC<MagnetProps> = ({
         style={{
           transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
           transition: transitionStyle,
-          willChange: 'transform'
+          willChange: 'transform',
         }}
       >
         {children}

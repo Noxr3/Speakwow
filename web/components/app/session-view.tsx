@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSessionContext, useSessionMessages } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
+import DotGrid from '@/components/DotGrid';
 import {
   AgentControlBar,
   type AgentControlBarControls,
@@ -12,7 +13,6 @@ import { ChatTranscript } from '@/components/app/chat-transcript';
 import { TileLayout } from '@/components/app/tile-layout';
 import { cn } from '@/lib/shadcn/utils';
 import { Shimmer } from '../ai-elements/shimmer';
-import DotGrid from '@/components/DotGrid';
 
 const MotionBottom = motion.create('div');
 
@@ -113,16 +113,18 @@ export const SessionView = ({
   }, [messages]);
 
   return (
-    <section className=" relative z-10 h-svh w-svw overflow-hidden" {...props}>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: -10,
-        pointerEvents: 'none',
-      }}>
+    <section className="relative z-10 h-svh w-svw overflow-hidden" {...props}>
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: -10,
+          pointerEvents: 'none',
+        }}
+      >
         <DotGrid
           dotSize={5}
           gap={15}
@@ -166,7 +168,6 @@ export const SessionView = ({
           </AnimatePresence>
         )}
         <div className="relative mx-auto max-w-2xl pb-3 md:pb-12">
-
           <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
           <AgentControlBar
             variant="livekit"
@@ -177,7 +178,6 @@ export const SessionView = ({
             onIsChatOpenChange={setChatOpen}
           />
         </div>
-
       </MotionBottom>
     </section>
   );

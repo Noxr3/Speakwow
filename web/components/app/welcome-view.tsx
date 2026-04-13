@@ -1,17 +1,12 @@
+import GlassSurface from '@/components/GlassSurface';
+import Magnet from '@/components/Magnet';
 import { Button } from '@/components/ui/button';
-import GlassSurface from '@/components/GlassSurface'
-import Magnet from '@/components/Magnet'
 import ColorBends from '../ColorBends';
-
 
 function WelcomeImage() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/wow5-logo-white.png"
-      alt="WOW5 Logo"
-      className="mb-4 h-16 w-auto"
-    />
+    <img src="/wow5-logo-white.png" alt="WOW5 Logo" className="mb-4 h-16 w-auto" />
   );
 }
 
@@ -34,33 +29,29 @@ export const WelcomeView = ({
           Chat live with your voice AI agent
         </p>
         <Magnet padding={15} disabled={false} magnetStrength={10}>
-
-
-        <button
-          type="button"
-          onClick={onStartCall}
-          className="mt-6 cursor-pointer transition-transform duration-400 hover:scale-110 active:scale-95 hover:font-bold bg-background/10 rounded-full"
-        >
-          <GlassSurface
-            className="w-64 rounded-full font-mono text-xs uppercase"
-            displace={0.5}
-            width={256}
-            height={48}
-            distortionScale={-180}
-            redOffset={70}
-            borderRadius={50}
-            greenOffset={10}
-            blueOffset={20}
-            brightness={50}
-            opacity={0.63}
-            mixBlendMode="screen"
+          <button
+            type="button"
+            onClick={onStartCall}
+            className="bg-background/10 mt-6 cursor-pointer rounded-full transition-transform duration-400 hover:scale-110 hover:font-bold active:scale-95"
           >
-            <span>{startButtonText}</span>
-          </GlassSurface>
-        </button>
+            <GlassSurface
+              className="w-64 rounded-full font-mono text-xs uppercase"
+              displace={0.5}
+              width={256}
+              height={48}
+              distortionScale={-180}
+              redOffset={70}
+              borderRadius={50}
+              greenOffset={10}
+              blueOffset={20}
+              brightness={50}
+              opacity={0.63}
+              mixBlendMode="screen"
+            >
+              <span>{startButtonText}</span>
+            </GlassSurface>
+          </button>
         </Magnet>
-
-
       </section>
 
       <div className="fixed bottom-5 left-0 flex w-full items-center justify-center">
@@ -77,17 +68,19 @@ export const WelcomeView = ({
           .
         </p>
       </div>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: -1,
-        pointerEvents: 'none',
-      }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: -1,
+          pointerEvents: 'none',
+        }}
+      >
         <ColorBends
-          colors={["#00ff1e","#2c7be2","#501b35"]}
+          colors={['#00ff1e', '#2c7be2', '#501b35']}
           rotation={0}
           speed={0.2}
           scale={1}
