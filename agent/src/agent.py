@@ -108,26 +108,16 @@ They hear the correct form naturally. Don't point it out.
         participant = self.session.room_io.linked_participant
         user_name = participant.name if participant else None
 
-        if user_name:
-            await self.session.generate_reply(
-                instructions=f"""
-Don't introduce yourself or explain anything.
-Just ask {user_name} ONE fun, easy question to get them talking immediately.
-Example: "Hey {user_name}! So random question — what's the best meal you've had recently?"
-Keep it to one short question. Nothing else.
+        name = user_name or "there"
+        await self.session.generate_reply(
+            instructions=f"""
+Say a warm, casual "Hey {name}!" and pause briefly.
+Then ease into a simple, low-pressure question — like asking how their day is going or what they've been up to.
+Keep it relaxed and short, like you're greeting an old friend. Don't rush.
+Example: "Hey {name}! How's it going? ... So, what have you been up to today?"
 """,
-                allow_interruptions=True,
-            )
-        else:
-            await self.session.generate_reply(
-                instructions="""
-Don't introduce yourself. Don't explain what you do.
-Just ask ONE fun, specific question to get them talking immediately.
-Example: "Hey! So here's a random question for you — if you could pick up any skill instantly, what would it be?"
-Keep it to one short question. Nothing else.
-""",
-                allow_interruptions=True,
-            )
+            allow_interruptions=True,
+        )
 
 
 server = AgentServer()
