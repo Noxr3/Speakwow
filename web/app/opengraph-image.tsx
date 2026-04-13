@@ -19,7 +19,7 @@ type ImageData = {
 };
 
 // Image metadata
-export const alt = 'About Acme';
+export const alt = 'Speakwow — AI English Speaking Coach';
 export const size = {
   width: 1200,
   height: 628,
@@ -107,8 +107,8 @@ export default async function Image() {
 
   const pageTitle = cleanPageTitle(appConfig.pageTitle);
   const logoUri = appConfig.logoDark || appConfig.logo;
-  const isLogoUriLocal = logoUri.includes('lk-logo');
-  const wordmarkUri = logoUri === APP_CONFIG_DEFAULTS.logoDark ? 'public/lk-wordmark.svg' : logoUri;
+  const isLogoUriLocal = false;
+  const wordmarkUri = logoUri;
 
   // Load fonts - use file system in dev, fetch in production
   let commitMonoData: ArrayBuffer | undefined;
@@ -134,7 +134,7 @@ export default async function Image() {
   // logo
   const { base64: logoSrcBase64, dimensions: logoDimensions } = await getImageData(
     logoUri,
-    'public/lk-logo-dark.svg'
+    'public/wow5-logo-white.png'
   );
   const logoSize = scaleImageSize(logoDimensions, 24);
 
@@ -194,21 +194,6 @@ export default async function Image() {
             gap: 16,
           }}
         >
-          <div
-            style={{
-              backgroundColor: '#1F1F1F',
-              padding: '2px 8px',
-              borderRadius: 4,
-              width: 72,
-              fontSize: 12,
-              fontFamily: 'CommitMono',
-              fontWeight: 600,
-              color: '#999999',
-              letterSpacing: 0.8,
-            }}
-          >
-            SANDBOX
-          </div>
           <div
             style={{
               fontSize: 48,

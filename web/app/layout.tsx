@@ -1,8 +1,6 @@
 import { Public_Sans } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
-import { ThemeProvider } from '@/components/app/theme-provider';
-import { ThemeToggle } from '@/components/app/theme-toggle';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { cn } from '@/lib/shadcn/utils';
 import { getAppConfig, getStyles } from '@/lib/utils';
@@ -48,16 +46,15 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const hdrs = await headers();
   const appConfig = await getAppConfig(hdrs);
   const styles = getStyles(appConfig);
-  const { pageTitle, pageDescription, companyName, logo, logoDark } = appConfig;
+  const { pageTitle, pageDescription, logo } = appConfig;
 
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={cn(
         publicSans.variable,
         commitMono.variable,
-        'scroll-smooth font-sans antialiased'
+        'dark scroll-smooth font-sans antialiased'
       )}
     >
       <head>
@@ -66,37 +63,16 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <meta name="description" content={pageDescription} />
       </head>
       <body className="overflow-x-hidden">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
           <AuthProvider>
             <header className="fixed top-0 left-0 z-50 hidden w-full flex-row justify-between p-6 md:flex">
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://livekit.io"
-                className="scale-100 transition-transform duration-300 hover:scale-110"
-              >
+              <a href="/" className="scale-100 transition-transform duration-300 hover:scale-110">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={logo} alt={`${companyName} Logo`} className="block size-6 dark:hidden" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logoDark ?? logo}
-                  alt={`${companyName} Logo`}
-                  className="hidden size-6 dark:block"
-                />
+                <img src={logo} alt="Speakwow Logo" className="h-6 w-auto" />
               </a>
-              <div className="fixed top-0 right-0 z-50 mb-2">
-                <ThemeToggle />
-              </div>
             </header>
 
             {children}
           </AuthProvider>
-        </ThemeProvider>
       </body>
     </html>
   );
