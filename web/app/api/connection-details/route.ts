@@ -39,8 +39,8 @@ export async function POST(req: Request) {
     } catch {
       // Empty or invalid body, use defaults
     }
-    const agentName: string = body?.room_config?.agents?.[0]?.agent_name as string;
-    console.log('agentName', body?.room_config?.agents);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const agentName: string = (body as any)?.room_config?.agents?.[0]?.agent_name as string;
     // Generate participant token
     const participantName = 'Brad';
     const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
