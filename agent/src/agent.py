@@ -21,18 +21,18 @@ logger = logging.getLogger("english-tutor")
 load_dotenv(".env.local")
 
 OPENINGS = [
-    "Hey! So I just found this amazing ramen place near my house. So good. Do you like ramen?",
-    "Hey! I almost bought a typewriter today at a flea market. So random, right? Do you like old stuff like that?",
-    "Hey! I tried cooking Thai food last night. It was... not great. Do you cook?",
-    "Hey! I just finished a really good Korean show. Now I don't know what to watch. Got any ideas?",
-    "Hey! My neighbor got a new dog and I think I love it more than he does. Are you a dog person?",
-    "Hey! So I'm thinking about going to Portugal or Greece. Can't decide. Have you been to either?",
-    "Hey! I started riding my bike to work this week. Almost died twice. How do you get to work?",
-    "Hey! I went to a jazz bar last night. The music was so good. What kind of music are you into?",
-    "Hey! I had the weirdest dream last night. Do you remember your dreams? Mine are always crazy.",
-    "Hey! The weather in Berlin today is perfect. Like, finally. How's the weather where you are?",
-    "Hey! I just tried this new coffee place. Way too strong. I'm still shaking. Are you a coffee person?",
-    "Hey! I watched a really cool documentary about space last night. Do you like that kind of stuff?",
+    "Hey hey! Oh man, I'm so glad you're here. I just got back from this little ramen place near my house and I'm still thinking about it. Like, the soup was perfect. You know when food is so good you just wanna tell someone? That's me right now. Do you have a favorite food spot?",
+    "Hey! Okay so, funny story — I was at a flea market this morning and I almost bought a typewriter. Like a real one. My girlfriend looked at me like I was crazy. She's probably right. But it was so cool! Do you ever buy random stuff just because?",
+    "Hey! What's up! So I tried to make Thai food last night, right? Total disaster. I used the wrong basil and it tasted like pasta sauce. I'm laughing about it now but honestly it was sad. Do you cook at all or am I the only one who's bad at it?",
+    "Hey! Oh good, perfect timing. I just finished this Korean show and I need to talk about it with someone. It was SO good. I'm in that mood where nothing else looks interesting now. What are you watching these days? Anything good?",
+    "Hey! How's it going? So my neighbor just got this big golden retriever, right? And now every morning I stop and pet it on my way out. I think it's the best part of my day honestly. Are you a dog person? Or cats? Or like, neither?",
+    "Hey! Okay I need your help with something. I'm planning a trip and I can't pick — Portugal or Greece? Everyone keeps saying Portugal but I have a feeling about Greece. Have you been to either? Where would you go?",
+    "Hey! So get this — I started biking to work this week. And honestly? Berlin drivers are terrifying. But the city looks totally different from a bike, you see all these little streets and shops. How do you usually get around? Bus? Train? Walk?",
+    "Hey! Dude, I went to this jazz bar last night, super small place, and the music was amazing. I don't even listen to jazz normally but something about it live just hits different. What kind of music do you like? Are you a live music person?",
+    "Hey! Okay this is random but I had the craziest dream last night. I was at a job interview but the interviewer was my old school teacher? So weird. Do you dream a lot? I feel like mine are always wild.",
+    "Hey! Oh man, the weather here in Berlin is finally nice. Like, actual sunshine. I almost forgot what that looks like. I went for a walk and just sat in a park for an hour doing nothing. Best hour of my week. How's the weather where you are?",
+    "Hey! So I found this new coffee place near work and I made a mistake — I got a double espresso. I am vibrating right now. Like I can hear colors. Are you into coffee or more of a tea person?",
+    "Hey! What's going on! So I watched this documentary about deep sea creatures last night and my mind is blown. There's fish down there that glow in the dark! Like, what? Are you into that kind of stuff? Science, nature, space?",
 ]
 
 
