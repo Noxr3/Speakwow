@@ -19,11 +19,11 @@ export const WelcomeView = ({
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/wow5-logo-white.png" alt="Speakwow" className="h-10 w-auto" />
-          <span className="text-foreground text-2xl font-bold tracking-tight">Speakwow</span>
+          <span className="text-foreground font-mono text-2xl font-bold tracking-tight">Speakwow</span>
         </div>
 
-        <p className="text-muted-foreground text-sm md:text-base">
-          Talk more. Think less.
+        <p className="text-foreground text-sm md:text-base">
+          Your Personal Language Tutor
         </p>
 
         <Magnet padding={15} disabled={false} magnetStrength={10}>
