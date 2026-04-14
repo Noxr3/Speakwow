@@ -21,18 +21,18 @@ logger = logging.getLogger("english-tutor")
 load_dotenv(".env.local")
 
 OPENINGS = [
-    "Hey! Dude, I just got back from this tiny ramen shop in Kreuzberg — the cook is this old Japanese guy who moved to Berlin like 30 years ago. Honestly the best ramen I've had outside of Japan. Do you have a spot like that near you? Like a hidden gem nobody knows about?",
-    "Oh man, so I was at this flea market yesterday and I almost bought a typewriter. Like an actual typewriter. My girlfriend was like 'where would you even put that?' She has a point. Have you ever bought something totally impractical just because it was cool?",
-    "So I've been trying to learn to cook Thai food and I just realized — I've been using the wrong kind of basil this entire time. Three months of pad kra pao with Italian basil. I'm a disaster. Do you cook much?",
-    "Okay so weird thing happened — I was on the U-Bahn this morning and this guy next to me was reading the exact same book I just finished. I almost said something but then I thought, is that creepy? Would you talk to a stranger on the train?",
-    "I just finished watching this Korean series my friend recommended and now I'm in that weird phase where nothing else seems worth watching. You know that feeling? What was the last show that did that to you?",
-    "So my neighbor just got a dog — this giant golden retriever — and now every morning I have this whole ritual of petting it before work. I think it's becoming the highlight of my day. Are you a dog person or a cat person? Or neither?",
-    "I tried going to one of those silent cafés yesterday — you know, where everyone's just working quietly and nobody talks? Lasted about 20 minutes before I went crazy. I think I need background noise. What about you, do you work better in silence?",
-    "Man, I had the most awkward thing happen at a dinner party last night. Someone asked me what I do and I somehow ended up explaining journalism for like 10 minutes. I could see their eyes glazing over. What do you usually say when people ask what you do?",
-    "So I'm planning a trip and I can't decide between Portugal and Greece. Everyone says Portugal but I feel like Greece is underrated right now. Have you been to either? Or where would you go if you had a week off?",
-    "I started cycling to work this month and I'm already convinced Berlin drivers are trying to kill me. But the city looks completely different from a bike — you notice things you never see from the train. How do you usually get around your city?",
-    "So I went to this underground jazz bar last night — no sign on the door, you literally have to know where it is. The saxophone player was insane. Do you have a music spot you love? Or are you more of a headphones-at-home person?",
-    "Okay random but I just had the weirdest dream — I was giving a TED talk but in my underwear and everyone was just... taking notes normally? Brains are so weird. Do you remember your dreams much?",
+    "Hey! So I just found this amazing ramen place near my house. So good. Do you like ramen?",
+    "Hey! I almost bought a typewriter today at a flea market. So random, right? Do you like old stuff like that?",
+    "Hey! I tried cooking Thai food last night. It was... not great. Do you cook?",
+    "Hey! I just finished a really good Korean show. Now I don't know what to watch. Got any ideas?",
+    "Hey! My neighbor got a new dog and I think I love it more than he does. Are you a dog person?",
+    "Hey! So I'm thinking about going to Portugal or Greece. Can't decide. Have you been to either?",
+    "Hey! I started riding my bike to work this week. Almost died twice. How do you get to work?",
+    "Hey! I went to a jazz bar last night. The music was so good. What kind of music are you into?",
+    "Hey! I had the weirdest dream last night. Do you remember your dreams? Mine are always crazy.",
+    "Hey! The weather in Berlin today is perfect. Like, finally. How's the weather where you are?",
+    "Hey! I just tried this new coffee place. Way too strong. I'm still shaking. Are you a coffee person?",
+    "Hey! I watched a really cool documentary about space last night. Do you like that kind of stuff?",
 ]
 
 
@@ -92,13 +92,8 @@ You're witty, a little sarcastic, and you love a good analogy. You have strong o
         opening = random.choice(OPENINGS)
         await self.session.generate_reply(
             instructions=f"""
-Start the conversation naturally by sharing this story/thought as if it just happened to you.
-Say it casually, like you're catching up with a friend. Don't rush — take a breath between sentences.
-
-Here's what you want to share:
+Say this casually, like you're talking to a friend. Keep it simple and relaxed. Don't add extra words.
 {opening}
-
-Deliver it naturally in your own voice. Don't read it word-for-word — make it sound spontaneous.
 """,
             allow_interruptions=True,
         )
