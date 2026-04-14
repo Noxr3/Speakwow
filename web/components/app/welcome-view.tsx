@@ -3,13 +3,6 @@ import Magnet from '@/components/Magnet';
 import { Button } from '@/components/ui/button';
 import ColorBends from '../ColorBends';
 
-function WelcomeImage() {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src="/wow5-logo-white.png" alt="WOW5 Logo" className="mb-4 h-16 w-auto" />
-  );
-}
-
 interface WelcomeViewProps {
   startButtonText: string;
   onStartCall: () => void;
@@ -22,17 +15,22 @@ export const WelcomeView = ({
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   return (
     <div ref={ref}>
-      <section className="flex flex-col items-center justify-center text-center">
-        <WelcomeImage />
+      <section className="flex flex-col items-center justify-center text-center gap-6">
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/wow5-logo-white.png" alt="Speakwow" className="h-10 w-auto" />
+          <span className="text-foreground text-2xl font-bold tracking-tight">Speakwow</span>
+        </div>
 
-        <p className="text-foreground max-w-prose pt-1 leading-6 font-medium">
-          Your AI English Speaking Coach
+        <p className="text-muted-foreground text-sm md:text-base">
+          Talk more. Think less.
         </p>
+
         <Magnet padding={15} disabled={false} magnetStrength={10}>
           <button
             type="button"
             onClick={onStartCall}
-            className="bg-background/10 mt-6 cursor-pointer rounded-full transition-transform duration-400 hover:scale-110 hover:font-bold active:scale-95"
+            className="bg-background/10 mt-2 cursor-pointer rounded-full transition-transform duration-400 hover:scale-110 hover:font-bold active:scale-95"
           >
             <GlassSurface
               className="w-64 rounded-full font-mono text-xs uppercase"

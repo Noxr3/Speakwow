@@ -110,7 +110,7 @@ server = AgentServer()
 @server.rtc_session(agent_name="Frank")
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
-        llm=xai.realtime.RealtimeModel(voice="Ash"),
+        llm=xai.realtime.RealtimeModel(voice="Rex"),
         min_interruption_duration=0.3,
     )
 
