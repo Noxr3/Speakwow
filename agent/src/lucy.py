@@ -21,6 +21,21 @@ X402_WALLET_PRIVATE_KEY = os.getenv("X402_WALLET_PRIVATE_KEY", "")
 # Network id as advertised by OpenAgora agents (CAIP-2 format)
 X402_CHAIN = os.getenv("X402_CHAIN", "eip155:84532")
 
+# Startup visibility: log which env vars are loaded (mask secrets).
+if not os.getenv("OPENAGORA_API_KEY"):
+    logger.warning("OPENAGORA_API_KEY not set in env, using hardcoded fallback")
+else:
+    logger.info("OPENAGORA_API_KEY loaded from env (len=%d)", len(OPENAGORA_API_KEY))
+
+if not X402_WALLET_PRIVATE_KEY:
+    logger.warning(
+        "X402_WALLET_PRIVATE_KEY not set — Lucy will NOT be able to pay agents"
+    )
+else:
+    logger.info("X402_WALLET_PRIVATE_KEY loaded (len=%d)", len(X402_WALLET_PRIVATE_KEY))
+
+logger.info("X402_CHAIN=%s OPENAGORA_BASE=%s", X402_CHAIN, OPENAGORA_BASE)
+
 
 def _build_x402_client() -> x402Client | None:
     """Build an x402 client if a wallet private key is configured."""

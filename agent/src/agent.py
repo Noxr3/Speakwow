@@ -21,6 +21,16 @@ from lucy import Lucy  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
 
+# Startup env check — warn loudly if anything required is missing.
+import os as _os  # noqa: E402
+
+_REQUIRED = ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "XAI_API_KEY"]
+_missing = [k for k in _REQUIRED if not _os.getenv(k)]
+if _missing:
+    logger.error("MISSING REQUIRED ENV VARS: %s — agent will fail to start", _missing)
+else:
+    logger.info("all required env vars present: %s", _REQUIRED)
+
 
 server = AgentServer()
 
