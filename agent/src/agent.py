@@ -21,15 +21,24 @@ from lucy import Lucy  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
 
-# Startup env check — warn loudly if anything required is missing.
+# Startup env check — print directly so it shows up before logging is configured.
 import os as _os  # noqa: E402
+import sys as _sys  # noqa: E402
 
 _REQUIRED = ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "XAI_API_KEY"]
 _missing = [k for k in _REQUIRED if not _os.getenv(k)]
 if _missing:
-    logger.error("MISSING REQUIRED ENV VARS: %s — agent will fail to start", _missing)
+    print(
+        f"[agent.boot] ERROR missing required env vars: {_missing}",
+        file=_sys.stderr,
+        flush=True,
+    )
 else:
-    logger.info("all required env vars present: %s", _REQUIRED)
+    print(
+        f"[agent.boot] all required env vars present: {_REQUIRED}",
+        file=_sys.stderr,
+        flush=True,
+    )
 
 
 server = AgentServer()

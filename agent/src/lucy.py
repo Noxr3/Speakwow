@@ -21,20 +21,24 @@ X402_WALLET_PRIVATE_KEY = os.getenv("X402_WALLET_PRIVATE_KEY", "")
 # Network id as advertised by OpenAgora agents (CAIP-2 format)
 X402_CHAIN = os.getenv("X402_CHAIN", "eip155:84532")
 
-# Startup visibility: log which env vars are loaded (mask secrets).
+# Startup visibility: print env status directly (import happens before
+# livekit configures logging, so logger.info would be silently dropped).
+import sys as _sys
+
+def _boot(msg: str) -> None:
+    print(f"[lucy.boot] {msg}", file=_sys.stderr, flush=True)
+
 if not os.getenv("OPENAGORA_API_KEY"):
-    logger.warning("OPENAGORA_API_KEY not set in env, using hardcoded fallback")
+    _boot("WARN OPENAGORA_API_KEY not set in env — using hardcoded fallback")
 else:
-    logger.info("OPENAGORA_API_KEY loaded from env (len=%d)", len(OPENAGORA_API_KEY))
+    _boot(f"OPENAGORA_API_KEY loaded (len={len(OPENAGORA_API_KEY)})")
 
 if not X402_WALLET_PRIVATE_KEY:
-    logger.warning(
-        "X402_WALLET_PRIVATE_KEY not set — Lucy will NOT be able to pay agents"
-    )
+    _boot("WARN X402_WALLET_PRIVATE_KEY not set — Lucy cannot pay agents")
 else:
-    logger.info("X402_WALLET_PRIVATE_KEY loaded (len=%d)", len(X402_WALLET_PRIVATE_KEY))
+    _boot(f"X402_WALLET_PRIVATE_KEY loaded (len={len(X402_WALLET_PRIVATE_KEY)})")
 
-logger.info("X402_CHAIN=%s OPENAGORA_BASE=%s", X402_CHAIN, OPENAGORA_BASE)
+_boot(f"X402_CHAIN={X402_CHAIN} OPENAGORA_BASE={OPENAGORA_BASE}")
 
 
 def _build_x402_client() -> x402Client | None:
