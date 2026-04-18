@@ -91,31 +91,20 @@ export function getStyles(appConfig: AppConfig) {
 }
 
 /**
- * Get a token source for a sandboxed LiveKit session
- * @param appConfig - The app configuration
- * @returns A token source for a sandboxed LiveKit session
+ * Token source that posts to the connection-details endpoint with the
+ * user's currently selected agent (Frank or Lucy).
  */
-export function getSandboxTokenSource(appConfig: AppConfig) {
+export function getAgentTokenSource(selectedAgentRef: { current: string }) {
+  const endpoint = process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT || '/api/connection-details';
   return TokenSource.custom(async () => {
-    const url = new URL(process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT!, window.location.origin);
-    const sandboxId = appConfig.sandboxId ?? '';
-    const roomConfig = appConfig.agentName
-      ? {
-          agents: [{ agent_name: appConfig.agentName }],
-        }
-      : undefined;
-
+    const url = new URL(endpoint, window.location.origin);
     try {
       const res = await fetch(url.toString(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Sandbox-Id': sandboxId,
-        },
-        body: JSON.stringify({
-          room_config: roomConfig,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selected_agent: selectedAgentRef.current }),
       });
+      if (!res.ok) throw new Error(`Token request failed: ${res.status}`);
       return await res.json();
     } catch (error) {
       console.error('Error fetching connection details:', error);

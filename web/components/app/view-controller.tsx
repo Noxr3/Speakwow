@@ -27,11 +27,15 @@ const VIEW_MOTION_PROPS = {
   },
 };
 
+import type { SelectableAgent } from '@/components/app/app';
+
 interface ViewControllerProps {
   appConfig: AppConfig;
+  selectedAgent: SelectableAgent;
+  onSelectAgent: (agent: SelectableAgent) => void;
 }
 
-export function ViewController({ appConfig }: ViewControllerProps) {
+export function ViewController({ appConfig, selectedAgent, onSelectAgent }: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
 
   return (
@@ -41,7 +45,8 @@ export function ViewController({ appConfig }: ViewControllerProps) {
         <MotionWelcomeView
           key="welcome"
           {...VIEW_MOTION_PROPS}
-          startButtonText={appConfig.startButtonText}
+          selectedAgent={selectedAgent}
+          onSelectAgent={onSelectAgent}
           onStartCall={start}
         />
       )}

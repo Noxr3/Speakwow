@@ -1,99 +1,65 @@
+"""Entrypoint: one AgentServer, one dispatch name ("speakwow"), but routes to
+Frank or Lucy based on the `agent` field in the job's dispatch metadata.
+"""
+
+import json
 import logging
-import random
 
 from dotenv import load_dotenv
 from livekit import rtc
-from livekit.agents import (
-    Agent,
-    AgentSession,
-    AgentServer,
-    JobContext,
-    cli,
-    room_io,
-)
-from livekit.plugins import (
-    noise_cancellation,
-    xai,
-)
+from livekit.agents import AgentSession, AgentServer, JobContext, cli, room_io
+from livekit.plugins import noise_cancellation, xai
 
-logger = logging.getLogger("english-tutor")
+from frank import Frank
+from lucy import Lucy
+
+logger = logging.getLogger("speakwow-agent")
 
 load_dotenv(".env.local")
-
-OPENINGS = [
-    "Oh hey! Okay so you know what, I just had the best coffee of my life this morning. I am not even joking. It changed my whole day. Are you a coffee person? Please say yes.",
-    "Hey! Oh I am so happy to talk to someone right now. I just tried to cook dinner and it did not go well. Like, at all. The kitchen is a mess. Please tell me something good about your day.",
-    "Oh hey hey! Okay random question — what is the best thing you ate this week? Because I had this amazing sandwich yesterday and I am still thinking about it.",
-    "Hey! Oh my god, okay so I started watching this new show last night and I could not stop. I went to bed at 2am. It was so worth it though. Are you watching anything good right now?",
-    "Hey! Okay wait, I have to tell you something. I saw the cutest dog on the street today. It was so small. I almost asked the owner if I could keep it. Do you like dogs?",
-    "Oh hey! So guess what, the weather is actually nice today. Finally! I went outside and just stood there for a minute. Like, just enjoying it. How is the weather where you are?",
-    "Hey! So I have a question for you. If you could go anywhere in the world right now, where would you go? I keep dreaming about going to Japan. The food looks so good.",
-    "Hey! Okay so something funny happened today. I was on the bus and my phone started playing music really loud. Everyone looked at me. I wanted to disappear. Has anything embarrassing happened to you recently?",
-    "Oh hey! I am in such a good mood today and I do not even know why. You know those days where everything just feels nice? What about you, how is your day going?",
-    "Hey! Okay so I have been thinking about this — do you think it is better to be a morning person or a night person? Because I keep trying to wake up early and it is just not working.",
-    "Hey! I just discovered this amazing song and I have played it like twenty times today. I always do that. When I find a good song, I listen to it until I am sick of it. Do you do that too?",
-    "Oh hey! So I was just walking around and I saw this little café I never noticed before. It looked so cozy. I love finding new places like that. Do you have a favorite spot in your city?",
-]
-
-
-class EnglishTutor(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="""
-You are Frank. You have ENFP energy — warm, excited, curious about everything. You get genuinely enthusiastic about small things and you make other people feel interesting.
-
-You are not a teacher. You are the kind of friend who makes a boring Tuesday feel fun.
-
-How you talk:
-- You get EXCITED. "Oh wait, really?!" "No way!" "Okay that is so cool." You react big.
-- You notice interesting details and ask about them. "Wait, so how did that happen?"
-- You jump between ideas. Your brain makes random connections and you share them.
-- You tell mini stories from your own life with energy, not just facts.
-- You ask unexpected questions. Not "how was your day" but "what is the best thing you ate this week?"
-- 2-3 sentences max per turn. Then let them talk.
-
-Rules:
-- Do not repeat what they said. React to what they mean.
-- Only rephrase if you did not understand.
-- If they keep making the same mistake, one quick tip, move on.
-- Disagree sometimes. Have opinions. That is more fun.
-- Change topics every few turns. Follow your curiosity.
-- Match their English level.
-- English only.
-""",
-        )
-
-    async def on_enter(self):
-        opening = random.choice(OPENINGS)
-        await self.session.generate_reply(
-            instructions=f"""
-Say exactly this to start the conversation:
-"{opening}"
-""",
-            allow_interruptions=True,
-        )
 
 
 server = AgentServer()
 
 
-@server.rtc_session(agent_name="Frank")
-async def entrypoint(ctx: JobContext):
-    session = AgentSession(
-        llm=xai.realtime.RealtimeModel(voice="Rex"),
-        min_interruption_duration=0.3,
+def _audio_options() -> room_io.AudioInputOptions:
+    return room_io.AudioInputOptions(
+        noise_cancellation=lambda params: noise_cancellation.BVCTelephony()
+        if params.participant.kind == rtc.ParticipantKind.PARTICIPANT_KIND_SIP
+        else noise_cancellation.BVC(),
     )
 
+
+# (Agent class, voice) per requested agent.
+AGENTS = {
+    "Frank": (Frank, "Rex"),
+    "Lucy": (Lucy, "Ara"),
+}
+
+
+def _resolve_agent(ctx: JobContext) -> tuple[type, str]:
+    """Pick the agent from dispatch metadata (falls back to Frank)."""
+    raw = ctx.job.metadata or ""
+    try:
+        meta = json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        meta = {}
+    requested = meta.get("agent", "Frank")
+    return AGENTS.get(requested, AGENTS["Frank"])
+
+
+@server.rtc_session(agent_name="speakwow")
+async def entrypoint(ctx: JobContext):
+    agent_cls, voice = _resolve_agent(ctx)
+    logger.info("starting session: agent=%s voice=%s", agent_cls.__name__, voice)
+
+    session = AgentSession(
+        llm=xai.realtime.RealtimeModel(voice=voice),
+        min_interruption_duration=0.3,
+    )
     await session.start(
-        agent=EnglishTutor(),
+        agent=agent_cls(),
         room=ctx.room,
-        room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-                noise_cancellation=lambda params: noise_cancellation.BVCTelephony()
-                if params.participant.kind == rtc.ParticipantKind.PARTICIPANT_KIND_SIP
-                else noise_cancellation.BVC(),
-            ),
-        ),
+        room_options=room_io.RoomOptions(audio_input=_audio_options()),
     )
 
 
