@@ -100,6 +100,8 @@ async def call_agent(
         "Content-Type": "application/json",
     }
 
+    logger.info("call_agent → slug=%s pay_usdc=%s url=%s", slug, pay_usdc, url)
+
     # When pay_usdc is authorized and a wallet is configured, use x402 transport
     # for automatic 402 handshake, payload signing, and retry.
     if pay_usdc is not None and _x402_client is not None:
@@ -121,6 +123,13 @@ async def call_agent(
     else:
         async with httpx.AsyncClient(timeout=30.0) as http:
             resp = await http.post(url, json=payload, headers=headers)
+
+    logger.info(
+        "call_agent ← status=%s headers=%s body=%s",
+        resp.status_code,
+        dict(resp.headers),
+        resp.text[:800],
+    )
 
     # Always passthrough the raw response body to the LLM — let it decide
     # what to do with the information (success, 402 payment offer, errors).
