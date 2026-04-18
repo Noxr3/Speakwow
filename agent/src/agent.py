@@ -6,16 +6,20 @@ import json
 import logging
 
 from dotenv import load_dotenv
-from livekit import rtc
-from livekit.agents import AgentSession, AgentServer, JobContext, cli, room_io
-from livekit.plugins import noise_cancellation, xai
 
-from frank import Frank
-from lucy import Lucy
+# Load env vars BEFORE importing frank/lucy — those modules read os.getenv at
+# import time. On Railway env vars come from the dashboard so this is a no-op;
+# only matters for local dev where .env.local holds the keys.
+load_dotenv(".env.local")
+
+from livekit import rtc  # noqa: E402
+from livekit.agents import AgentSession, AgentServer, JobContext, cli, room_io  # noqa: E402
+from livekit.plugins import noise_cancellation, xai  # noqa: E402
+
+from frank import Frank  # noqa: E402
+from lucy import Lucy  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
-
-load_dotenv(".env.local")
 
 
 server = AgentServer()
