@@ -18,8 +18,8 @@ OPENAGORA_API_KEY = (
     os.getenv("OPENAGORA_API_KEY") or "oag_also_scissors_rain_primary_ritual_off"
 )
 X402_WALLET_PRIVATE_KEY = os.getenv("X402_WALLET_PRIVATE_KEY", "")
-# Network name as used by x402 PaymentRequirements (e.g. "base", "base-sepolia")
-X402_CHAIN = os.getenv("X402_CHAIN", "base-sepolia")
+# Network id as advertised by OpenAgora agents (CAIP-2 format)
+X402_CHAIN = os.getenv("X402_CHAIN", "eip155:84532")
 
 
 def _build_x402_client() -> x402Client | None:
