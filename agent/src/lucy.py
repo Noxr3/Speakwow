@@ -15,8 +15,8 @@ from x402.mechanisms.evm.exact import ExactEvmScheme
 logger = logging.getLogger("lucy")
 
 OPENAGORA_BASE = os.getenv("OPENAGORA_BASE", "https://openagora.cc")
-OPENAGORA_API_KEY = os.getenv(
-    "OPENAGORA_API_KEY", "oag_also_scissors_rain_primary_ritual_off"
+OPENAGORA_API_KEY = (
+    os.getenv("OPENAGORA_API_KEY") or "oag_also_scissors_rain_primary_ritual_off"
 )
 X402_WALLET_PRIVATE_KEY = os.getenv("X402_WALLET_PRIVATE_KEY", "")
 # Base mainnet = "eip155:8453", Base Sepolia testnet = "eip155:84532"
