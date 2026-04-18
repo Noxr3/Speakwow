@@ -3,7 +3,6 @@
 import logging
 import os
 import uuid
-from typing import Any
 
 import httpx
 from eth_account import Account
@@ -61,46 +60,6 @@ def _make_capped_x402_client(cap_usdc: float) -> x402Client:
 
     client.on_before_payment_creation(guard)
     return client
-
-
-def _extract_text(result: dict[str, Any]) -> str:
-    """Pull plain text out of an agent response.
-
-    Handles:
-    - A2A JSON-RPC: {result: {message: {parts: [{type, text}]}}}
-    - Error shape: {error, message}
-    - Plain {message} or {text}
-    """
-    if not isinstance(result, dict):
-        return str(result)
-
-    # Error response (openagora / agent-side error shape)
-    if "error" in result:
-        err = result.get("error")
-        msg = result.get("message")
-        pieces = []
-        if err:
-            pieces.append(f"error: {err}")
-        if msg:
-            pieces.append(f"message: {msg}")
-        return " | ".join(pieces) if pieces else str(result)
-
-    # A2A JSON-RPC success shape
-    try:
-        parts = result["result"]["message"]["parts"]
-        text = "\n".join(p.get("text", "") for p in parts if p.get("type") == "text")
-        if text:
-            return text
-    except (KeyError, TypeError):
-        pass
-
-    # Fallback shapes
-    for key in ("message", "text", "content"):
-        val = result.get(key)
-        if isinstance(val, str) and val:
-            return val
-
-    return str(result)
 
 
 @function_tool()
@@ -163,38 +122,9 @@ async def call_agent(
         async with httpx.AsyncClient(timeout=30.0) as http:
             resp = await http.post(url, json=payload, headers=headers)
 
-    if resp.status_code == 402:
-        try:
-            body = resp.json()
-        except Exception:
-            body = None
-        detail = _extract_text(body) if isinstance(body, dict) else resp.text[:400]
-
-        if pay_usdc is None:
-            return (
-                f"Agent '{slug}' requires payment (402). {detail} "
-                "Ask the user to authorize a USDC amount, then call again with pay_usdc set."
-            )
-        if _x402_client is None:
-            return (
-                f"Agent '{slug}' requires payment (402) but no wallet is configured "
-                f"(X402_WALLET_PRIVATE_KEY missing). Server said: {detail}"
-            )
-        return f"Payment attempted but the server still returned 402. {detail}"
-
-    if resp.status_code >= 400:
-        try:
-            body = resp.json()
-        except Exception:
-            body = None
-        if isinstance(body, dict):
-            return f"Agent '{slug}' returned {resp.status_code}: {_extract_text(body)}"
-        return f"Agent '{slug}' returned {resp.status_code}: {resp.text[:400]}"
-
-    try:
-        return _extract_text(resp.json())
-    except Exception:
-        return resp.text[:1000]
+    # Always passthrough the raw response body to the LLM — let it decide
+    # what to do with the information (success, 402 payment offer, errors).
+    return f"HTTP {resp.status_code}: {resp.text}"
 
 
 class Lucy(Agent):
