@@ -21,20 +21,23 @@ X402_WALLET_PRIVATE_KEY = os.getenv("X402_WALLET_PRIVATE_KEY", "")
 # Network id as advertised by OpenAgora agents (CAIP-2 format)
 X402_CHAIN = os.getenv("X402_CHAIN", "eip155:84532")
 
-# Startup visibility: print env status directly (import happens before
-# livekit configures logging, so logger.info would be silently dropped).
+# Startup visibility: emit env status via print() AND logger.warning() so it
+# surfaces regardless of logging configuration timing.
 import sys as _sys
 
 def _boot(msg: str) -> None:
-    print(f"[lucy.boot] {msg}", file=_sys.stderr, flush=True)
+    line = f"[lucy.boot] {msg}"
+    print(line, file=_sys.stderr, flush=True)
+    print(line, flush=True)  # also stdout in case Railway captures separately
+    logger.warning(line)  # WARNING triggers lastResort handler if none configured
 
 if not os.getenv("OPENAGORA_API_KEY"):
-    _boot("WARN OPENAGORA_API_KEY not set in env — using hardcoded fallback")
+    _boot("OPENAGORA_API_KEY not set in env — using hardcoded fallback")
 else:
     _boot(f"OPENAGORA_API_KEY loaded (len={len(OPENAGORA_API_KEY)})")
 
 if not X402_WALLET_PRIVATE_KEY:
-    _boot("WARN X402_WALLET_PRIVATE_KEY not set — Lucy cannot pay agents")
+    _boot("X402_WALLET_PRIVATE_KEY not set — Lucy cannot pay agents")
 else:
     _boot(f"X402_WALLET_PRIVATE_KEY loaded (len={len(X402_WALLET_PRIVATE_KEY)})")
 

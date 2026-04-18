@@ -27,18 +27,14 @@ import sys as _sys  # noqa: E402
 
 _REQUIRED = ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "XAI_API_KEY"]
 _missing = [k for k in _REQUIRED if not _os.getenv(k)]
-if _missing:
-    print(
-        f"[agent.boot] ERROR missing required env vars: {_missing}",
-        file=_sys.stderr,
-        flush=True,
-    )
-else:
-    print(
-        f"[agent.boot] all required env vars present: {_REQUIRED}",
-        file=_sys.stderr,
-        flush=True,
-    )
+_msg = (
+    f"[agent.boot] ERROR missing required env vars: {_missing}"
+    if _missing
+    else f"[agent.boot] all required env vars present: {_REQUIRED}"
+)
+print(_msg, file=_sys.stderr, flush=True)
+print(_msg, flush=True)
+logger.warning(_msg)
 
 
 server = AgentServer()
