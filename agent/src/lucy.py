@@ -62,12 +62,43 @@ def _make_capped_x402_client(cap_usdc: float) -> x402Client:
 
 
 def _extract_text(result: dict[str, Any]) -> str:
-    """Pull the plain text out of a JSON-RPC A2A response."""
+    """Pull plain text out of an agent response.
+
+    Handles:
+    - A2A JSON-RPC: {result: {message: {parts: [{type, text}]}}}
+    - Error shape: {error, message}
+    - Plain {message} or {text}
+    """
+    if not isinstance(result, dict):
+        return str(result)
+
+    # Error response (openagora / agent-side error shape)
+    if "error" in result:
+        err = result.get("error")
+        msg = result.get("message")
+        pieces = []
+        if err:
+            pieces.append(f"error: {err}")
+        if msg:
+            pieces.append(f"message: {msg}")
+        return " | ".join(pieces) if pieces else str(result)
+
+    # A2A JSON-RPC success shape
     try:
         parts = result["result"]["message"]["parts"]
-        return "\n".join(p.get("text", "") for p in parts if p.get("type") == "text")
+        text = "\n".join(p.get("text", "") for p in parts if p.get("type") == "text")
+        if text:
+            return text
     except (KeyError, TypeError):
-        return str(result)
+        pass
+
+    # Fallback shapes
+    for key in ("message", "text", "content"):
+        val = result.get(key)
+        if isinstance(val, str) and val:
+            return val
+
+    return str(result)
 
 
 @function_tool()
@@ -144,7 +175,13 @@ async def call_agent(
         return "Payment attempted but the server still returned 402."
 
     if resp.status_code >= 400:
-        return f"Agent call failed ({resp.status_code}): {resp.text[:400]}"
+        try:
+            body = resp.json()
+        except Exception:
+            body = None
+        if isinstance(body, dict):
+            return f"Agent '{slug}' returned {resp.status_code}: {_extract_text(body)}"
+        return f"Agent '{slug}' returned {resp.status_code}: {resp.text[:400]}"
 
     try:
         return _extract_text(resp.json())
