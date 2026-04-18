@@ -164,17 +164,23 @@ async def call_agent(
             resp = await http.post(url, json=payload, headers=headers)
 
     if resp.status_code == 402:
+        try:
+            body = resp.json()
+        except Exception:
+            body = None
+        detail = _extract_text(body) if isinstance(body, dict) else resp.text[:400]
+
         if pay_usdc is None:
             return (
-                f"Agent '{slug}' requires payment. "
+                f"Agent '{slug}' requires payment (402). {detail} "
                 "Ask the user to authorize a USDC amount, then call again with pay_usdc set."
             )
         if _x402_client is None:
             return (
-                "Agent requires payment but no wallet is configured on the server "
-                "(X402_WALLET_PRIVATE_KEY missing)."
+                f"Agent '{slug}' requires payment (402) but no wallet is configured "
+                f"(X402_WALLET_PRIVATE_KEY missing). Server said: {detail}"
             )
-        return "Payment attempted but the server still returned 402."
+        return f"Payment attempted but the server still returned 402. {detail}"
 
     if resp.status_code >= 400:
         try:
