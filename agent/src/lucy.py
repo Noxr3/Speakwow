@@ -44,13 +44,15 @@ else:
 _boot(f"X402_CHAIN={X402_CHAIN} OPENAGORA_BASE={OPENAGORA_BASE}")
 
 
+_signer = Account.from_key(X402_WALLET_PRIVATE_KEY) if X402_WALLET_PRIVATE_KEY else None
+
+
 def _build_x402_client() -> x402Client | None:
     """Build an x402 client if a wallet private key is configured."""
-    if not X402_WALLET_PRIVATE_KEY:
+    if _signer is None:
         return None
-    signer = Account.from_key(X402_WALLET_PRIVATE_KEY)
     client = x402Client()
-    client.register(X402_CHAIN, ExactEvmScheme(signer=signer))
+    client.register(X402_CHAIN, ExactEvmScheme(signer=_signer))
     return client
 
 
@@ -59,12 +61,10 @@ _x402_client = _build_x402_client()
 
 def _make_capped_x402_client(cap_usdc: float) -> x402Client:
     """Build a per-call x402Client that aborts payments over the user's cap."""
-    if _x402_client is None:
+    if _signer is None:
         raise RuntimeError("x402 wallet not configured")
     client = x402Client()
-    # Re-register the same scheme using the cached signer.
-    for net, scheme in _x402_client._schemes.items():  # type: ignore[attr-defined]
-        client.register(net, scheme)
+    client.register(X402_CHAIN, ExactEvmScheme(signer=_signer))
 
     cap_micros = int(cap_usdc * 1_000_000)
 
