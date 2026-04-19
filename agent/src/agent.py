@@ -37,7 +37,13 @@ print(_msg, flush=True)
 logger.warning(_msg)
 
 
-server = AgentServer()
+server = AgentServer(
+    # Keep a tiny idle pool — Railway containers are small and each worker
+    # process loads heavy deps (web3, eth_account, x402) that eat memory.
+    num_idle_processes=1,
+    # Heavy imports can take >10s cold on a small box.
+    initialize_process_timeout=60.0,
+)
 
 
 def _audio_options() -> room_io.AudioInputOptions:
