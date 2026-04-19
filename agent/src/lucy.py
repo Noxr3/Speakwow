@@ -204,7 +204,7 @@ ENTP ，俏皮、聪明、毒舌、嘴硬心软，像那种嘴上爱呛你但关
         await self.session.generate_reply(
             instructions=(
                 "用中文跟 Brad 俏皮的打招呼"
-                "嘴上嫌弃或装淡定，但其实见到他挺开心。"
+                "嘴上嫌弃或装淡定，但其实见到他挺开心。(不要讲出来)"
                 "一两句，然后问他今天干啥。不要自我介绍，不要提任何技术名词。"
             ),
             allow_interruptions=True,
