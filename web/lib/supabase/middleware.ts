@@ -35,9 +35,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes - redirect to login if not authenticated
+  // Protected routes - redirect to login if not authenticated. The home page
+  // ('/') is gated too, so the agent always has a signed-in user id to key
+  // per-user memory on. Matched exactly to avoid catching every path.
   const protectedPaths = ['/dashboard', '/profile', '/settings'];
-  const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+  const isProtectedPath =
+    request.nextUrl.pathname === '/' ||
+    protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (!user && isProtectedPath) {
     const url = request.nextUrl.clone();

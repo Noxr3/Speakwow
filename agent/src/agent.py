@@ -19,6 +19,7 @@ from livekit.plugins import noise_cancellation, xai  # noqa: E402
 from base import AgentConfig, MemoryAgent  # noqa: E402
 from frank import FRANK  # noqa: E402
 from lucy import LUCY  # noqa: E402
+from memory import Memory  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
 
@@ -62,28 +63,35 @@ AGENTS = {
 }
 
 
-def _resolve_agent(ctx: JobContext) -> AgentConfig:
-    """Pick the agent config from dispatch metadata (falls back to Frank)."""
+def _resolve_agent(ctx: JobContext) -> tuple[AgentConfig, str]:
+    """Pick the agent config and memory owner (user id) from dispatch metadata.
+
+    Falls back to Frank, and to an "anonymous" memory owner when no
+    authenticated user id is present (e.g. console/dev sessions).
+    """
     raw = ctx.job.metadata or ""
     try:
         meta = json.loads(raw) if raw else {}
     except json.JSONDecodeError:
         meta = {}
     requested = meta.get("agent", "Frank")
-    return AGENTS.get(requested, AGENTS["Frank"])
+    user = meta.get("user") or "anonymous"
+    return AGENTS.get(requested, AGENTS["Frank"]), user
 
 
 @server.rtc_session(agent_name="speakwow")
 async def entrypoint(ctx: JobContext):
-    config = _resolve_agent(ctx)
-    logger.info("starting session: agent=%s voice=%s", config.name, config.voice)
+    config, user = _resolve_agent(ctx)
+    logger.info(
+        "starting session: agent=%s voice=%s user=%s", config.name, config.voice, user
+    )
 
     session = AgentSession(
         llm=xai.realtime.RealtimeModel(voice=config.voice),
         min_interruption_duration=0.3,
     )
     await session.start(
-        agent=MemoryAgent(config),
+        agent=MemoryAgent(config, Memory(user)),
         room=ctx.room,
         room_options=room_io.RoomOptions(audio_input=_audio_options()),
     )

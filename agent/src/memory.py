@@ -13,17 +13,27 @@ volume in production for the store to survive redeploys.
 import json
 import logging
 import os
+import re
 import tempfile
 from pathlib import Path
 
 logger = logging.getLogger("memory")
+
+# Owner comes from external input (the authenticated user id), so confine it to
+# a safe filename: no path separators, no traversal.
+_UNSAFE = re.compile(r"[^A-Za-z0-9_-]")
+
+
+def _safe_owner(owner: str) -> str:
+    cleaned = _UNSAFE.sub("_", (owner or "").strip())[:128]
+    return cleaned or "anonymous"
 
 
 class Memory:
     def __init__(self, owner: str, *, directory: str | Path | None = None) -> None:
         directory = directory or os.getenv("MEMORY_DIR", ".memory")
         self._dir = Path(directory)
-        self._path = self._dir / f"{owner}.json"
+        self._path = self._dir / f"{_safe_owner(owner)}.json"
 
     def facts(self) -> list[str]:
         try:

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AccessToken, type AccessTokenOptions, type VideoGrant } from 'livekit-server-sdk';
 import { RoomAgentDispatch, RoomConfiguration } from '@livekit/protocol';
+import { createClient } from '@/lib/supabase/server';
 
 type ConnectionDetails = {
   serverUrl: string;
@@ -22,6 +23,15 @@ export async function POST(req: Request) {
     if (API_KEY === undefined) throw new Error('LIVEKIT_API_KEY is not defined');
     if (API_SECRET === undefined) throw new Error('LIVEKIT_API_SECRET is not defined');
 
+    // The signed-in user's id is the stable key for per-user agent memory.
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     let body: Record<string, unknown> = {};
     try {
       const text = await req.text();
@@ -34,14 +44,15 @@ export async function POST(req: Request) {
     const selected = ((body as any)?.selected_agent as string) ?? 'Frank';
     const agent = selected === 'Lucy' ? 'Lucy' : 'Frank';
 
-    const participantName = 'You';
-    const participantIdentity = `user_${Math.floor(Math.random() * 100_000)}`;
+    const participantName = user.email ?? 'You';
+    const participantIdentity = user.id;
     const roomName = `speakwow_${Math.floor(Math.random() * 100_000)}`;
 
     const participantToken = await createParticipantToken(
       { identity: participantIdentity, name: participantName },
       roomName,
-      agent
+      agent,
+      user.id
     );
 
     const data: ConnectionDetails = {
@@ -64,7 +75,8 @@ export async function POST(req: Request) {
 function createParticipantToken(
   userInfo: AccessTokenOptions,
   roomName: string,
-  selectedAgent: string
+  selectedAgent: string,
+  userId: string
 ): Promise<string> {
   const at = new AccessToken(API_KEY, API_SECRET, { ...userInfo, ttl: '15m' });
   const grant: VideoGrant = {
@@ -80,7 +92,7 @@ function createParticipantToken(
     agents: [
       new RoomAgentDispatch({
         agentName: DISPATCH_NAME,
-        metadata: JSON.stringify({ agent: selectedAgent }),
+        metadata: JSON.stringify({ agent: selectedAgent, user: userId }),
       }),
     ],
   });

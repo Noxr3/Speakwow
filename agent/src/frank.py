@@ -50,7 +50,6 @@ Memory:
 FRANK = AgentConfig(
     name="Frank",
     voice="Rex",
-    memory_owner="frank",
     instructions=INSTRUCTIONS,
     opening=lambda: f'Say exactly this to start the conversation:\n"{random.choice(OPENINGS)}"',
     memory_header="# What you already know about your friend",

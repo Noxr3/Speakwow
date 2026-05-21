@@ -214,7 +214,6 @@ def _greeting() -> str:
 LUCY = AgentConfig(
     name="Lucy",
     voice="Ara",
-    memory_owner="brad",
     instructions=INSTRUCTIONS,
     opening=_greeting,
     memory_header="# 你已经知道关于 Brad 的事",

@@ -25,7 +25,6 @@ logger = logging.getLogger("agent")
 class AgentConfig:
     name: str
     voice: str
-    memory_owner: str
     instructions: str
     # Returns the instruction passed to generate_reply on entry. A callable so
     # agents like Frank can pick a fresh random opening each session.
@@ -37,9 +36,9 @@ class AgentConfig:
 
 
 class MemoryAgent(Agent):
-    def __init__(self, config: AgentConfig, memory: Memory | None = None) -> None:
+    def __init__(self, config: AgentConfig, memory: Memory) -> None:
         self.config = config
-        self._memory = memory or Memory(config.memory_owner)
+        self._memory = memory
         instructions = config.instructions
         known = self._memory.as_prompt()
         if known:

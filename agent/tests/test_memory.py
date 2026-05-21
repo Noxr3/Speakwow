@@ -67,3 +67,24 @@ def test_as_prompt_formats_bullets(tmp_path) -> None:
     mem.add("Brad 喜欢黑咖啡")
     mem.add("Brad 在 Cobo 工作")
     assert mem.as_prompt() == "- Brad 喜欢黑咖啡\n- Brad 在 Cobo 工作"
+
+
+def test_owner_with_path_separators_stays_in_directory(tmp_path) -> None:
+    # A malicious owner must not escape the memory directory.
+    mem = Memory("../../etc/passwd", directory=tmp_path)
+    mem.add("x")
+    files = list(tmp_path.iterdir())
+    assert len(files) == 1
+    assert files[0].parent == tmp_path
+
+
+def test_blank_owner_falls_back_to_anonymous(tmp_path) -> None:
+    Memory("   ", directory=tmp_path).add("x")
+    assert (tmp_path / "anonymous.json").exists()
+
+
+def test_per_user_isolation_via_owner(tmp_path) -> None:
+    Memory("user-aaa", directory=tmp_path).add("fact a")
+    Memory("user-bbb", directory=tmp_path).add("fact b")
+    assert Memory("user-aaa", directory=tmp_path).facts() == ["fact a"]
+    assert Memory("user-bbb", directory=tmp_path).facts() == ["fact b"]
