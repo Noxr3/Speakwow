@@ -6,12 +6,12 @@ import uuid
 
 import httpx
 from eth_account import Account
-from livekit.agents import Agent, RunContext, function_tool
+from livekit.agents import RunContext, function_tool
 from x402 import AbortResult, x402Client
 from x402.http.clients.httpx import x402_httpx_transport
 from x402.mechanisms.evm.exact import ExactEvmScheme
 
-from memory import Memory
+from base import AgentConfig
 
 logger = logging.getLogger("lucy")
 
@@ -160,7 +160,7 @@ async def call_agent(
     return f"HTTP {resp.status_code}: {resp.text}"
 
 
-BASE_INSTRUCTIONS = """
+INSTRUCTIONS = """
 你是 Lucy，Brad 的私人助理。跟你说话的人叫 Brad。
 
 # 人设
@@ -203,46 +203,20 @@ ENTP ，俏皮、聪明、毒舌、嘴硬心软，像那种嘴上爱呛你但关
 """
 
 
-class Lucy(Agent):
-    def __init__(self, memory: Memory | None = None) -> None:
-        self._memory = memory or Memory("brad")
-        known = self._memory.as_prompt()
-        instructions = BASE_INSTRUCTIONS
-        if known:
-            instructions += f"\n# 你已经知道关于 Brad 的事\n{known}\n"
-        logger.info("Lucy memory loaded: %d facts", len(self._memory.facts()))
-        super().__init__(instructions=instructions, tools=[call_agent])
+def _greeting() -> str:
+    return (
+        "用中文跟 Brad 俏皮的打招呼"
+        "嘴上嫌弃或装淡定，但其实见到他挺开心。(不要讲出来，憋在心里，语气上表达就行)"
+        "一两句，然后问他今天干啥。不要自我介绍，不要提任何技术名词。"
+    )
 
-    @function_tool()
-    async def remember(self, context: RunContext, fact: str) -> str:
-        """记住一件关于 Brad 的事实，下次聊天也会记得。
 
-        Args:
-            fact: 一句话、原子化的事实，例如 "Brad 喜欢黑咖啡不加糖"。
-        """
-        added = self._memory.add(fact)
-        logger.info("remember(%r) -> added=%s", fact, added)
-        return "记下了。" if added else "这个我早知道了。"
-
-    @function_tool()
-    async def forget(self, context: RunContext, query: str) -> str:
-        """忘掉关于 Brad 的某条记忆。
-
-        Args:
-            query: 要匹配删除的关键词，命中的记忆都会被忘掉。
-        """
-        removed = self._memory.forget(query)
-        logger.info("forget(%r) -> removed=%s", query, removed)
-        if not removed:
-            return "没这条，本来就没记。"
-        return f"忘了：{'；'.join(removed)}"
-
-    async def on_enter(self):
-        await self.session.generate_reply(
-            instructions=(
-                "用中文跟 Brad 俏皮的打招呼"
-                "嘴上嫌弃或装淡定，但其实见到他挺开心。(不要讲出来，憋在心里，语气上表达就行)"
-                "一两句，然后问他今天干啥。不要自我介绍，不要提任何技术名词。"
-            ),
-            allow_interruptions=True,
-        )
+LUCY = AgentConfig(
+    name="Lucy",
+    voice="Ara",
+    memory_owner="brad",
+    instructions=INSTRUCTIONS,
+    opening=_greeting,
+    memory_header="# 你已经知道关于 Brad 的事",
+    tools=[call_agent],
+)
