@@ -19,7 +19,7 @@ from livekit.plugins import noise_cancellation, xai  # noqa: E402
 from base import AgentConfig, MemoryAgent  # noqa: E402
 from frank import FRANK  # noqa: E402
 from lucy import LUCY  # noqa: E402
-from memory import Memory  # noqa: E402
+from memory import make_memory  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
 
@@ -82,8 +82,16 @@ def _resolve_agent(ctx: JobContext) -> tuple[AgentConfig, str]:
 @server.rtc_session(agent_name="speakwow")
 async def entrypoint(ctx: JobContext):
     config, user = _resolve_agent(ctx)
+
+    memory = make_memory(user)
+    known = await memory.as_prompt()
     logger.info(
-        "starting session: agent=%s voice=%s user=%s", config.name, config.voice, user
+        "starting session: agent=%s voice=%s user=%s memory=%s facts=%d",
+        config.name,
+        config.voice,
+        user,
+        type(memory).__name__,
+        known.count("\n- ") + (1 if known else 0),
     )
 
     session = AgentSession(
@@ -91,7 +99,7 @@ async def entrypoint(ctx: JobContext):
         min_interruption_duration=0.3,
     )
     await session.start(
-        agent=MemoryAgent(config, Memory(user)),
+        agent=MemoryAgent(config, memory, known),
         room=ctx.room,
         room_options=room_io.RoomOptions(audio_input=_audio_options()),
     )

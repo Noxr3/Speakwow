@@ -3,7 +3,7 @@ from livekit.agents import AgentSession, inference, llm
 
 from base import MemoryAgent
 from frank import FRANK
-from memory import Memory
+from memory import FileMemory
 
 
 def _llm() -> llm.LLM:
@@ -12,7 +12,7 @@ def _llm() -> llm.LLM:
 
 def _agent(tmp_path) -> MemoryAgent:
     # Isolated, empty memory so evals don't depend on any persisted facts.
-    return MemoryAgent(FRANK, memory=Memory("test", directory=tmp_path))
+    return MemoryAgent(FRANK, FileMemory("test", directory=tmp_path))
 
 
 @pytest.mark.asyncio

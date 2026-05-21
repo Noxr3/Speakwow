@@ -16,9 +16,11 @@ from typing import Any
 
 from livekit.agents import Agent, RunContext, function_tool
 
-from memory import Memory
+from memory import FileMemory, SupabaseMemory
 
 logger = logging.getLogger("agent")
+
+MemoryStore = FileMemory | SupabaseMemory
 
 
 @dataclass
@@ -36,16 +38,14 @@ class AgentConfig:
 
 
 class MemoryAgent(Agent):
-    def __init__(self, config: AgentConfig, memory: Memory) -> None:
+    def __init__(
+        self, config: AgentConfig, memory: MemoryStore, known: str = ""
+    ) -> None:
         self.config = config
         self._memory = memory
         instructions = config.instructions
-        known = self._memory.as_prompt()
         if known:
             instructions += f"\n{config.memory_header}\n{known}\n"
-        logger.info(
-            "%s memory loaded: %d facts", config.name, len(self._memory.facts())
-        )
         super().__init__(instructions=instructions, tools=config.tools)
 
     @function_tool()
@@ -55,7 +55,7 @@ class MemoryAgent(Agent):
         Args:
             fact: One short, atomic fact, e.g. "User likes black coffee, no sugar".
         """
-        added = self._memory.add(fact)
+        added = await self._memory.add(fact)
         logger.info("[%s] remember(%r) -> added=%s", self.config.name, fact, added)
         return "saved" if added else "already known"
 
@@ -66,7 +66,7 @@ class MemoryAgent(Agent):
         Args:
             query: Keyword to match; every fact containing it is removed.
         """
-        removed = self._memory.forget(query)
+        removed = await self._memory.forget(query)
         logger.info("[%s] forget(%r) -> removed=%s", self.config.name, query, removed)
         if not removed:
             return "nothing matched"
