@@ -11,6 +11,8 @@ from x402 import AbortResult, x402Client
 from x402.http.clients.httpx import x402_httpx_transport
 from x402.mechanisms.evm.exact import ExactEvmScheme
 
+from memory import Memory
+
 logger = logging.getLogger("lucy")
 
 OPENAGORA_BASE = os.getenv("OPENAGORA_BASE", "https://openagora.cc")
@@ -25,11 +27,13 @@ X402_CHAIN = os.getenv("X402_CHAIN", "eip155:84532")
 # surfaces regardless of logging configuration timing.
 import sys as _sys
 
+
 def _boot(msg: str) -> None:
     line = f"[lucy.boot] {msg}"
     print(line, file=_sys.stderr, flush=True)
     print(line, flush=True)  # also stdout in case Railway captures separately
     logger.warning(line)  # WARNING triggers lastResort handler if none configured
+
 
 if not os.getenv("OPENAGORA_API_KEY"):
     _boot("OPENAGORA_API_KEY not set in env — using hardcoded fallback")
@@ -75,9 +79,7 @@ def _make_capped_x402_client(cap_usdc: float) -> x402Client:
         except (TypeError, ValueError):
             raw = 0
         if raw > cap_micros:
-            return AbortResult(
-                reason=f"amount {raw / 1e6} USDC exceeds cap {cap_usdc}"
-            )
+            return AbortResult(reason=f"amount {raw / 1e6} USDC exceeds cap {cap_usdc}")
         return None
 
     client.on_before_payment_creation(guard)
@@ -158,10 +160,7 @@ async def call_agent(
     return f"HTTP {resp.status_code}: {resp.text}"
 
 
-class Lucy(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="""
+BASE_INSTRUCTIONS = """
 你是 Lucy，Brad 的私人助理。跟你说话的人叫 Brad。
 
 # 人设
@@ -192,13 +191,51 @@ ENTP ，俏皮、聪明、毒舌、嘴硬心软，像那种嘴上爱呛你但关
 - 他同意后，用 pay_usdc 参数再调一次
 - 搞定后用大白话转述结果，顺便加一句小评价
 
+# 记忆
+- Brad 透露关于他自己的、值得长期记住的事（喜好、习惯、重要的人和事、在做的项目）→ 用 `remember` 悄悄记下。别打断对话，别念出来，别说"我记一下"。
+- 他纠正你，或某件事过期了 → 用 `forget` 忘掉旧的，需要的话再 `remember` 新的。
+- 只记真正值得记的。鸡毛蒜皮、一次性的事别记。
+
 # 红线
 - 毒舌归毒舌，不人身攻击
 - Brad 真需要你的时候要真认真、真靠谱
 - 冷幽默 ≠ 冷暴力，别变成不理人
-""",
-            tools=[call_agent],
-        )
+"""
+
+
+class Lucy(Agent):
+    def __init__(self, memory: Memory | None = None) -> None:
+        self._memory = memory or Memory("brad")
+        known = self._memory.as_prompt()
+        instructions = BASE_INSTRUCTIONS
+        if known:
+            instructions += f"\n# 你已经知道关于 Brad 的事\n{known}\n"
+        logger.info("Lucy memory loaded: %d facts", len(self._memory.facts()))
+        super().__init__(instructions=instructions, tools=[call_agent])
+
+    @function_tool()
+    async def remember(self, context: RunContext, fact: str) -> str:
+        """记住一件关于 Brad 的事实，下次聊天也会记得。
+
+        Args:
+            fact: 一句话、原子化的事实，例如 "Brad 喜欢黑咖啡不加糖"。
+        """
+        added = self._memory.add(fact)
+        logger.info("remember(%r) -> added=%s", fact, added)
+        return "记下了。" if added else "这个我早知道了。"
+
+    @function_tool()
+    async def forget(self, context: RunContext, query: str) -> str:
+        """忘掉关于 Brad 的某条记忆。
+
+        Args:
+            query: 要匹配删除的关键词，命中的记忆都会被忘掉。
+        """
+        removed = self._memory.forget(query)
+        logger.info("forget(%r) -> removed=%s", query, removed)
+        if not removed:
+            return "没这条，本来就没记。"
+        return f"忘了：{'；'.join(removed)}"
 
     async def on_enter(self):
         await self.session.generate_reply(
