@@ -9,6 +9,7 @@ import {
   AgentControlBar,
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
+import type { SelectableAgent } from '@/components/app/app';
 import { ChatTranscript } from '@/components/app/chat-transcript';
 import { TileLayout } from '@/components/app/tile-layout';
 import { cn } from '@/lib/shadcn/utils';
@@ -17,6 +18,11 @@ import { Shimmer } from '../ai-elements/shimmer';
 const MotionBottom = motion.create('div');
 
 const MotionMessage = motion.create(Shimmer);
+
+const AGENT_LABELS: Record<SelectableAgent, string> = {
+  Frank: 'English conversation partner',
+  Lucy: 'OpenAgora agent',
+};
 
 const BOTTOM_VIEW_MOTION_PROPS = {
   variants: {
@@ -84,10 +90,12 @@ export function Fade({ top = false, bottom = false, className }: FadeProps) {
 
 interface SessionViewProps {
   appConfig: AppConfig;
+  selectedAgent: SelectableAgent;
 }
 
 export const SessionView = ({
   appConfig,
+  selectedAgent,
   ...props
 }: React.ComponentProps<'section'> & SessionViewProps) => {
   const session = useSessionContext();
@@ -138,6 +146,17 @@ export const SessionView = ({
         />
       </div>
       <Fade top className="absolute inset-x-4 top-0 z-10 h-40" />
+      {/* Agent indicator: prominently identifies the current conversation agent (Frank/Lucy)
+          so users with multiple tabs open never continue a session in the wrong context. */}
+      <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center">
+        <div className="bg-background/70 flex items-center gap-2 rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase backdrop-blur-md">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+          <span className="text-foreground">{selectedAgent}</span>
+          <span className="text-muted-foreground font-normal normal-case">
+            {AGENT_LABELS[selectedAgent]}
+          </span>
+        </div>
+      </div>
       {/* transcript */}
       <ChatTranscript
         hidden={!chatOpen}
