@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useSessionContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
+import type { SelectableAgent } from '@/components/app/app';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
 
@@ -27,8 +28,6 @@ const VIEW_MOTION_PROPS = {
   },
 };
 
-import type { SelectableAgent } from '@/components/app/app';
-
 interface ViewControllerProps {
   appConfig: AppConfig;
   selectedAgent: SelectableAgent;
@@ -52,7 +51,12 @@ export function ViewController({ appConfig, selectedAgent, onSelectAgent }: View
       )}
       {/* Session view */}
       {isConnected && (
-        <MotionSessionView key="session-view" {...VIEW_MOTION_PROPS} appConfig={appConfig} />
+        <MotionSessionView
+          key="session-view"
+          {...VIEW_MOTION_PROPS}
+          appConfig={appConfig}
+          selectedAgent={selectedAgent}
+        />
       )}
     </AnimatePresence>
   );
