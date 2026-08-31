@@ -21,5 +21,8 @@ jobs:
         with:
           version: latest
 
+      - name: Start local Supabase stack
+        run: supabase start
+
       - name: Dry-run migrations against a fresh local Postgres
         run: supabase db reset
