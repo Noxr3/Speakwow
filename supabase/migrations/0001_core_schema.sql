@@ -15,7 +15,7 @@ create type public.attempt_type as enum (
   'scenario', 'talkabout', 'repeat', 'word', 'dictation', 'write', 'imgtalk'
 );
 
-create type public.weakness_source as enum ('live_session', 'exercise');
+create type public.weakness_source as enum ('live_session', 'exercise', 'assessment', 'teacher');
 
 create type public.submission_status as enum ('pending', 'submitted', 'graded');
 
@@ -272,6 +272,10 @@ as $$
     )
   );
 $$;
+
+-- 快照函数仅登录用户与服务端可调（agent 走 service_role），anon/public 不可见
+revoke execute on function public.get_student_snapshot(uuid) from public, anon;
+grant execute on function public.get_student_snapshot(uuid) to authenticated, service_role;
 
 -- ============ RLS ============
 -- web 端一律 anon key + 下列 policy；agent 用 service_role（仅 Railway 持有，
