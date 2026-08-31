@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "speakwow-agent"
+version = "1.0.0"
+description = "Speakwow home-tutor voice agents (Frank/Lucy) on LiveKit"
+requires-python = ">=3.10, <3.14"
+
+dependencies = [
+    "httpx>=0.28.1",
+    "livekit>=1.0.23",
+    "livekit-agents[mcp,silero,turn-detector]~=1.3",
+    "livekit-plugins-noise-cancellation~=0.2",
+    "livekit-plugins-xai~=1.3",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "live: requires external LLM/API access; skipped in CI (run locally: pytest -m live)",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B", "A", "C4", "UP", "SIM", "RUF"]
+ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

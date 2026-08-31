@@ -1,5 +1,30 @@
-.DS_Store
+# env
 .env
 .env.*
 !.env.example
+
+# deps
+node_modules/
+.pnpm-store/
+
+# next
+.next/
+out/
+next-env.d.ts
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# build/tooling
+dist/
+.turbo/
+coverage/
+
+# misc
+.DS_Store
 .claude/
+*.log

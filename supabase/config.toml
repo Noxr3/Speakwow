@@ -1,0 +1,20 @@
+# Speakwow local Supabase stack (dev environment)
+# Usage: supabase start && supabase db reset
+project_id = "speakwow"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+
+[auth.external.google]
+enabled = false
