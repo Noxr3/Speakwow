@@ -26,3 +26,11 @@ jobs:
 
       - name: Dry-run migrations against a fresh local Postgres
         run: supabase db reset
+
+      - name: SQL regression tests (each file runs in a transaction and rolls back)
+        run: |
+          for f in supabase/tests/*.sql; do
+            echo "::group::$f"
+            psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -q -f "$f"
+            echo "::endgroup::"
+          done

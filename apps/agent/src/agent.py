@@ -1,15 +1,25 @@
-"""Entrypoint: one AgentServer, one dispatch name ("speakwow"), but routes to
-Frank or Lucy based on the `agent` field in the job's dispatch metadata.
+"""Entrypoint: one AgentServer, one dispatch name ("speakwow").
+
+The web app's token route writes the job metadata, signed into the
+participant token: which teacher (`persona`, or the legacy `agent` display
+name) and, for a signed-in student, `student_id`. With a student id and
+Supabase configured, the teacher starts from what it remembers and writes
+the lesson back to memory when the call ends.
 """
 
+from __future__ import annotations
+
+import asyncio
 import json
 import logging
+import os
+import sys
+from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-# Load env vars BEFORE importing frank/lucy — those modules read os.getenv at
-# import time. On Railway env vars come from the dashboard so this is a no-op;
-# only matters for local dev where .env.local holds the keys.
+# Load env vars before anything reads them. On Railway env vars come from the
+# dashboard so this is a no-op; it matters for local dev (.env.local).
 load_dotenv(".env.local")
 
 from livekit import rtc  # noqa: E402
@@ -20,28 +30,42 @@ from livekit.agents import (  # noqa: E402
     cli,
     room_io,
 )
-from livekit.plugins import noise_cancellation, xai  # noqa: E402
+from livekit.plugins import noise_cancellation  # noqa: E402
 
-from frank import Frank  # noqa: E402
-from lucy import Lucy  # noqa: E402
+from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
+from coach import Coach, build_state  # noqa: E402
+from lesson import current_unit, unit_goals  # noqa: E402
+from memory import SupabaseMemory, is_uuid  # noqa: E402
+from personas import Persona, load_personas, resolve_persona  # noqa: E402
+from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
+from reflect import Reflector, Turn  # noqa: E402
+from stickers import load_stickers, make_sticker_tool  # noqa: E402
+from teacher import Teacher  # noqa: E402
+from widgets import make_widget_tool  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
 
-# Startup env check — print directly so it shows up before logging is configured.
-import os as _os  # noqa: E402
-import sys as _sys  # noqa: E402
-
-_REQUIRED = ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "XAI_API_KEY"]
-_missing = [k for k in _REQUIRED if not _os.getenv(k)]
-_msg = (
-    f"[agent.boot] ERROR missing required env vars: {_missing}"
+_REQUIRED = ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"]
+_missing = [k for k in _REQUIRED if not os.getenv(k)]
+_optional = {
+    "provider": default_provider(),
+    "operator_key": bool(os.getenv(f"{default_provider().upper()}_API_KEY")),
+    "byok": bool(secret_from_env()),
+    "memory": bool(SupabaseMemory.from_env()),
+    "reflection": bool(Reflector.from_env()),
+    "coach": bool(Coach.from_env()),
+}
+# print, so it shows before logging is configured (Railway boot logs).
+print(
+    f"[agent.boot] missing required env: {_missing}"
     if _missing
-    else f"[agent.boot] all required env vars present: {_REQUIRED}"
+    else f"[agent.boot] required env present; optional: {_optional}",
+    file=sys.stderr,
+    flush=True,
 )
-print(_msg, file=_sys.stderr, flush=True)
-print(_msg, flush=True)
-logger.warning(_msg)
 
+PERSONAS = load_personas()
+STICKERS = load_stickers()
 
 server = AgentServer(
     # Keep a tiny idle pool — Railway containers are small and each worker
@@ -60,38 +84,151 @@ def _audio_options() -> room_io.AudioInputOptions:
     )
 
 
-# (Agent class, voice) per requested agent.
-AGENTS = {
-    "Frank": (Frank, "Rex"),
-    "Lucy": (Lucy, "Ara"),
-}
+@dataclass(frozen=True)
+class JobRequest:
+    persona: Persona
+    student_id: str | None
+    user_key: UserKey | None
+    mode: str  # "free" | "course"
 
 
-def _resolve_agent(ctx: JobContext) -> tuple[type, str]:
-    """Pick the agent from dispatch metadata (falls back to Frank)."""
-    raw = ctx.job.metadata or ""
+def parse_job_metadata(raw: str | None) -> JobRequest:
+    """Read what the token route signed into the job. Bad input degrades to a
+    guest free-talk session with the default teacher, never a crash."""
     try:
         meta = json.loads(raw) if raw else {}
     except json.JSONDecodeError:
         meta = {}
-    requested = meta.get("agent", "Frank")
-    return AGENTS.get(requested, AGENTS["Frank"])
+    if not isinstance(meta, dict):
+        meta = {}
+    persona = resolve_persona(PERSONAS, meta.get("persona") or meta.get("agent"))
+    student_id = meta.get("student_id") if is_uuid(meta.get("student_id")) else None
+    user_key = None
+    if sealed := meta.get("byok"):
+        secret = secret_from_env()
+        user_key = open_sealed(sealed, secret) if secret else None
+        if user_key and user_key.provider not in PROVIDERS:
+            user_key = None
+    mode = "course" if meta.get("mode") == "course" and student_id else "free"
+    return JobRequest(persona, student_id, user_key, mode)
+
+
+def transcript(session: AgentSession) -> list[Turn]:
+    turns: list[Turn] = []
+    for item in session.history.items:
+        role = getattr(item, "role", None)
+        text = getattr(item, "text_content", None)
+        if role in ("user", "assistant") and text:
+            turns.append(Turn(role=role, text=text))
+    return turns
 
 
 @server.rtc_session(agent_name="speakwow")
-async def entrypoint(ctx: JobContext):
-    agent_cls, voice = _resolve_agent(ctx)
-    logger.info("starting session: agent=%s voice=%s", agent_cls.__name__, voice)
+async def entrypoint(ctx: JobContext) -> None:
+    job = parse_job_metadata(ctx.job.metadata)
+    persona, student_id, user_key = job.persona, job.student_id, job.user_key
+    provider = user_key.provider if user_key else default_provider()
+    memory = SupabaseMemory.from_env() if student_id else None
+
+    snapshot = session_id = None
+    if memory and student_id:
+        snapshot = await memory.load_snapshot(student_id)
+    unit = current_unit(snapshot) if job.mode == "course" else None
+    mode = "course" if unit else "free"
+    if memory and student_id:
+        session_id = await memory.start_session(
+            student_id, persona.id, ctx.room.name, mode, unit["id"] if unit else None
+        )
+    logger.info(
+        "starting session: persona=%s provider=%s byok=%s student=%s remembered=%s mode=%s",
+        persona.id,
+        provider,
+        bool(user_key),
+        bool(student_id),
+        bool(snapshot),
+        mode,
+    )
 
     session = AgentSession(
-        llm=xai.realtime.RealtimeModel(voice=voice),
+        llm=build_realtime_model(persona, provider, user_key.key if user_key else None),
         min_interruption_duration=0.3,
     )
+
+    if memory and student_id and session_id:
+        known_level = ((snapshot or {}).get("profile") or {}).get("level")
+        lesson = (
+            {"course_id": snapshot["current_course"]["id"], "unit": unit}
+            if unit
+            else None
+        )
+
+        async def remember_lesson() -> None:
+            turns = transcript(session)
+            reflector = Reflector.from_env()
+            reflection = (
+                await reflector.reflect(turns, persona.display_name, unit_goals(unit))
+                if reflector
+                else None
+            )
+            await memory.finish_session(
+                student_id=student_id,
+                session_id=session_id,
+                turns=turns,
+                reflection=reflection,
+                known_level=known_level,
+                lesson=lesson,
+            )
+            await memory.aclose()
+            logger.info(
+                "lesson saved: turns=%d reflected=%s", len(turns), bool(reflection)
+            )
+
+        ctx.add_shutdown_callback(remember_lesson)
+
+    teacher = Teacher(
+        persona,
+        snapshot,
+        STICKERS,
+        tools=[make_sticker_tool(STICKERS), make_widget_tool()],
+        mode=mode,
+    )
+    if coach := Coach.from_env():
+        attach_coach(ctx, session, teacher, coach, unit)
+
     await session.start(
-        agent=agent_cls(),
+        agent=teacher,
         room=ctx.room,
         room_options=room_io.RoomOptions(audio_input=_audio_options()),
     )
+
+
+def attach_coach(
+    ctx: JobContext,
+    session: AgentSession,
+    teacher: Teacher,
+    coach: Coach,
+    unit: dict | None,
+) -> None:
+    """After each student turn, ask the sidecar in the background (coach.py).
+    One check at a time; a turn that lands while one runs is skipped."""
+    goal = "; ".join(g.get("text", "") for g in unit_goals(unit)) if unit else None
+    running: set[asyncio.Task] = set()
+
+    async def check() -> None:
+        state = build_state(transcript(session), teacher.persona.display_name, goal)
+        advice = await coach.advise(state)
+        if advice is not None:
+            await teacher.set_coaching_note(advice.text())
+
+    @session.on("conversation_item_added")
+    def _on_item(event) -> None:
+        if getattr(event.item, "role", None) != "user" or running:
+            return
+        task = asyncio.create_task(check())
+        running.add(task)
+        task.add_done_callback(running.discard)
+
+    ctx.add_shutdown_callback(coach.aclose)
 
 
 if __name__ == "__main__":

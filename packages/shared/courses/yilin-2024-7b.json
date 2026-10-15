@@ -1,0 +1,521 @@
+{
+  "slug": "yilin-2024-7b",
+  "title": "译林版初中英语 七年级下册（7B，新课标）",
+  "description": "Yilin Press junior-high English 7B, the edition revised for the 2022 national curriculum standard and used in Jiangsu. Outline only: unit titles, topics, grammar points, language functions and short word lists; no textbook text. Speaking tasks are original to Speakwow. Theme categories (人与自我 / 人与社会 / 人与自然) are our own classification against the standard, not the teacher's book.",
+  "subject": "english",
+  "grade": "7",
+  "term": "B",
+  "region": "江苏",
+  "publisher": "译林出版社",
+  "edition": "2024",
+  "standard": "义务教育英语课程标准（2022年版）三级",
+  "units": [
+    {
+      "position": 1,
+      "title": "Home",
+      "title_zh": "家",
+      "theme": "人与自我",
+      "topic": "Types of houses; homes around the world and around China",
+      "goals": [
+        {
+          "id": "u1-g1",
+          "kind": "speaking",
+          "text": "Describe types of houses and rooms"
+        },
+        {
+          "id": "u1-g2",
+          "kind": "speaking",
+          "text": "Compare homes in different places"
+        },
+        {
+          "id": "u1-g3",
+          "kind": "speaking",
+          "text": "Use numbers for floors, dates and order"
+        },
+        {
+          "id": "u1-g4",
+          "kind": "grammar",
+          "text": "Use cardinal numbers"
+        },
+        {
+          "id": "u1-g5",
+          "kind": "grammar",
+          "text": "Use ordinal numbers"
+        },
+        {
+          "id": "u1-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: cottage, farmhouse, town house, balcony, bedroom"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "cottage",
+          "farmhouse",
+          "town house",
+          "balcony",
+          "bedroom",
+          "living room",
+          "carpet",
+          "yard",
+          "village"
+        ],
+        "grammar": [
+          "Cardinal numbers",
+          "Ordinal numbers"
+        ],
+        "functions": [
+          "Describe types of houses and rooms",
+          "Compare homes in different places",
+          "Use numbers for floors, dates and order"
+        ],
+        "speaking_tasks": [
+          "Describe your home room by room",
+          "Describe your dream home"
+        ]
+      }
+    },
+    {
+      "position": 2,
+      "title": "Neighbourhood",
+      "title_zh": "社区／邻里",
+      "theme": "人与社会",
+      "topic": "My neighbourhood; good neighbours helping each other",
+      "goals": [
+        {
+          "id": "u2-g1",
+          "kind": "speaking",
+          "text": "Describe a neighbourhood and its facilities"
+        },
+        {
+          "id": "u2-g2",
+          "kind": "speaking",
+          "text": "Talk about how neighbours help each other"
+        },
+        {
+          "id": "u2-g3",
+          "kind": "speaking",
+          "text": "Talk about plans and predictions"
+        },
+        {
+          "id": "u2-g4",
+          "kind": "grammar",
+          "text": "Use simple future tense with 'will'"
+        },
+        {
+          "id": "u2-g5",
+          "kind": "grammar",
+          "text": "Use simple future tense with 'be going to'"
+        },
+        {
+          "id": "u2-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: neighbourhood, neighbour, community, volunteer, police station"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "neighbourhood",
+          "neighbour",
+          "community",
+          "volunteer",
+          "police station",
+          "restaurant",
+          "engineer",
+          "washing machine",
+          "fridge",
+          "laptop"
+        ],
+        "grammar": [
+          "Simple future tense with 'will'",
+          "Simple future tense with 'be going to'"
+        ],
+        "functions": [
+          "Describe a neighbourhood and its facilities",
+          "Talk about how neighbours help each other",
+          "Talk about plans and predictions"
+        ],
+        "speaking_tasks": [
+          "Describe your neighbourhood",
+          "Plan next weekend: what will you do?"
+        ]
+      }
+    },
+    {
+      "position": 3,
+      "title": "My hometown",
+      "title_zh": "我的家乡",
+      "theme": "人与社会",
+      "topic": "Hometowns and places of interest (e.g. Beijing)",
+      "goals": [
+        {
+          "id": "u3-g1",
+          "kind": "speaking",
+          "text": "Introduce your hometown and its places of interest"
+        },
+        {
+          "id": "u3-g2",
+          "kind": "speaking",
+          "text": "Say where places are"
+        },
+        {
+          "id": "u3-g3",
+          "kind": "speaking",
+          "text": "Write a simple travel guide"
+        },
+        {
+          "id": "u3-g4",
+          "kind": "grammar",
+          "text": "Use articles a / an / the"
+        },
+        {
+          "id": "u3-g5",
+          "kind": "grammar",
+          "text": "Use prepositions of place"
+        },
+        {
+          "id": "u3-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: capital, palace, emperor, courtyard, place of interest"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "capital",
+          "palace",
+          "emperor",
+          "courtyard",
+          "place of interest",
+          "stadium",
+          "theatre",
+          "tower",
+          "shopkeeper"
+        ],
+        "grammar": [
+          "Articles a / an / the",
+          "Prepositions of place"
+        ],
+        "functions": [
+          "Introduce your hometown and its places of interest",
+          "Say where places are",
+          "Write a simple travel guide"
+        ],
+        "speaking_tasks": [
+          "Be a tour guide for your hometown",
+          "Give directions from school to a place nearby"
+        ]
+      }
+    },
+    {
+      "position": 4,
+      "title": "Chinese folk art",
+      "title_zh": "中国民间艺术",
+      "theme": "人与社会",
+      "topic": "Traditional Chinese crafts (e.g. paper-cutting)",
+      "goals": [
+        {
+          "id": "u4-g1",
+          "kind": "speaking",
+          "text": "Name and describe traditional crafts"
+        },
+        {
+          "id": "u4-g2",
+          "kind": "speaking",
+          "text": "Explain how a craft is made"
+        },
+        {
+          "id": "u4-g3",
+          "kind": "speaking",
+          "text": "Express appreciation of folk art"
+        },
+        {
+          "id": "u4-g4",
+          "kind": "grammar",
+          "text": "Use noun + 's (possessive nouns)"
+        },
+        {
+          "id": "u4-g5",
+          "kind": "grammar",
+          "text": "Use possessive adjectives and possessive pronouns"
+        },
+        {
+          "id": "u4-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: paper-cut, clay, teapot, woodcarving, craftsperson"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "paper-cut",
+          "clay",
+          "teapot",
+          "woodcarving",
+          "craftsperson",
+          "handicraft",
+          "Chinese knot",
+          "opera",
+          "folk",
+          "inkstick"
+        ],
+        "grammar": [
+          "Noun + 's (possessive nouns)",
+          "Possessive adjectives and possessive pronouns"
+        ],
+        "functions": [
+          "Name and describe traditional crafts",
+          "Explain how a craft is made",
+          "Express appreciation of folk art"
+        ],
+        "speaking_tasks": [
+          "Explain a Chinese craft to a friend from abroad",
+          "Whose is it? A quick possessives game"
+        ]
+      }
+    },
+    {
+      "position": 5,
+      "title": "Animal friends",
+      "title_zh": "动物朋友",
+      "theme": "人与自然",
+      "topic": "Animals and pets; animal facts",
+      "goals": [
+        {
+          "id": "u5-g1",
+          "kind": "speaking",
+          "text": "Describe animals and pets"
+        },
+        {
+          "id": "u5-g2",
+          "kind": "speaking",
+          "text": "Talk about ability, permission and possibility"
+        },
+        {
+          "id": "u5-g3",
+          "kind": "speaking",
+          "text": "Read and write short poems about animals"
+        },
+        {
+          "id": "u5-g4",
+          "kind": "grammar",
+          "text": "Use using adjectives (attributive and predicative)"
+        },
+        {
+          "id": "u5-g5",
+          "kind": "grammar",
+          "text": "Use using can, could and may"
+        },
+        {
+          "id": "u5-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: insect, honeybee, butterfly, wing, honey"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "insect",
+          "honeybee",
+          "butterfly",
+          "wing",
+          "honey",
+          "parrot",
+          "goldfish",
+          "giraffe",
+          "snake",
+          "guinea pig"
+        ],
+        "grammar": [
+          "Using adjectives (attributive and predicative)",
+          "Using can, could and may"
+        ],
+        "functions": [
+          "Describe animals and pets",
+          "Talk about ability, permission and possibility",
+          "Read and write short poems about animals"
+        ],
+        "speaking_tasks": [
+          "Describe a pet or a favourite animal",
+          "What can these animals do?"
+        ]
+      }
+    },
+    {
+      "position": 6,
+      "title": "Beautiful landscapes",
+      "title_zh": "美丽的风景",
+      "theme": "人与自然",
+      "topic": "Landscapes and landforms (incl. landscapes of China)",
+      "goals": [
+        {
+          "id": "u6-g1",
+          "kind": "speaking",
+          "text": "Describe different landscapes"
+        },
+        {
+          "id": "u6-g2",
+          "kind": "speaking",
+          "text": "Express strong feelings"
+        },
+        {
+          "id": "u6-g3",
+          "kind": "speaking",
+          "text": "Introduce landscapes of China"
+        },
+        {
+          "id": "u6-g4",
+          "kind": "grammar",
+          "text": "Use indefinite pronouns"
+        },
+        {
+          "id": "u6-g5",
+          "kind": "grammar",
+          "text": "Use exclamations with what and how"
+        },
+        {
+          "id": "u6-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: ocean, desert, forest, plain, rainforest"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "ocean",
+          "desert",
+          "forest",
+          "plain",
+          "rainforest",
+          "waterfall",
+          "landform",
+          "sandstone",
+          "sunrise",
+          "rainbow"
+        ],
+        "grammar": [
+          "Indefinite pronouns",
+          "Exclamations with what and how"
+        ],
+        "functions": [
+          "Describe different landscapes",
+          "Express strong feelings",
+          "Introduce landscapes of China"
+        ],
+        "speaking_tasks": [
+          "Describe the most beautiful place you have seen",
+          "Exclamation round: 'What a … !' / 'How … !'"
+        ]
+      }
+    },
+    {
+      "position": 7,
+      "title": "Outdoor fun",
+      "title_zh": "户外乐趣",
+      "theme": "人与自然",
+      "topic": "Outdoor activities and trips (e.g. a cycling trip)",
+      "goals": [
+        {
+          "id": "u7-g1",
+          "kind": "speaking",
+          "text": "Talk about outdoor activities"
+        },
+        {
+          "id": "u7-g2",
+          "kind": "speaking",
+          "text": "Describe a past trip or experience"
+        },
+        {
+          "id": "u7-g3",
+          "kind": "speaking",
+          "text": "Plan an outdoor activity"
+        },
+        {
+          "id": "u7-g4",
+          "kind": "grammar",
+          "text": "Use simple past tense (I)"
+        },
+        {
+          "id": "u7-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: cycle, hike, skate, ski, horse riding"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "cycle",
+          "hike",
+          "skate",
+          "ski",
+          "horse riding",
+          "picnic",
+          "campsite",
+          "sleeping bag",
+          "birdwatching",
+          "binoculars"
+        ],
+        "grammar": [
+          "Simple past tense (I)"
+        ],
+        "functions": [
+          "Talk about outdoor activities",
+          "Describe a past trip or experience",
+          "Plan an outdoor activity"
+        ],
+        "speaking_tasks": [
+          "Tell the story of a trip you took",
+          "Plan an outdoor day with friends"
+        ]
+      }
+    },
+    {
+      "position": 8,
+      "title": "Wonderland",
+      "title_zh": "奇境／仙境",
+      "theme": "人与社会",
+      "topic": "Fantasy stories (e.g. Alice in Wonderland)",
+      "goals": [
+        {
+          "id": "u8-g1",
+          "kind": "speaking",
+          "text": "Tell or retell a story in the past"
+        },
+        {
+          "id": "u8-g2",
+          "kind": "speaking",
+          "text": "Talk about characters and plot in fantasy stories"
+        },
+        {
+          "id": "u8-g3",
+          "kind": "grammar",
+          "text": "Use simple past tense (II)"
+        },
+        {
+          "id": "u8-g4",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: fantasy, adventure, magical, fairy, character"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "fantasy",
+          "adventure",
+          "magical",
+          "fairy",
+          "character",
+          "plot",
+          "fisherman",
+          "paintbrush",
+          "walking stick"
+        ],
+        "grammar": [
+          "Simple past tense (II)"
+        ],
+        "functions": [
+          "Tell or retell a story in the past",
+          "Talk about characters and plot in fantasy stories"
+        ],
+        "speaking_tasks": [
+          "Retell a story you love",
+          "Make up a story together, one sentence each"
+        ]
+      }
+    }
+  ]
+}

@@ -10,6 +10,8 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // Vendored from React Bits, kept byte-for-byte so upstream updates diff cleanly.
+  { ignores: ['components/CircularCarousel.tsx'] },
   ...compat.extends(
     'next/core-web-vitals',
     'next/typescript',

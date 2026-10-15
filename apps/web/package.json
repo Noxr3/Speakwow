@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "shadcn:install": "pnpm dlx shadcn@latest add @agents-ui/agent-audio-visualizer-bar @agents-ui/agent-audio-visualizer-grid @agents-ui/agent-audio-visualizer-radial @agents-ui/agent-control-bar @agents-ui/agent-session-provider @agents-ui/agent-track-control @agents-ui/agent-track-toggle @agents-ui/agent-chat-transcript @agents-ui/agent-chat-indicator @agents-ui/start-audio-button",
-    "test": "echo \"@speakwow/web: no tests yet (vitest lands in C2)\""
+    "test": "node --test lib/*.test.ts"
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.18",
@@ -30,6 +30,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@rive-app/react-webgl2": "^4.26.1",
+    "@speakwow/shared": "workspace:*",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.91.0",
     "@xyflow/react": "^12.10.0",

@@ -1,0 +1,506 @@
+{
+  "slug": "yilin-2024-7a",
+  "title": "译林版初中英语 七年级上册（7A，新课标）",
+  "description": "Yilin Press junior-high English 7A, the edition revised for the 2022 national curriculum standard and used in Jiangsu. Outline only: unit titles, topics, grammar points, language functions and short word lists; no textbook text. Speaking tasks are original to Speakwow. Theme categories (人与自我 / 人与社会 / 人与自然) are our own classification against the standard, not the teacher's book.",
+  "subject": "english",
+  "grade": "7",
+  "term": "A",
+  "region": "江苏",
+  "publisher": "译林出版社",
+  "edition": "2024",
+  "standard": "义务教育英语课程标准（2022年版）三级",
+  "units": [
+    {
+      "position": 1,
+      "title": "This is me!",
+      "title_zh": "这就是我！",
+      "theme": "人与社会",
+      "topic": "New school, new friends: greetings; introducing yourself and others",
+      "goals": [
+        {
+          "id": "u1-g1",
+          "kind": "speaking",
+          "text": "Greet people when meeting for the first time"
+        },
+        {
+          "id": "u1-g2",
+          "kind": "speaking",
+          "text": "Introduce yourself and others ('This is ...')"
+        },
+        {
+          "id": "u1-g3",
+          "kind": "speaking",
+          "text": "Describe age, looks, personality and hobbies"
+        },
+        {
+          "id": "u1-g4",
+          "kind": "grammar",
+          "text": "Use simple present tense (I): the verb 'be' (am/is/are)"
+        },
+        {
+          "id": "u1-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: greet, introduce, classmate, hobby, friendly"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "greet",
+          "introduce",
+          "classmate",
+          "hobby",
+          "friendly",
+          "polite",
+          "shy",
+          "pretty",
+          "interested",
+          "character"
+        ],
+        "grammar": [
+          "Simple present tense (I): the verb 'be' (am/is/are)"
+        ],
+        "functions": [
+          "Greet people when meeting for the first time",
+          "Introduce yourself and others ('This is ...')",
+          "Describe age, looks, personality and hobbies"
+        ],
+        "speaking_tasks": [
+          "Introduce yourself to a new classmate: name, age and one hobby",
+          "Introduce a friend: 'This is …'"
+        ]
+      }
+    },
+    {
+      "position": 2,
+      "title": "Hobbies",
+      "title_zh": "爱好",
+      "theme": "人与自我",
+      "topic": "Hobbies and after-school fun",
+      "goals": [
+        {
+          "id": "u2-g1",
+          "kind": "speaking",
+          "text": "Talk about likes and hobbies (like/love/enjoy doing; be interested in)"
+        },
+        {
+          "id": "u2-g2",
+          "kind": "speaking",
+          "text": "Describe after-school activities"
+        },
+        {
+          "id": "u2-g3",
+          "kind": "speaking",
+          "text": "Ask about other people's hobbies"
+        },
+        {
+          "id": "u2-g4",
+          "kind": "grammar",
+          "text": "Use simple present tense (II): action verbs, third-person singular, do/does"
+        },
+        {
+          "id": "u2-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: jogging, painting, paper-cutting, museum, scientist"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "jogging",
+          "painting",
+          "paper-cutting",
+          "museum",
+          "scientist",
+          "dream",
+          "club",
+          "volleyball",
+          "skill",
+          "designer"
+        ],
+        "grammar": [
+          "Simple present tense (II): action verbs, third-person singular, do/does"
+        ],
+        "functions": [
+          "Talk about likes and hobbies (like/love/enjoy doing; be interested in)",
+          "Describe after-school activities",
+          "Ask about other people's hobbies"
+        ],
+        "speaking_tasks": [
+          "Interview your teacher about their hobbies",
+          "Say which club you would join and why"
+        ]
+      }
+    },
+    {
+      "position": 3,
+      "title": "Welcome to our school!",
+      "title_zh": "欢迎来到我们学校！",
+      "theme": "人与自我",
+      "topic": "School places and facilities",
+      "goals": [
+        {
+          "id": "u3-g1",
+          "kind": "speaking",
+          "text": "Name and describe places at school"
+        },
+        {
+          "id": "u3-g2",
+          "kind": "speaking",
+          "text": "Show a visitor around the school"
+        },
+        {
+          "id": "u3-g3",
+          "kind": "speaking",
+          "text": "Say which school place you like and why"
+        },
+        {
+          "id": "u3-g4",
+          "kind": "grammar",
+          "text": "Use personal pronouns (subject and object forms)"
+        },
+        {
+          "id": "u3-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: gym, building, dining hall, lab, sports field"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "gym",
+          "building",
+          "dining hall",
+          "lab",
+          "sports field",
+          "classroom building",
+          "modern",
+          "bright",
+          "noticeboard",
+          "exciting"
+        ],
+        "grammar": [
+          "Personal pronouns (subject and object forms)"
+        ],
+        "functions": [
+          "Name and describe places at school",
+          "Show a visitor around the school",
+          "Say which school place you like and why"
+        ],
+        "speaking_tasks": [
+          "Show your teacher around your school",
+          "Say which place at school you like best and why"
+        ]
+      }
+    },
+    {
+      "position": 4,
+      "title": "School days",
+      "title_zh": "校园时光",
+      "theme": "人与自我",
+      "topic": "A day at school; learning beyond the books",
+      "goals": [
+        {
+          "id": "u4-g1",
+          "kind": "speaking",
+          "text": "Describe a school day and timetable"
+        },
+        {
+          "id": "u4-g2",
+          "kind": "speaking",
+          "text": "Say how often you do things"
+        },
+        {
+          "id": "u4-g3",
+          "kind": "speaking",
+          "text": "Talk about learning by doing (activities, field trips)"
+        },
+        {
+          "id": "u4-g4",
+          "kind": "grammar",
+          "text": "Use prepositions of time (in/on/at)"
+        },
+        {
+          "id": "u4-g5",
+          "kind": "grammar",
+          "text": "Use adverbs of frequency"
+        },
+        {
+          "id": "u4-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: activity, homework, housework, weekday, practise"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "activity",
+          "homework",
+          "housework",
+          "weekday",
+          "practise",
+          "field trip",
+          "tennis",
+          "tour",
+          "teamwork",
+          "tiring"
+        ],
+        "grammar": [
+          "Prepositions of time (in/on/at)",
+          "Adverbs of frequency"
+        ],
+        "functions": [
+          "Describe a school day and timetable",
+          "Say how often you do things",
+          "Talk about learning by doing (activities, field trips)"
+        ],
+        "speaking_tasks": [
+          "Walk through your school day from morning to evening",
+          "Quiz: how often do you … ?"
+        ]
+      }
+    },
+    {
+      "position": 5,
+      "title": "A healthy lifestyle",
+      "title_zh": "健康的生活方式",
+      "theme": "人与自我",
+      "topic": "Food, eating habits and healthy living",
+      "goals": [
+        {
+          "id": "u5-g1",
+          "kind": "speaking",
+          "text": "Talk about kinds of food"
+        },
+        {
+          "id": "u5-g2",
+          "kind": "speaking",
+          "text": "Judge whether a lifestyle is healthy"
+        },
+        {
+          "id": "u5-g3",
+          "kind": "speaking",
+          "text": "Describe your own lifestyle and give simple advice"
+        },
+        {
+          "id": "u5-g4",
+          "kind": "grammar",
+          "text": "Use countable and uncountable nouns (incl. how many / how much)"
+        },
+        {
+          "id": "u5-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: lifestyle, health, diet, delicious, carrot"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "lifestyle",
+          "health",
+          "diet",
+          "delicious",
+          "carrot",
+          "cucumber",
+          "watermelon",
+          "chocolate",
+          "cheese",
+          "tooth"
+        ],
+        "grammar": [
+          "Countable and uncountable nouns (incl. how many / how much)"
+        ],
+        "functions": [
+          "Talk about kinds of food",
+          "Judge whether a lifestyle is healthy",
+          "Describe your own lifestyle and give simple advice"
+        ],
+        "speaking_tasks": [
+          "Describe what you ate yesterday and whether it was healthy",
+          "Give your teacher one tip for a healthier day"
+        ]
+      }
+    },
+    {
+      "position": 6,
+      "title": "My clothes, my style",
+      "title_zh": "我的服装，我的风格",
+      "theme": "人与自我",
+      "topic": "Clothes, colours and personal style",
+      "goals": [
+        {
+          "id": "u6-g1",
+          "kind": "speaking",
+          "text": "Name and describe clothes and colours"
+        },
+        {
+          "id": "u6-g2",
+          "kind": "speaking",
+          "text": "Talk about personal style and choosing the right colour"
+        },
+        {
+          "id": "u6-g3",
+          "kind": "speaking",
+          "text": "Ask and answer questions about preferences"
+        },
+        {
+          "id": "u6-g4",
+          "kind": "grammar",
+          "text": "Use asking questions: yes/no questions, wh-questions, alternative (choice) questions"
+        },
+        {
+          "id": "u6-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: blouse, jacket, jeans, scarf, tie"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "blouse",
+          "jacket",
+          "jeans",
+          "scarf",
+          "tie",
+          "suit",
+          "fashion",
+          "silk",
+          "cotton",
+          "leather"
+        ],
+        "grammar": [
+          "Asking questions: yes/no questions, wh-questions, alternative (choice) questions"
+        ],
+        "functions": [
+          "Name and describe clothes and colours",
+          "Talk about personal style and choosing the right colour",
+          "Ask and answer questions about preferences"
+        ],
+        "speaking_tasks": [
+          "Describe what you are wearing today",
+          "Choose an outfit for a school event and explain why"
+        ]
+      }
+    },
+    {
+      "position": 7,
+      "title": "Be wise with money",
+      "title_zh": "理智用钱",
+      "theme": "人与自我",
+      "topic": "Money, gifts, budgets and family money management",
+      "goals": [
+        {
+          "id": "u7-g1",
+          "kind": "speaking",
+          "text": "Talk about money and prices"
+        },
+        {
+          "id": "u7-g2",
+          "kind": "speaking",
+          "text": "Plan and manage pocket money / a budget"
+        },
+        {
+          "id": "u7-g3",
+          "kind": "speaking",
+          "text": "Compare gift customs around the world"
+        },
+        {
+          "id": "u7-g4",
+          "kind": "grammar",
+          "text": "Use using some / any"
+        },
+        {
+          "id": "u7-g5",
+          "kind": "grammar",
+          "text": "Use using 'there be'"
+        },
+        {
+          "id": "u7-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: budget, pocket money, coin, expensive, yuan"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "budget",
+          "pocket money",
+          "coin",
+          "expensive",
+          "yuan",
+          "dollar",
+          "pound",
+          "euro",
+          "red packet",
+          "bookshop"
+        ],
+        "grammar": [
+          "Using some / any",
+          "Using 'there be'"
+        ],
+        "functions": [
+          "Talk about money and prices",
+          "Plan and manage pocket money / a budget",
+          "Compare gift customs around the world"
+        ],
+        "speaking_tasks": [
+          "Plan how to spend 100 yuan of pocket money",
+          "Talk about a gift you gave someone"
+        ]
+      }
+    },
+    {
+      "position": 8,
+      "title": "Let's celebrate!",
+      "title_zh": "让我们庆祝吧！",
+      "theme": "人与社会",
+      "topic": "Festivals and celebrations (New Year, festivals around the world)",
+      "goals": [
+        {
+          "id": "u8-g1",
+          "kind": "speaking",
+          "text": "Talk about festivals and how people celebrate them"
+        },
+        {
+          "id": "u8-g2",
+          "kind": "speaking",
+          "text": "Describe what people are doing now"
+        },
+        {
+          "id": "u8-g3",
+          "kind": "speaking",
+          "text": "Introduce a favourite festival"
+        },
+        {
+          "id": "u8-g4",
+          "kind": "grammar",
+          "text": "Use present continuous tense"
+        },
+        {
+          "id": "u8-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: celebrate, tradition, lantern, rice dumpling, dragon boat"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "celebrate",
+          "tradition",
+          "lantern",
+          "rice dumpling",
+          "dragon boat",
+          "Spring Festival couplets",
+          "Christmas",
+          "midnight",
+          "symbol",
+          "poem"
+        ],
+        "grammar": [
+          "Present continuous tense"
+        ],
+        "functions": [
+          "Talk about festivals and how people celebrate them",
+          "Describe what people are doing now",
+          "Introduce a favourite festival"
+        ],
+        "speaking_tasks": [
+          "Introduce your favourite festival",
+          "Describe what your family is doing at Spring Festival"
+        ]
+      }
+    }
+  ]
+}

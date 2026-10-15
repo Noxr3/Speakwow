@@ -1,5 +1,4 @@
 import { cache } from 'react';
-import { TokenSource } from 'livekit-client';
 import { APP_CONFIG_DEFAULTS } from '@/app-config';
 import type { AppConfig } from '@/app-config';
 
@@ -88,27 +87,4 @@ export function getStyles(appConfig: AppConfig) {
   ]
     .filter(Boolean)
     .join('\n');
-}
-
-/**
- * Token source that posts to the connection-details endpoint with the
- * user's currently selected agent (Frank or Lucy).
- */
-export function getAgentTokenSource(selectedAgentRef: { current: string }) {
-  const endpoint = process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT || '/api/connection-details';
-  return TokenSource.custom(async () => {
-    const url = new URL(endpoint, window.location.origin);
-    try {
-      const res = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ selected_agent: selectedAgentRef.current }),
-      });
-      if (!res.ok) throw new Error(`Token request failed: ${res.status}`);
-      return await res.json();
-    } catch (error) {
-      console.error('Error fetching connection details:', error);
-      throw new Error('Error fetching connection details!');
-    }
-  });
 }

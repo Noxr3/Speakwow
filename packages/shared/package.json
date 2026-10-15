@@ -2,6 +2,9 @@
   "name": "@speakwow/shared",
   "version": "0.0.0",
   "private": true,
-  "description": "Cross-app shared types and persona card data (web display + agent instructions share one source)",
-  "types": "types/index.ts"
+  "description": "Data both apps read: persona cards and the sticker set",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/index.ts"
+  }
 }

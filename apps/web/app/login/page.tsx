@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
@@ -14,8 +15,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
+  const { enabled, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const router = useRouter();
+
+  // /auth/callback sends failures back here as ?error=...
+  useEffect(() => {
+    const fromCallback = new URLSearchParams(window.location.search).get('error');
+    if (fromCallback) setError(fromCallback);
+  }, []);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,9 +68,19 @@ export default function LoginPage() {
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
+            {isSignUp
+              ? 'Your teacher will remember you, your goals and your progress.'
+              : 'Sign in so your teacher picks up where you left off.'}
           </p>
         </div>
+
+        {!enabled && (
+          <div className="bg-muted text-muted-foreground rounded-md p-3 text-sm">
+            Accounts are not set up on this server, so you can only talk as a guest. To enable them,
+            add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{' '}
+            (see the README).
+          </div>
+        )}
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
           <div>
@@ -160,6 +177,12 @@ export default function LoginPage() {
           >
             {isSignUp ? 'Sign In' : 'Sign Up'}
           </button>
+        </p>
+
+        <p className="text-center text-sm">
+          <Link href="/" className="text-muted-foreground hover:text-foreground underline">
+            Continue as a guest
+          </Link>
         </p>
       </div>
     </div>
