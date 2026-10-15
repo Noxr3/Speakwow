@@ -8,10 +8,10 @@ import { useAuth } from '@/components/auth/auth-provider';
 export function AccountLinks() {
   const { enabled, user, loading, signOut } = useAuth();
   const router = useRouter();
-  const link = 'text-foreground/70 hover:text-foreground text-xs font-medium transition-colors';
+  const link = 'text-white/50 hover:text-white text-xs transition-colors';
 
   return (
-    <nav className="glass flex items-center gap-4 rounded-full px-4 py-2" aria-label="Account">
+    <nav className="flex items-center gap-5" aria-label="Account">
       {enabled && user && (
         <Link href="/profile" className={link}>
           Learning record

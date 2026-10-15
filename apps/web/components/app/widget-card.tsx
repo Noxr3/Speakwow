@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { CheckCircleIcon, MicrophoneIcon, XCircleIcon, XIcon } from '@phosphor-icons/react';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/shadcn/utils';
 import { type Widget, answerMessage, sameAnswer } from '@/lib/widgets';
 
@@ -104,7 +105,7 @@ export function WidgetCard({ widget, onAnswer, onClose }: WidgetCardProps) {
     case 'word_card':
       body = (
         <div className="space-y-1">
-          <p className="font-display text-3xl font-semibold">{widget.word}</p>
+          <p className="text-2xl font-medium">{widget.word}</p>
           {widget.phonetic && <p className="text-muted-foreground">{widget.phonetic}</p>}
           {widget.meaning && <p>{widget.meaning}</p>}
           {widget.example && <p className="text-muted-foreground italic">“{widget.example}”</p>}
@@ -262,23 +263,24 @@ export function WidgetCard({ widget, onAnswer, onClose }: WidgetCardProps) {
   }
 
   return (
-    <section
-      aria-label={KIND_LABEL[widget.kind]}
-      className="glass-strong space-y-3 rounded-3xl p-5"
-    >
-      <header className="flex items-center gap-2">
-        <span className="label-mono text-white/60">{widget.title || KIND_LABEL[widget.kind]}</span>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close card"
-          className="text-muted-foreground hover:text-foreground ml-auto"
-        >
-          <XIcon />
-        </button>
-      </header>
-      {body}
-      {result && <Verdict correct={result.correct} />}
-    </section>
+    <LiquidGlass radius={28} tint={0.35}>
+      <section aria-label={KIND_LABEL[widget.kind]} className="space-y-3 p-5">
+        <header className="flex items-center gap-2">
+          <span className="label-mono text-white/60">
+            {widget.title || KIND_LABEL[widget.kind]}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close card"
+            className="text-muted-foreground hover:text-foreground ml-auto"
+          >
+            <XIcon />
+          </button>
+        </header>
+        {body}
+        {result && <Verdict correct={result.correct} />}
+      </section>
+    </LiquidGlass>
   );
 }

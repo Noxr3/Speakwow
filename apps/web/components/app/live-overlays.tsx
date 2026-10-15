@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useChat, useDataChannel } from '@livekit/components-react';
 import { STICKERS, STICKER_TOPIC, type Sticker, stickerImageUrl } from '@speakwow/shared';
 import { WidgetCard } from '@/components/app/widget-card';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { WIDGET_TOPIC, type Widget, parseWidget } from '@/lib/widgets';
 
 const BY_ID = new Map(STICKERS.map((s) => [s.id, s]));
@@ -121,26 +122,30 @@ export function LiveOverlays() {
         )}
       </AnimatePresence>
 
-      <div
-        className="glass mx-auto mb-3 flex w-fit max-w-full flex-wrap justify-center gap-0.5 rounded-full p-1"
-        role="toolbar"
-        aria-label="Send a sticker"
-      >
-        {TRAY.map((id) => {
-          const sticker = BY_ID.get(id)!;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => sendSticker(sticker)}
-              title={`Send ${sticker.label}`}
-              aria-label={`Send ${sticker.label} sticker`}
-              className="rounded-full p-1.5 text-xl leading-none transition-transform hover:scale-115 hover:bg-white/10 active:scale-95"
-            >
-              {sticker.emoji}
-            </button>
-          );
-        })}
+      <div className="mx-auto mb-3 w-fit max-w-full">
+        <LiquidGlass radius={999} width="auto">
+          <div
+            className="flex flex-wrap justify-center gap-0.5 p-1"
+            role="toolbar"
+            aria-label="Send a sticker"
+          >
+            {TRAY.map((id) => {
+              const sticker = BY_ID.get(id)!;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => sendSticker(sticker)}
+                  title={`Send ${sticker.label}`}
+                  aria-label={`Send ${sticker.label} sticker`}
+                  className="rounded-full p-1.5 text-xl leading-none transition-transform hover:scale-115 hover:bg-white/10 active:scale-95"
+                >
+                  {sticker.emoji}
+                </button>
+              );
+            })}
+          </div>
+        </LiquidGlass>
       </div>
     </>
   );

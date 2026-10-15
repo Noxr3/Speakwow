@@ -3,6 +3,7 @@ import GlassSurface from '@/components/GlassSurface';
 import Magnet from '@/components/Magnet';
 import type { CourseSpot } from '@/components/app/app';
 import { TeacherCarousel } from '@/components/app/teacher-carousel';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/shadcn/utils';
 import type { CallMode } from '@/lib/token-source';
 import ColorBends from '../ColorBends';
@@ -34,7 +35,7 @@ export const WelcomeView = ({
   return (
     <div ref={ref}>
       <section className="flex flex-col items-center gap-5 px-4 pt-14 text-center md:gap-6">
-        <h1 className="text-foreground text-3xl leading-[1.1] font-medium md:text-[2.75rem]">
+        <h1 className="text-sm font-normal tracking-wide text-white/75 md:text-base">
           A teacher who remembers you.
         </h1>
 
@@ -45,29 +46,31 @@ export const WelcomeView = ({
         </p>
 
         {course && (
-          <div className="glass flex rounded-full p-1 text-xs" role="group" aria-label="What to do">
-            {(
-              [
-                ['course', `Lesson · Unit ${course.unitPosition}`],
-                ['free', 'Free talk'],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => onSelectMode(value)}
-                aria-pressed={mode === value}
-                className={cn(
-                  'rounded-full px-4 py-1.5 font-medium transition-colors',
-                  mode === value
-                    ? 'text-foreground bg-white/15 shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <LiquidGlass radius={999} width="auto">
+            <div className="flex p-1 text-xs" role="group" aria-label="What to do">
+              {(
+                [
+                  ['course', `Lesson · Unit ${course.unitPosition}`],
+                  ['free', 'Free talk'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onSelectMode(value)}
+                  aria-pressed={mode === value}
+                  className={cn(
+                    'rounded-full px-4 py-1.5 font-medium transition-colors',
+                    mode === value
+                      ? 'text-foreground bg-white/15 shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </LiquidGlass>
         )}
 
         <Magnet padding={10} disabled={false} magnetStrength={10}>
@@ -89,8 +92,9 @@ export const WelcomeView = ({
               brightness={50}
               opacity={0.63}
               mixBlendMode="screen"
+              forceDark
             >
-              <span>Start talking</span>
+              <span>Talk with {persona.display_name}</span>
             </GlassSurface>
           </button>
         </Magnet>

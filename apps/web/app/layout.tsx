@@ -1,4 +1,3 @@
-import { Bricolage_Grotesque, Hanken_Grotesk } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
 import Link from 'next/link';
@@ -8,19 +7,7 @@ import { cn } from '@/lib/shadcn/utils';
 import { getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
 
-// Type system: Bricolage Grotesque for headings (warm, a little characterful),
-// Hanken Grotesk for reading, CommitMono for labels and teacher names.
-const display = Bricolage_Grotesque({
-  variable: '--font-bricolage',
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-});
-
-const sans = Hanken_Grotesk({
-  variable: '--font-hanken',
-  subsets: ['latin'],
-});
-
+// One typeface throughout: CommitMono.
 const commitMono = localFont({
   display: 'swap',
   variable: '--font-commit-mono',
@@ -59,15 +46,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const { pageTitle, pageDescription, logo } = appConfig;
 
   return (
-    <html
-      lang="en"
-      className={cn(
-        display.variable,
-        sans.variable,
-        commitMono.variable,
-        'dark scroll-smooth font-sans antialiased'
-      )}
-    >
+    <html lang="en" className={cn(commitMono.variable, 'dark scroll-smooth font-sans antialiased')}>
       <head>
         {styles && <style>{styles}</style>}
         <title>{pageTitle}</title>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 /** Two slow colour glows behind a page, so its glass panels have something to show through. */
 export function PageBackdrop() {
@@ -28,7 +29,7 @@ export function PageShell({ eyebrow, title, subtitle, children }: PageShellProps
       </Link>
       <header className="mt-8 mb-10 space-y-3">
         {eyebrow && <p className="label-mono text-white/45">{eyebrow}</p>}
-        <h1 className="text-foreground text-4xl leading-[1.05] font-medium md:text-5xl">{title}</h1>
+        <h1 className="text-foreground text-2xl font-medium md:text-3xl">{title}</h1>
         {subtitle && (
           <p className="text-muted-foreground max-w-prose text-[15px] leading-relaxed">
             {subtitle}
@@ -48,14 +49,16 @@ interface GlassPanelProps {
 
 export function GlassPanel({ title, description, children }: GlassPanelProps) {
   return (
-    <section className="glass space-y-5 rounded-3xl p-6 md:p-7">
-      <div className="space-y-1.5">
-        <h2 className="text-foreground text-lg font-medium">{title}</h2>
-        {description && (
-          <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
-        )}
-      </div>
-      {children}
-    </section>
+    <LiquidGlass radius={28} tint={0.3}>
+      <section className="space-y-5 p-6 md:p-7">
+        <div className="space-y-1.5">
+          <h2 className="text-foreground text-lg font-medium">{title}</h2>
+          {description && (
+            <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+          )}
+        </div>
+        {children}
+      </section>
+    </LiquidGlass>
   );
 }

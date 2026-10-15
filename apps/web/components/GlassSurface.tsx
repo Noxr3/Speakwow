@@ -39,6 +39,10 @@ export interface GlassSurfaceProps {
     | 'plus-lighter';
   className?: string;
   style?: React.CSSProperties;
+  /** Speakwow: the app is always dark, whatever the OS theme. */
+  forceDark?: boolean;
+  /** Speakwow: layout of the content box (default: centred, 8px padding). */
+  contentClassName?: string;
 }
 
 const useDarkMode = () => {
@@ -79,6 +83,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   mixBlendMode = 'difference',
   className = '',
   style = {},
+  forceDark = false,
+  contentClassName = 'flex items-center justify-center p-2',
 }) => {
   const uniqueId = useId().replace(/:/g, '-');
   const filterId = `glass-filter-${uniqueId}`;
@@ -94,7 +100,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const blueChannelRef = useRef<SVGFEDisplacementMapElement>(null);
   const gaussianBlurRef = useRef<SVGFEGaussianBlurElement>(null);
 
-  const isDarkMode = useDarkMode();
+  const isDarkMode = useDarkMode() || forceDark;
 
   const generateDisplacementMap = () => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -398,7 +404,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         </defs>
       </svg>
 
-      <div className="relative z-10 flex h-full w-full items-center justify-center rounded-[inherit] p-2">
+      <div className={`relative z-10 h-full w-full rounded-[inherit] ${contentClassName}`}>
         {children}
       </div>
     </div>

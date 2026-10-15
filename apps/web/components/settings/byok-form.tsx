@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { type GuestKey, loadGuestKey, saveGuestKey } from '@/lib/client-prefs';
 
 type Provider = GuestKey['provider'];
@@ -98,98 +99,104 @@ export function ByokForm() {
   };
 
   return (
-    <section className="glass space-y-5 rounded-3xl p-6 md:p-7">
-      <div className="space-y-1.5">
-        <h2 className="text-foreground text-lg font-medium">API key</h2>
-        <p className="text-muted-foreground text-sm">
-          {status?.required ? 'Required to start a call.' : 'Optional. Use your own model account.'}
-        </p>
-      </div>
-
-      {status && !status.enabled && (
-        <p className="text-muted-foreground rounded-2xl bg-white/[0.04] p-4 text-sm">
-          Not enabled on this server.
-        </p>
-      )}
-
-      {current && (
-        <div className="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]">
-          <span className="text-foreground">
-            {PROVIDERS.find((p) => p.id === current.provider)?.name} ·••••{current.hint}
-          </span>
-          <span className="text-muted-foreground text-xs">
-            {signedIn ? 'Account' : 'This browser'}
-          </span>
-          <button
-            type="button"
-            onClick={remove}
-            disabled={busy}
-            className="text-muted-foreground hover:text-foreground ml-auto text-xs underline"
-          >
-            Remove
-          </button>
-        </div>
-      )}
-
-      {status?.enabled && (
-        <form onSubmit={save} className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-2">
-            {PROVIDERS.map((p) => (
-              <label
-                key={p.id}
-                className={`cursor-pointer space-y-1 rounded-2xl border p-4 text-sm transition-colors ${
-                  provider === p.id
-                    ? 'border-white/35 bg-white/[0.09] shadow-[inset_0_1px_0_rgb(255_255_255/0.2)]'
-                    : 'border-white/10 hover:border-white/20'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="provider"
-                  value={p.id}
-                  checked={provider === p.id}
-                  onChange={() => setProvider(p.id)}
-                  className="sr-only"
-                />
-                <span className="text-foreground block font-medium">{p.name}</span>
-                <a
-                  href={p.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary text-xs underline"
-                >
-                  Get key
-                </a>
-              </label>
-            ))}
-          </div>
-          <input
-            type="password"
-            autoComplete="off"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="Paste your API key"
-            aria-label="API key"
-            className="field"
-          />
-          <Button
-            type="submit"
-            className="rounded-full px-5"
-            disabled={busy || key.trim().length < 20}
-          >
-            {busy ? 'Saving…' : current ? 'Replace key' : 'Save key'}
-          </Button>
-          <p className="text-muted-foreground text-xs">
-            {signedIn ? 'Encrypted before it is stored.' : 'Encrypted. Kept in this browser only.'}
+    <LiquidGlass radius={28} tint={0.3}>
+      <section className="space-y-5 p-6 md:p-7">
+        <div className="space-y-1.5">
+          <h2 className="text-foreground text-lg font-medium">API key</h2>
+          <p className="text-muted-foreground text-sm">
+            {status?.required
+              ? 'Required to start a call.'
+              : 'Optional. Use your own model account.'}
           </p>
-        </form>
-      )}
+        </div>
 
-      {message && (
-        <p className={`text-sm ${message.ok ? 'text-emerald-300' : 'text-destructive'}`}>
-          {message.text}
-        </p>
-      )}
-    </section>
+        {status && !status.enabled && (
+          <p className="text-muted-foreground rounded-2xl bg-white/[0.04] p-4 text-sm">
+            Not enabled on this server.
+          </p>
+        )}
+
+        {current && (
+          <div className="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]">
+            <span className="text-foreground">
+              {PROVIDERS.find((p) => p.id === current.provider)?.name} ·••••{current.hint}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              {signedIn ? 'Account' : 'This browser'}
+            </span>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={busy}
+              className="text-muted-foreground hover:text-foreground ml-auto text-xs underline"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        {status?.enabled && (
+          <form onSubmit={save} className="space-y-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {PROVIDERS.map((p) => (
+                <label
+                  key={p.id}
+                  className={`cursor-pointer space-y-1 rounded-2xl border p-4 text-sm transition-colors ${
+                    provider === p.id
+                      ? 'border-white/35 bg-white/[0.09] shadow-[inset_0_1px_0_rgb(255_255_255/0.2)]'
+                      : 'border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="provider"
+                    value={p.id}
+                    checked={provider === p.id}
+                    onChange={() => setProvider(p.id)}
+                    className="sr-only"
+                  />
+                  <span className="text-foreground block font-medium">{p.name}</span>
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary text-xs underline"
+                  >
+                    Get key
+                  </a>
+                </label>
+              ))}
+            </div>
+            <input
+              type="password"
+              autoComplete="off"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="Paste your API key"
+              aria-label="API key"
+              className="field"
+            />
+            <Button
+              type="submit"
+              className="rounded-full px-5"
+              disabled={busy || key.trim().length < 20}
+            >
+              {busy ? 'Saving…' : current ? 'Replace key' : 'Save key'}
+            </Button>
+            <p className="text-muted-foreground text-xs">
+              {signedIn
+                ? 'Encrypted before it is stored.'
+                : 'Encrypted. Kept in this browser only.'}
+            </p>
+          </form>
+        )}
+
+        {message && (
+          <p className={`text-sm ${message.ok ? 'text-emerald-300' : 'text-destructive'}`}>
+            {message.text}
+          </p>
+        )}
+      </section>
+    </LiquidGlass>
   );
 }

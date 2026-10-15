@@ -13,6 +13,7 @@ import {
 import { ChatTranscript } from '@/components/app/chat-transcript';
 import { LiveOverlays } from '@/components/app/live-overlays';
 import { TileLayout } from '@/components/app/tile-layout';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/shadcn/utils';
 import type { CallMode } from '@/lib/token-source';
 import { Shimmer } from '../ai-elements/shimmer';
@@ -148,15 +149,15 @@ export const SessionView = ({
       {/* Agent indicator: prominently identifies the current teacher
           so users with multiple tabs open never continue a session in the wrong context. */}
       <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center">
-        <div className="glass flex items-center gap-2.5 rounded-full px-4 py-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153)]" />
-          <span className="font-display text-foreground text-sm font-semibold">
-            {persona.display_name}
-          </span>
-          <span className="label-mono text-white/50">
-            {mode === 'course' ? 'Lesson' : 'Free talk'}
-          </span>
-        </div>
+        <LiquidGlass radius={999} width="auto">
+          <div className="flex items-center gap-2.5 px-4 py-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153)]" />
+            <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
+            <span className="label-mono text-white/50">
+              {mode === 'course' ? 'Lesson' : 'Free talk'}
+            </span>
+          </div>
+        </LiquidGlass>
       </div>
       {/* transcript */}
       <ChatTranscript
