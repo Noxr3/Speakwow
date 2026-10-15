@@ -28,3 +28,6 @@ coverage/
 .DS_Store
 .claude/
 *.log
+
+# supabase CLI link state (project ref, pooler URL)
+supabase/.temp/
