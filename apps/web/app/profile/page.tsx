@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { GlassPanel, PageShell } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { getSessionUser } from '@/lib/supabase/server';
 import { enroll, forgetFact, forgetWeakness, setCurrentUnit, updateProfile } from './actions';
@@ -12,17 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
   mastered: 'Mastered',
 };
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4 rounded-2xl border border-white/10 p-5">
-      <h2 className="text-foreground text-lg font-semibold">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-const field =
-  'border-input bg-background text-foreground w-full rounded-md border px-3 py-2 text-sm';
+const field = 'field';
 
 /** 学习档案: who the student is, where they are in their course, and what the
  * teacher remembers — every remembered thing can be erased here. */
@@ -86,19 +76,8 @@ export default async function ProfilePage() {
   const p = profile.data;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-24">
-      <div>
-        <Link href="/" className="text-muted-foreground hover:text-foreground text-sm">
-          ← Back to your teacher
-        </Link>
-        <h1 className="text-foreground mt-4 text-3xl font-bold">Learning record</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          学习档案 · Level {p?.level ?? 'not assessed yet'}
-          {p?.level ? ' (estimated by your teacher)' : ''}
-        </p>
-      </div>
-
-      <Section title="About you">
+    <PageShell title="Learning record" subtitle={p?.level ? `Level ${p.level}` : undefined}>
+      <GlassPanel title="About you">
         <form action={updateProfile} className="grid gap-3">
           <label className="grid gap-1 text-sm">
             <span className="text-muted-foreground">What should your teacher call you?</span>
@@ -123,13 +102,13 @@ export default async function ProfilePage() {
               className={field}
             />
           </label>
-          <Button type="submit" className="justify-self-start">
+          <Button type="submit" className="justify-self-start rounded-full px-5">
             Save
           </Button>
         </form>
-      </Section>
+      </GlassPanel>
 
-      <Section title="Course">
+      <GlassPanel title="Course">
         {course ? (
           <div className="space-y-3">
             <p className="text-foreground text-sm font-medium">{course.title}</p>
@@ -140,11 +119,15 @@ export default async function ProfilePage() {
                 return (
                   <li
                     key={u.id}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
-                      current ? 'bg-primary/10 border-primary border' : 'bg-white/5'
+                    className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm ${
+                      current
+                        ? 'border border-white/30 bg-white/[0.09] shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]'
+                        : 'bg-white/[0.03]'
                     }`}
                   >
-                    <span className="text-muted-foreground w-14 shrink-0">Unit {u.position}</span>
+                    <span className="label-mono w-16 shrink-0 text-white/45">
+                      Unit {u.position}
+                    </span>
                     <span className="text-foreground min-w-0 flex-1 truncate">
                       {u.title}
                       {u.topic && (
@@ -197,9 +180,9 @@ export default async function ProfilePage() {
             No courses on this server yet. Import one with <code>pnpm course:import</code>.
           </p>
         )}
-      </Section>
+      </GlassPanel>
 
-      <Section title="What your teacher remembers">
+      <GlassPanel title="What your teacher remembers">
         {facts.data?.length || weaknesses.data?.length ? (
           <ul className="space-y-1.5">
             {facts.data?.map((f) => (
@@ -234,9 +217,9 @@ export default async function ProfilePage() {
             them, what to practise — and you can erase any of them here.
           </p>
         )}
-      </Section>
+      </GlassPanel>
 
-      <Section title="Recent lessons">
+      <GlassPanel title="Recent lessons">
         {sessions.data?.length ? (
           <ul className="space-y-3">
             {sessions.data.map((s) => (
@@ -252,7 +235,7 @@ export default async function ProfilePage() {
         ) : (
           <p className="text-muted-foreground text-sm">Your lessons will show up here.</p>
         )}
-      </Section>
-    </div>
+      </GlassPanel>
+    </PageShell>
   );
 }

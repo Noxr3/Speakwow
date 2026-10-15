@@ -17,14 +17,14 @@ interface ByokStatus {
 const PROVIDERS: { id: Provider; name: string; hint: string; url: string }[] = [
   {
     id: 'xai',
-    name: 'xAI (Grok Voice)',
-    hint: 'Fastest replies. Keys start with xai-.',
+    name: 'xAI',
+    hint: '',
     url: 'https://console.x.ai',
   },
   {
     id: 'openai',
-    name: 'OpenAI (Realtime)',
-    hint: 'Keys start with sk-.',
+    name: 'OpenAI',
+    hint: '',
     url: 'https://platform.openai.com/api-keys',
   },
 ];
@@ -98,31 +98,27 @@ export function ByokForm() {
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 p-5">
-      <div>
-        <h2 className="text-foreground text-lg font-semibold">Your own API key</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Use your own voice-model account for your lessons.{' '}
-          {status?.required
-            ? 'This server needs one before you can start a call.'
-            : 'Optional: without one, this server’s own key is used.'}
+    <section className="glass space-y-5 rounded-3xl p-6 md:p-7">
+      <div className="space-y-1.5">
+        <h2 className="text-foreground text-lg font-medium">API key</h2>
+        <p className="text-muted-foreground text-sm">
+          {status?.required ? 'Required to start a call.' : 'Optional. Use your own model account.'}
         </p>
       </div>
 
       {status && !status.enabled && (
-        <p className="bg-muted text-muted-foreground rounded-md p-3 text-sm">
-          This server has not turned on bring-your-own-key (it needs a{' '}
-          <code>BYOK_ENCRYPTION_KEY</code>).
+        <p className="text-muted-foreground rounded-2xl bg-white/[0.04] p-4 text-sm">
+          Not enabled on this server.
         </p>
       )}
 
       {current && (
-        <div className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2 text-sm">
+        <div className="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]">
           <span className="text-foreground">
             {PROVIDERS.find((p) => p.id === current.provider)?.name} ·••••{current.hint}
           </span>
           <span className="text-muted-foreground text-xs">
-            {signedIn ? 'saved to your account' : 'saved in this browser'}
+            {signedIn ? 'Account' : 'This browser'}
           </span>
           <button
             type="button"
@@ -141,8 +137,10 @@ export function ByokForm() {
             {PROVIDERS.map((p) => (
               <label
                 key={p.id}
-                className={`cursor-pointer rounded-lg border p-3 text-sm ${
-                  provider === p.id ? 'border-primary bg-primary/10' : 'border-white/15'
+                className={`cursor-pointer space-y-1 rounded-2xl border p-4 text-sm transition-colors ${
+                  provider === p.id
+                    ? 'border-white/35 bg-white/[0.09] shadow-[inset_0_1px_0_rgb(255_255_255/0.2)]'
+                    : 'border-white/10 hover:border-white/20'
                 }`}
               >
                 <input
@@ -154,14 +152,13 @@ export function ByokForm() {
                   className="sr-only"
                 />
                 <span className="text-foreground block font-medium">{p.name}</span>
-                <span className="text-muted-foreground block text-xs">{p.hint}</span>
                 <a
                   href={p.url}
                   target="_blank"
                   rel="noreferrer"
                   className="text-primary text-xs underline"
                 >
-                  Get a key
+                  Get key
                 </a>
               </label>
             ))}
@@ -173,15 +170,17 @@ export function ByokForm() {
             onChange={(e) => setKey(e.target.value)}
             placeholder="Paste your API key"
             aria-label="API key"
-            className="border-input bg-background text-foreground w-full rounded-md border px-3 py-2 text-sm"
+            className="field"
           />
-          <Button type="submit" disabled={busy || key.trim().length < 20}>
+          <Button
+            type="submit"
+            className="rounded-full px-5"
+            disabled={busy || key.trim().length < 20}
+          >
             {busy ? 'Saving…' : current ? 'Replace key' : 'Save key'}
           </Button>
           <p className="text-muted-foreground text-xs">
-            {signedIn
-              ? 'Encrypted on the server before it is stored. Only the voice service can decrypt it, and only during your call.'
-              : 'Kept only in this browser and encrypted by the server for each call. Sign in to keep it on your account.'}
+            {signedIn ? 'Encrypted before it is stored.' : 'Encrypted. Kept in this browser only.'}
           </p>
         </form>
       )}

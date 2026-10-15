@@ -148,10 +148,12 @@ export const SessionView = ({
       {/* Agent indicator: prominently identifies the current teacher
           so users with multiple tabs open never continue a session in the wrong context. */}
       <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center">
-        <div className="bg-background/70 flex items-center gap-2 rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase backdrop-blur-md">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
-          <span className="text-foreground">{persona.display_name}</span>
-          <span className="text-muted-foreground font-normal normal-case">
+        <div className="glass flex items-center gap-2.5 rounded-full px-4 py-1.5">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153)]" />
+          <span className="font-display text-foreground text-sm font-semibold">
+            {persona.display_name}
+          </span>
+          <span className="label-mono text-white/50">
             {mode === 'course' ? 'Lesson' : 'Free talk'}
           </span>
         </div>

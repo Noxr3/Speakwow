@@ -5,7 +5,7 @@ import { SpeakerHighIcon, SpeakerSlashIcon } from '@phosphor-icons/react';
 import type { PersonaSummary } from '@speakwow/shared';
 import CircularCarousel from '@/components/CircularCarousel';
 import { loadPersonaId, loadVoicePreview, saveVoicePreview } from '@/lib/client-prefs';
-import { CARD_HEIGHT, CARD_WIDTH, teacherCardUrl } from '@/lib/teacher-card';
+import { CARD_HEIGHT, CARD_WIDTH, loadCardFont, teacherCardUrl } from '@/lib/teacher-card';
 
 interface TeacherCarouselProps {
   personas: PersonaSummary[];
@@ -23,6 +23,7 @@ const SAMPLE_DELAY_MS = 450;
  */
 export function TeacherCarousel({ personas, onSelect }: TeacherCarouselProps) {
   const [first, setFirst] = useState<number | null>(null);
+  const [font, setFont] = useState<string | null | undefined>(undefined);
   const [voiceOn, setVoiceOn] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<number | undefined>(undefined);
@@ -32,7 +33,10 @@ export function TeacherCarousel({ personas, onSelect }: TeacherCarouselProps) {
     const ids = personas.map((p) => p.id);
     setFirst(Math.max(0, ids.indexOf(loadPersonaId(ids, ids[0]))));
     setVoiceOn(loadVoicePreview());
+    let live = true;
+    loadCardFont().then((url) => live && setFont(url));
     return () => {
+      live = false;
       window.clearTimeout(timerRef.current);
       audioRef.current?.pause();
     };
@@ -45,12 +49,12 @@ export function TeacherCarousel({ personas, onSelect }: TeacherCarouselProps) {
   const items = useMemo(
     () =>
       order.map((k) => ({
-        src: teacherCardUrl(personas[k]),
+        src: teacherCardUrl(personas[k], font),
         alt: `${personas[k].display_name}: ${personas[k].tagline_en}`,
         title: personas[k].display_name,
         subtitle: personas[k].specialty_en,
       })),
-    [order, personas]
+    [order, personas, font]
   );
 
   const playSample = (id: string) => {
@@ -73,20 +77,23 @@ export function TeacherCarousel({ personas, onSelect }: TeacherCarouselProps) {
   };
 
   return (
-    <div className="relative h-[330px] w-full max-w-3xl md:h-[390px]">
-      {first !== null ? (
+    <div className="relative h-[min(360px,42svh)] w-full max-w-4xl">
+      {first !== null && font !== undefined ? (
         <CircularCarousel
           items={items}
           preset="cylinder"
+          // One flat pane per card: bent cards are cut into overlapping strips,
+          // and translucent glass shows every overlap as a seam.
+          curve={0}
           intro="rise"
-          cardWidth={200}
+          cardWidth={196}
           aspectRatio={CARD_WIDTH / CARD_HEIGHT}
           gap={26}
           autoplay="off"
           snap
           draggable
           focusOnClick
-          depthFade={0.7}
+          depthFade={0.85}
           fadeColor="#000000"
           cornerRadius={20}
           onChange={(index) => {
@@ -97,7 +104,7 @@ export function TeacherCarousel({ personas, onSelect }: TeacherCarouselProps) {
         />
       ) : (
         <div className="flex h-full items-center justify-center" aria-hidden="true">
-          <div className="h-[278px] w-[200px] animate-pulse rounded-[20px] bg-white/5" />
+          <div className="glass h-[272px] w-[196px] animate-pulse rounded-[20px]" />
         </div>
       )}
       <button
@@ -106,7 +113,7 @@ export function TeacherCarousel({ personas, onSelect }: TeacherCarouselProps) {
         aria-pressed={voiceOn}
         aria-label={voiceOn ? 'Mute voice samples' : 'Play voice samples'}
         title={voiceOn ? 'Mute voice samples' : 'Play voice samples'}
-        className="text-muted-foreground hover:text-foreground absolute right-2 bottom-2 rounded-full p-2 transition-colors"
+        className="glass text-muted-foreground hover:text-foreground absolute right-3 bottom-3 rounded-full p-2.5 transition-colors"
       >
         {voiceOn ? <SpeakerHighIcon size={18} /> : <SpeakerSlashIcon size={18} />}
       </button>

@@ -41,7 +41,7 @@ function Option({
       disabled={disabled}
       className={cn(
         'rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-        'border-white/15 bg-white/5 hover:bg-white/10 disabled:cursor-default',
+        'border-white/12 bg-white/[0.04] shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] hover:bg-white/10 disabled:cursor-default',
         state === 'right' && 'border-emerald-400/70 bg-emerald-400/15',
         state === 'wrong' && 'border-rose-400/70 bg-rose-400/15',
         state === 'picked' && 'border-primary bg-primary/15',
@@ -104,7 +104,7 @@ export function WidgetCard({ widget, onAnswer, onClose }: WidgetCardProps) {
     case 'word_card':
       body = (
         <div className="space-y-1">
-          <p className="text-2xl font-semibold">{widget.word}</p>
+          <p className="font-display text-3xl font-semibold">{widget.word}</p>
           {widget.phonetic && <p className="text-muted-foreground">{widget.phonetic}</p>}
           {widget.meaning && <p>{widget.meaning}</p>}
           {widget.example && <p className="text-muted-foreground italic">“{widget.example}”</p>}
@@ -264,12 +264,10 @@ export function WidgetCard({ widget, onAnswer, onClose }: WidgetCardProps) {
   return (
     <section
       aria-label={KIND_LABEL[widget.kind]}
-      className="bg-background/85 space-y-3 rounded-2xl border border-white/15 p-4 shadow-2xl backdrop-blur-md"
+      className="glass-strong space-y-3 rounded-3xl p-5"
     >
       <header className="flex items-center gap-2">
-        <span className="text-primary text-xs font-semibold tracking-wide uppercase">
-          {widget.title || KIND_LABEL[widget.kind]}
-        </span>
+        <span className="label-mono text-white/60">{widget.title || KIND_LABEL[widget.kind]}</span>
         <button
           type="button"
           onClick={onClose}

@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import type { PersonaSummary } from '@speakwow/shared';
 import GlassSurface from '@/components/GlassSurface';
 import Magnet from '@/components/Magnet';
 import type { CourseSpot } from '@/components/app/app';
 import { TeacherCarousel } from '@/components/app/teacher-carousel';
-import { useAuth } from '@/components/auth/auth-provider';
 import { cn } from '@/lib/shadcn/utils';
 import type { CallMode } from '@/lib/token-source';
 import ColorBends from '../ColorBends';
@@ -33,27 +31,21 @@ export const WelcomeView = ({
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
-  const { enabled: accounts, user, loading } = useAuth();
-
   return (
     <div ref={ref}>
-      <section className="flex flex-col items-center gap-3 px-4 pt-10 text-center">
-        <h1 className="text-foreground text-lg font-medium text-balance md:text-xl">
+      <section className="flex flex-col items-center gap-5 px-4 pt-14 text-center md:gap-6">
+        <h1 className="text-foreground text-3xl leading-[1.1] font-medium md:text-[2.75rem]">
           A teacher who remembers you.
         </h1>
 
         <TeacherCarousel personas={personas} onSelect={onSelectPersona} />
 
-        <p className="text-muted-foreground min-h-10 max-w-sm text-sm" aria-live="polite">
-          {persona.tagline_en}
+        <p className="label-mono text-white/50" aria-live="polite">
+          {persona.specialty_en}
         </p>
 
         {course && (
-          <div
-            className="flex rounded-full border border-white/10 p-0.5 text-xs"
-            role="group"
-            aria-label="What to do"
-          >
+          <div className="glass flex rounded-full p-1 text-xs" role="group" aria-label="What to do">
             {(
               [
                 ['course', `Lesson · Unit ${course.unitPosition}`],
@@ -66,8 +58,10 @@ export const WelcomeView = ({
                 onClick={() => onSelectMode(value)}
                 aria-pressed={mode === value}
                 className={cn(
-                  'rounded-full px-4 py-1.5 transition-colors',
-                  mode === value ? 'text-foreground bg-white/15' : 'text-muted-foreground'
+                  'rounded-full px-4 py-1.5 font-medium transition-colors',
+                  mode === value
+                    ? 'text-foreground bg-white/15 shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {label}
@@ -80,13 +74,13 @@ export const WelcomeView = ({
           <button
             type="button"
             onClick={onStartCall}
-            className="bg-background/10 mt-1 cursor-pointer rounded-full transition-transform duration-400 hover:scale-105 active:scale-95"
+            className="cursor-pointer rounded-full transition-transform duration-400 hover:scale-105 active:scale-95"
           >
             <GlassSurface
-              className="w-60 rounded-full font-mono text-xs uppercase"
+              className="w-64 rounded-full font-mono text-xs tracking-[0.14em] uppercase"
               displace={0.5}
-              width={240}
-              height={48}
+              width={256}
+              height={52}
               distortionScale={-180}
               redOffset={70}
               borderRadius={50}
@@ -96,19 +90,10 @@ export const WelcomeView = ({
               opacity={0.63}
               mixBlendMode="screen"
             >
-              <span>Talk to {persona.display_name}</span>
+              <span>Start talking</span>
             </GlassSurface>
           </button>
         </Magnet>
-
-        {accounts && !loading && !user && (
-          <p className="text-muted-foreground text-xs">
-            <Link href="/login" className="hover:text-foreground underline">
-              Sign in
-            </Link>{' '}
-            and {persona.display_name} will remember you next time
-          </p>
-        )}
       </section>
 
       {/* Dimmed so the teachers are the brightest thing on the page. */}

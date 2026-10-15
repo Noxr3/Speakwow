@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PageBackdrop } from '@/components/app/page-shell';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/shadcn/utils';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -61,30 +61,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-foreground text-3xl font-bold">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+    <div className="flex min-h-screen items-center justify-center px-4 py-24">
+      <PageBackdrop />
+      <div className="glass w-full max-w-md space-y-7 rounded-3xl p-7 md:p-9">
+        <div className="space-y-2 text-center">
+          <h1 className="text-foreground text-3xl font-semibold md:text-4xl">
+            {isSignUp ? 'Create account' : 'Sign in'}
           </h1>
-          <p className="text-muted-foreground mt-2">
-            {isSignUp
-              ? 'Your teacher will remember you, your goals and your progress.'
-              : 'Sign in so your teacher picks up where you left off.'}
-          </p>
         </div>
 
         {!enabled && (
-          <div className="bg-muted text-muted-foreground rounded-md p-3 text-sm">
-            Accounts are not set up on this server, so you can only talk as a guest. To enable them,
-            add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{' '}
-            (see the README).
-          </div>
+          <p className="text-muted-foreground text-center text-sm">
+            Accounts aren&apos;t set up on this server.
+          </p>
         )}
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
           <div>
-            <label htmlFor="email" className="text-foreground mb-1 block text-sm font-medium">
+            <label htmlFor="email" className="label-mono mb-2 block text-white/55">
               Email
             </label>
             <input
@@ -93,16 +87,13 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={cn(
-                'border-input bg-background text-foreground placeholder:text-muted-foreground w-full rounded-md border px-3 py-2',
-                'focus:border-primary focus:ring-primary focus:ring-1 focus:outline-none'
-              )}
+              className="field"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="text-foreground mb-1 block text-sm font-medium">
+            <label htmlFor="password" className="label-mono mb-2 block text-white/55">
               Password
             </label>
             <input
@@ -112,10 +103,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className={cn(
-                'border-input bg-background text-foreground placeholder:text-muted-foreground w-full rounded-md border px-3 py-2',
-                'focus:border-primary focus:ring-primary focus:ring-1 focus:outline-none'
-              )}
+              className="field"
               placeholder="••••••••"
             />
           </div>
@@ -128,7 +116,7 @@ export default function LoginPage() {
             <div className="bg-primary/10 text-primary rounded-md p-3 text-sm">{message}</div>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full rounded-full" disabled={loading}>
             {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
           </Button>
         </form>
@@ -138,11 +126,18 @@ export default function LoginPage() {
             <div className="border-border w-full border-t" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-background text-muted-foreground px-2">Or continue with</span>
+            <span className="label-mono bg-transparent px-3 text-white/40 backdrop-blur-xl">
+              or
+            </span>
           </div>
         </div>
 
-        <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full rounded-full border-white/15 bg-white/[0.04] hover:bg-white/10"
+          onClick={handleGoogleSignIn}
+        >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
               fill="currentColor"
@@ -181,7 +176,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm">
           <Link href="/" className="text-muted-foreground hover:text-foreground underline">
-            Continue as a guest
+            Continue as guest
           </Link>
         </p>
       </div>

@@ -121,7 +121,11 @@ export function LiveOverlays() {
         )}
       </AnimatePresence>
 
-      <div className="mx-auto mb-2 flex max-w-2xl flex-wrap justify-center gap-1" role="toolbar">
+      <div
+        className="glass mx-auto mb-3 flex w-fit max-w-full flex-wrap justify-center gap-0.5 rounded-full p-1"
+        role="toolbar"
+        aria-label="Send a sticker"
+      >
         {TRAY.map((id) => {
           const sticker = BY_ID.get(id)!;
           return (
@@ -131,7 +135,7 @@ export function LiveOverlays() {
               onClick={() => sendSticker(sticker)}
               title={`Send ${sticker.label}`}
               aria-label={`Send ${sticker.label} sticker`}
-              className="bg-background/60 hover:bg-background/90 rounded-full border border-white/10 p-1.5 text-xl leading-none backdrop-blur transition-transform hover:scale-110 active:scale-95"
+              className="rounded-full p-1.5 text-xl leading-none transition-transform hover:scale-115 hover:bg-white/10 active:scale-95"
             >
               {sticker.emoji}
             </button>

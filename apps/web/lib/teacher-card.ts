@@ -13,7 +13,7 @@ import type { PersonaSummary, TeacherMotif } from '@speakwow/shared';
 export const CARD_WIDTH = 460;
 export const CARD_HEIGHT = 640;
 const CX = CARD_WIDTH / 2;
-const CY = 262;
+const CY = 280;
 
 /** Deterministic PRNG so a teacher's card never changes between visits. */
 function seeded(text: string) {
@@ -195,42 +195,88 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
   }),
 };
 
-export function teacherCardSvg(persona: PersonaSummary): string {
+/** Matches the carousel's 20px corner radius at 200px card width. */
+const RADIUS = 46;
+
+export function teacherCardSvg(persona: PersonaSummary, fontDataUrl?: string | null): string {
   const [a, b] = persona.colors;
   const rand = seeded(persona.id);
   const motif = (MOTIFS[persona.motif] ?? MOTIFS.bars)(rand);
   const name = xml(persona.display_name.toUpperCase());
-  const tag = xml(persona.specialty_en.toUpperCase());
+  const font = fontDataUrl
+    ? `@font-face{font-family:CommitMono;src:url(${fontDataUrl}) format("woff")}`
+    : '';
+  const W = CARD_WIDTH;
+  const H = CARD_HEIGHT;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" width="${CARD_WIDTH}" height="${CARD_HEIGHT}">
+  // Liquid glass, drawn: a translucent body the page shows through, colour
+  // caustics inside, a specular sheen from the top-left, and a bright rim
+  // that catches the light along the top edge.
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
 <defs>
-<radialGradient id="ga"><stop offset="0" stop-color="${a}" stop-opacity=".9"/><stop offset="1" stop-color="${a}" stop-opacity="0"/></radialGradient>
-<radialGradient id="gb"><stop offset="0" stop-color="${b}" stop-opacity=".8"/><stop offset="1" stop-color="${b}" stop-opacity="0"/></radialGradient>
+<radialGradient id="ga"><stop offset="0" stop-color="${a}" stop-opacity=".7"/><stop offset="1" stop-color="${a}" stop-opacity="0"/></radialGradient>
+<radialGradient id="gb"><stop offset="0" stop-color="${b}" stop-opacity=".6"/><stop offset="1" stop-color="${b}" stop-opacity="0"/></radialGradient>
 <radialGradient id="core"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="${b}"/><stop offset="1" stop-color="${a}"/></radialGradient>
 <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="${b}"/></linearGradient>
 <linearGradient id="inkH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="${b}"/></linearGradient>
 <linearGradient id="hot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="${b}"/></linearGradient>
-<filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#101820" stop-opacity=".55"/><stop offset=".62" stop-color="#0b1015" stop-opacity=".66"/><stop offset="1" stop-color="#06080b" stop-opacity=".86"/></linearGradient>
+<linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset=".32" stop-color="#fff" stop-opacity=".04"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".35" stop-color="#fff" stop-opacity=".12"/><stop offset=".7" stop-color="${b}" stop-opacity=".18"/><stop offset="1" stop-color="${a}" stop-opacity=".55"/></linearGradient>
+<radialGradient id="spec" cx=".3" cy="0" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<clipPath id="card"><rect width="${W}" height="${H}" rx="${RADIUS}"/></clipPath>
+<filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
 <style>
+${font}
 @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(36px,-28px)}}
-@keyframes breathe{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes glint{0%,100%{opacity:.55}50%{opacity:1}}
 .g1{animation:drift 9s ease-in-out infinite,breathe 5s ease-in-out infinite}
 .g2{animation:drift 12s ease-in-out -4s infinite reverse,breathe 7s ease-in-out -2s infinite}
+.rim{animation:glint 6s ease-in-out infinite}
 ${motif.css}
-text{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace}
+text{font-family:CommitMono,ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
-<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="#050607"/>
-<circle class="g1" cx="120" cy="190" r="250" fill="url(#ga)"/>
-<circle class="g2" cx="350" cy="430" r="270" fill="url(#gb)"/>
-<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="#050607" opacity=".35"/>
+<g clip-path="url(#card)">
+<rect width="${W}" height="${H}" fill="url(#body)"/>
+<circle class="g1" cx="120" cy="190" r="240" fill="url(#ga)"/>
+<circle class="g2" cx="350" cy="430" r="260" fill="url(#gb)"/>
 <g filter="url(#glow)">${motif.svg}</g>
-<text x="36" y="548" font-size="56" font-weight="700" fill="#fff" letter-spacing="3">${name}</text>
-<text x="38" y="588" font-size="16" fill="${a}" letter-spacing="3">${tag}</text>
+<rect width="${W}" height="${H}" fill="url(#sheen)"/>
+<ellipse cx="150" cy="0" rx="260" ry="120" fill="url(#spec)"/>
+
+<text x="${W / 2}" y="${H - 62}" text-anchor="middle" font-size="40" fill="#fff" fill-opacity=".92" letter-spacing="9">${name}</text>
+</g>
+<rect class="rim" x="1.25" y="1.25" width="${W - 2.5}" height="${H - 2.5}" rx="${RADIUS - 1.25}" fill="none" stroke="url(#rim)" stroke-width="2.5"/>
+<rect x="7" y="7" width="${W - 14}" height="${H - 14}" rx="${RADIUS - 7}" fill="none" stroke="#fff" stroke-opacity=".06"/>
 </svg>`;
 }
 
-export function teacherCardUrl(persona: PersonaSummary): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(teacherCardSvg(persona))}`;
+export function teacherCardUrl(persona: PersonaSummary, fontDataUrl?: string | null): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(teacherCardSvg(persona, fontDataUrl))}`;
+}
+
+let cardFont: Promise<string | null> | null = null;
+
+/**
+ * An SVG used as an image cannot load web fonts, so the brand mono is inlined
+ * as a data URL (fetched once per page, ~57 KB). Falls back to the system mono.
+ */
+export function loadCardFont(): Promise<string | null> {
+  cardFont ??= fetch('/commit-mono-400-regular.woff')
+    .then((res) => (res.ok ? res.blob() : null))
+    .then(
+      (blob) =>
+        blob &&
+        new Promise<string | null>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        })
+    )
+    .catch(() => null);
+  return cardFont;
 }
