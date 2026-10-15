@@ -2,10 +2,12 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { useSessionContext } from '@livekit/components-react';
+import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
-import type { SelectableAgent } from '@/components/app/app';
+import type { CourseSpot } from '@/components/app/app';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
+import type { CallMode } from '@/lib/token-source';
 
 const MotionWelcomeView = motion.create(WelcomeView);
 const MotionSessionView = motion.create(SessionView);
@@ -30,11 +32,23 @@ const VIEW_MOTION_PROPS = {
 
 interface ViewControllerProps {
   appConfig: AppConfig;
-  selectedAgent: SelectableAgent;
-  onSelectAgent: (agent: SelectableAgent) => void;
+  personas: PersonaSummary[];
+  persona: PersonaSummary;
+  onSelectPersona: (id: string) => void;
+  course: CourseSpot | null;
+  mode: CallMode;
+  onSelectMode: (mode: CallMode) => void;
 }
 
-export function ViewController({ appConfig, selectedAgent, onSelectAgent }: ViewControllerProps) {
+export function ViewController({
+  appConfig,
+  personas,
+  persona,
+  onSelectPersona,
+  course,
+  mode,
+  onSelectMode,
+}: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
 
   return (
@@ -44,8 +58,12 @@ export function ViewController({ appConfig, selectedAgent, onSelectAgent }: View
         <MotionWelcomeView
           key="welcome"
           {...VIEW_MOTION_PROPS}
-          selectedAgent={selectedAgent}
-          onSelectAgent={onSelectAgent}
+          personas={personas}
+          persona={persona}
+          onSelectPersona={onSelectPersona}
+          course={course}
+          mode={mode}
+          onSelectMode={onSelectMode}
           onStartCall={start}
         />
       )}
@@ -55,7 +73,8 @@ export function ViewController({ appConfig, selectedAgent, onSelectAgent }: View
           key="session-view"
           {...VIEW_MOTION_PROPS}
           appConfig={appConfig}
-          selectedAgent={selectedAgent}
+          persona={persona}
+          mode={course ? mode : 'free'}
         />
       )}
     </AnimatePresence>

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "about": "Stickers the teacher can send mid-conversation, and the student can send back. `code` names the Noto Animated Emoji file (CC BY 4.0, https://googlefonts.github.io/noto-emoji-animation/); the web falls back to the plain emoji when an animation is missing. Ids are the vocabulary the agent's send_sticker tool accepts.",
+  "stickers": [
+    { "id": "laugh", "emoji": "😂", "code": "1f602", "label": "Laughing", "when": "something was genuinely funny" },
+    { "id": "grin", "emoji": "😄", "code": "1f604", "label": "Happy", "when": "a warm, happy moment" },
+    { "id": "wink", "emoji": "😉", "code": "1f609", "label": "Wink", "when": "teasing gently or sharing a little secret" },
+    { "id": "sweat_smile", "emoji": "😅", "code": "1f605", "label": "Oops", "when": "a small mistake or an awkward story, theirs or yours" },
+    { "id": "wow", "emoji": "😮", "code": "1f62e", "label": "Wow", "when": "you are surprised by what they said" },
+    { "id": "mind_blown", "emoji": "🤯", "code": "1f92f", "label": "Mind blown", "when": "something truly amazing or a big realisation" },
+    { "id": "star_struck", "emoji": "🤩", "code": "1f929", "label": "Amazed", "when": "they did something impressive" },
+    { "id": "love_it", "emoji": "😍", "code": "1f60d", "label": "Love it", "when": "they mention something you adore" },
+    { "id": "thinking", "emoji": "🤔", "code": "1f914", "label": "Thinking", "when": "you are considering their idea or posing a puzzle" },
+    { "id": "eyes", "emoji": "👀", "code": "1f440", "label": "Tell me more", "when": "a juicy story is starting" },
+    { "id": "hug", "emoji": "🤗", "code": "1f917", "label": "Hug", "when": "they are sad, tired or need comfort" },
+    { "id": "sad", "emoji": "😢", "code": "1f622", "label": "Sad", "when": "they share bad news" },
+    { "id": "clap", "emoji": "👏", "code": "1f44f", "label": "Applause", "when": "they nailed a sentence, word or sound" },
+    { "id": "thumbs_up", "emoji": "👍", "code": "1f44d", "label": "Nice", "when": "a quick, light approval" },
+    { "id": "hundred", "emoji": "💯", "code": "1f4af", "label": "Perfect", "when": "an answer was exactly right" },
+    { "id": "fire", "emoji": "🔥", "code": "1f525", "label": "On fire", "when": "they are on a streak or full of energy" },
+    { "id": "muscle", "emoji": "💪", "code": "1f4aa", "label": "You can do it", "when": "encouraging them before a hard try" },
+    { "id": "crossed_fingers", "emoji": "🤞", "code": "1f91e", "label": "Good luck", "when": "they have an exam, interview or big day coming" },
+    { "id": "party", "emoji": "🎉", "code": "1f389", "label": "Celebrate", "when": "a milestone, good news or the end of a great lesson" },
+    { "id": "heart", "emoji": "❤️", "code": "2764_fe0f", "label": "Love", "when": "a heartfelt moment" },
+    { "id": "salute", "emoji": "🫡", "code": "1fae1", "label": "Yes, teacher", "when": "accepting a challenge or a promise for next time" },
+    { "id": "coffee", "emoji": "☕", "code": "2615", "label": "Coffee", "when": "small talk about mornings, coffee or a break" },
+    { "id": "sleepy", "emoji": "😴", "code": "1f634", "label": "Sleepy", "when": "late nights, tiredness or a boring thing" },
+    { "id": "rocket", "emoji": "🚀", "code": "1f680", "label": "Level up", "when": "they made clear progress since last time" }
+  ]
+}

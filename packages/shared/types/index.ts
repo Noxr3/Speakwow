@@ -10,14 +10,18 @@ export interface PersonaCard {
   display_name: string;
   /** one-line persona for the teacher-picker page (display only, never in prompt) */
   tagline: string;
+  /** the same in English, for the default (English) UI */
+  tagline_en: string;
   gender: 'male' | 'female';
   /** e.g. "American" | "RP British" */
   accent: string;
   accent_tag: string;
   /** e.g. "encourage" | "rigorous" (display only) */
   teaching_style: string;
-  /** realtime voice candidate — C2 audition decides final value */
+  /** legacy: the xAI voice. Prefer `voices`. */
   voice: string;
+  /** realtime voice per provider, e.g. { xai: "Rex", openai: "cedar" } */
+  voices: Partial<Record<'xai' | 'openai', string>>;
   language_policy: string;
   /** system prompt body */
   personality: string;
@@ -30,6 +34,46 @@ export interface PersonaCard {
   guidance_style: { scenario: string; expression: string }[];
   /** pointer only — the red lines themselves are injected by the shared teacher layer */
   boundaries: string;
+  /** the teacher's own life: who they are and storylines that move forward over time */
+  life?: {
+    about?: string;
+    routine?: string[];
+    loves?: string[];
+    dislikes?: string[];
+    opinions?: string[];
+    threads?: { title: string; headline?: string; beats: string[] }[];
+  };
+  /** the picker card: what they are best at, and their two signature colours */
+  specialty_en?: string;
+  specialty?: string;
+  look?: { colors: [string, string]; motif?: TeacherMotif };
+  /** one line in character, read aloud as the voice sample on the picker */
+  sample_line?: string;
+}
+
+/** The animated voiceprint drawn on the teacher's card (apps/web/lib/teacher-card.ts). */
+export type TeacherMotif =
+  | 'bars'
+  | 'wave'
+  | 'rings'
+  | 'dots'
+  | 'pixels'
+  | 'radial'
+  | 'flame'
+  | 'orbit'
+  | 'strings'
+  | 'ripple';
+
+// ---------- Stickers (packages/shared/stickers.json) ----------
+
+export interface Sticker {
+  id: string;
+  emoji: string;
+  /** Noto Animated Emoji file name, e.g. "1f602" */
+  code: string;
+  label: string;
+  /** when the teacher should use it (goes into the agent prompt) */
+  when: string;
 }
 
 // ---------- Core DB rows (mirror of public schema) ----------
@@ -44,6 +88,8 @@ export interface Profile {
   id: string;
   display_name: string | null;
   level: string | null;
+  grade: string | null;
+  learning_goal: string | null;
   points: number;
   preferred_topics: string[];
   selected_textbook_id: string | null;

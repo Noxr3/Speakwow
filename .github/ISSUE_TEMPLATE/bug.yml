@@ -1,0 +1,24 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1. Start a lesson with Frank  2. ...
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version, and voice provider (xai / openai)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (remove any keys or personal details)
+      render: text

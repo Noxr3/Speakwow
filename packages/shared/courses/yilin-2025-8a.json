@@ -1,0 +1,510 @@
+{
+  "slug": "yilin-2025-8a",
+  "title": "译林版初中英语 八年级上册（8A，新课标）",
+  "description": "Yilin Press junior-high English 8A, the edition revised for the 2022 national curriculum standard and used in Jiangsu. Outline only: unit titles, topics, grammar points, language functions and short word lists; no textbook text. Speaking tasks are original to Speakwow. Theme categories (人与自我 / 人与社会 / 人与自然) are our own classification against the standard, not the teacher's book.",
+  "subject": "english",
+  "grade": "8",
+  "term": "A",
+  "region": "江苏",
+  "publisher": "译林出版社",
+  "edition": "2025",
+  "standard": "义务教育英语课程标准（2022年版）三级",
+  "units": [
+    {
+      "position": 1,
+      "title": "Friendship",
+      "title_zh": "友谊",
+      "theme": "人与社会",
+      "topic": "Friends and what makes a good friend",
+      "goals": [
+        {
+          "id": "u1-g1",
+          "kind": "speaking",
+          "text": "Describe friends' looks and personalities"
+        },
+        {
+          "id": "u1-g2",
+          "kind": "speaking",
+          "text": "Compare people"
+        },
+        {
+          "id": "u1-g3",
+          "kind": "speaking",
+          "text": "Talk about making friends"
+        },
+        {
+          "id": "u1-g4",
+          "kind": "grammar",
+          "text": "Use comparative and superlative adjectives"
+        },
+        {
+          "id": "u1-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: friendship, honest, cheerful, humorous, caring"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "friendship",
+          "honest",
+          "cheerful",
+          "humorous",
+          "caring",
+          "trustworthy",
+          "brave",
+          "thoughtful",
+          "secret",
+          "encourage"
+        ],
+        "grammar": [
+          "Comparative and superlative adjectives"
+        ],
+        "functions": [
+          "Describe friends' looks and personalities",
+          "Compare people",
+          "Talk about making friends"
+        ],
+        "speaking_tasks": [
+          "Describe your best friend",
+          "Compare two of your friends"
+        ]
+      }
+    },
+    {
+      "position": 2,
+      "title": "School life",
+      "title_zh": "学校生活",
+      "theme": "人与自我",
+      "topic": "School life in different countries; unusual schools",
+      "goals": [
+        {
+          "id": "u2-g1",
+          "kind": "speaking",
+          "text": "Compare school lives in different countries"
+        },
+        {
+          "id": "u2-g2",
+          "kind": "speaking",
+          "text": "Express preferences about school"
+        },
+        {
+          "id": "u2-g3",
+          "kind": "speaking",
+          "text": "Make suggestions (letter to a head teacher)"
+        },
+        {
+          "id": "u2-g4",
+          "kind": "grammar",
+          "text": "Use comparing amounts: more/most, fewer/fewest, less/least"
+        },
+        {
+          "id": "u2-g5",
+          "kind": "grammar",
+          "text": "Use as ... as / not as ... as"
+        },
+        {
+          "id": "u2-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: uniform, textbook, programme, international, vacation"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "uniform",
+          "textbook",
+          "programme",
+          "international",
+          "vacation",
+          "suggestion",
+          "improve",
+          "develop",
+          "junior",
+          "hands-on"
+        ],
+        "grammar": [
+          "Comparing amounts: more/most, fewer/fewest, less/least",
+          "as ... as / not as ... as"
+        ],
+        "functions": [
+          "Compare school lives in different countries",
+          "Express preferences about school",
+          "Make suggestions (letter to a head teacher)"
+        ],
+        "speaking_tasks": [
+          "Compare your school with a school in another country",
+          "Suggest one change to your school"
+        ]
+      }
+    },
+    {
+      "position": 3,
+      "title": "To be a good learner",
+      "title_zh": "做一名好的学习者",
+      "theme": "人与自我",
+      "topic": "Learning to learn; lifelong learning; language learning",
+      "goals": [
+        {
+          "id": "u3-g1",
+          "kind": "speaking",
+          "text": "Talk about learning methods and habits"
+        },
+        {
+          "id": "u3-g2",
+          "kind": "speaking",
+          "text": "Give advice on learning (e.g. language learning)"
+        },
+        {
+          "id": "u3-g3",
+          "kind": "speaking",
+          "text": "Describe a love of learning"
+        },
+        {
+          "id": "u3-g4",
+          "kind": "grammar",
+          "text": "Use comparative and superlative adverbs"
+        },
+        {
+          "id": "u3-g5",
+          "kind": "grammar",
+          "text": "Use reflexive pronouns"
+        },
+        {
+          "id": "u3-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: learner, lifelong, successful, inventor, talent"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "learner",
+          "lifelong",
+          "successful",
+          "inventor",
+          "talent",
+          "pronunciation",
+          "grammar",
+          "translate",
+          "conversation",
+          "journey"
+        ],
+        "grammar": [
+          "Comparative and superlative adverbs",
+          "Reflexive pronouns"
+        ],
+        "functions": [
+          "Talk about learning methods and habits",
+          "Give advice on learning (e.g. language learning)",
+          "Describe a love of learning"
+        ],
+        "speaking_tasks": [
+          "Share how you learn English best",
+          "Give a friend advice on learning"
+        ]
+      }
+    },
+    {
+      "position": 4,
+      "title": "Hands-on fun",
+      "title_zh": "动手的乐趣",
+      "theme": "人与自我",
+      "topic": "DIY and hands-on activities (e.g. paper roses, tie-dyeing)",
+      "goals": [
+        {
+          "id": "u4-g1",
+          "kind": "speaking",
+          "text": "Give step-by-step instructions"
+        },
+        {
+          "id": "u4-g2",
+          "kind": "speaking",
+          "text": "Give advice"
+        },
+        {
+          "id": "u4-g3",
+          "kind": "speaking",
+          "text": "Describe a DIY activity (diary entry)"
+        },
+        {
+          "id": "u4-g4",
+          "kind": "grammar",
+          "text": "Use imperative sentences (giving instructions)"
+        },
+        {
+          "id": "u4-g5",
+          "kind": "grammar",
+          "text": "Use should and had better (giving advice)"
+        },
+        {
+          "id": "u4-g6",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: DIY, handyman, tie-dye, fold, glue"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "DIY",
+          "handyman",
+          "tie-dye",
+          "fold",
+          "glue",
+          "thread",
+          "dye",
+          "workshop",
+          "pattern"
+        ],
+        "grammar": [
+          "Imperative sentences (giving instructions)",
+          "should and had better (giving advice)"
+        ],
+        "functions": [
+          "Give step-by-step instructions",
+          "Give advice",
+          "Describe a DIY activity (diary entry)"
+        ],
+        "speaking_tasks": [
+          "Teach your teacher how to make something, step by step"
+        ]
+      }
+    },
+    {
+      "position": 5,
+      "title": "Wild animals",
+      "title_zh": "野生动物",
+      "theme": "人与自然",
+      "topic": "Wild animals and their protection (e.g. pandas)",
+      "goals": [
+        {
+          "id": "u5-g1",
+          "kind": "speaking",
+          "text": "Describe wild animals and threats to them"
+        },
+        {
+          "id": "u5-g2",
+          "kind": "speaking",
+          "text": "Talk about ways to protect wild animals"
+        },
+        {
+          "id": "u5-g3",
+          "kind": "speaking",
+          "text": "Persuade others to take action"
+        },
+        {
+          "id": "u5-g4",
+          "kind": "grammar",
+          "text": "Use to-infinitives"
+        },
+        {
+          "id": "u5-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: giant panda, dolphin, shark, wolf, polar bear"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "giant panda",
+          "dolphin",
+          "shark",
+          "wolf",
+          "polar bear",
+          "rhino",
+          "nature reserve",
+          "in danger",
+          "protection",
+          "pollution"
+        ],
+        "grammar": [
+          "To-infinitives"
+        ],
+        "functions": [
+          "Describe wild animals and threats to them",
+          "Talk about ways to protect wild animals",
+          "Persuade others to take action"
+        ],
+        "speaking_tasks": [
+          "Talk about an animal in danger and how to help it",
+          "Persuade someone to protect wildlife"
+        ]
+      }
+    },
+    {
+      "position": 6,
+      "title": "Seasons",
+      "title_zh": "季节",
+      "theme": "人与自然",
+      "topic": "Weather and seasons; seasons around the world; Solar Terms",
+      "goals": [
+        {
+          "id": "u6-g1",
+          "kind": "speaking",
+          "text": "Describe weather and seasons"
+        },
+        {
+          "id": "u6-g2",
+          "kind": "speaking",
+          "text": "Say which season you like and why"
+        },
+        {
+          "id": "u6-g3",
+          "kind": "speaking",
+          "text": "Compare seasons in different places"
+        },
+        {
+          "id": "u6-g4",
+          "kind": "grammar",
+          "text": "Use verbs and sentence structures (I) (transitive/intransitive verbs, basic sentence patterns)"
+        },
+        {
+          "id": "u6-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: foggy, snowy, shower, snowstorm, frozen"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "foggy",
+          "snowy",
+          "shower",
+          "snowstorm",
+          "frozen",
+          "sunshine",
+          "harvest",
+          "temperature",
+          "average",
+          "blow"
+        ],
+        "grammar": [
+          "Verbs and sentence structures (I) (transitive/intransitive verbs, basic sentence patterns)"
+        ],
+        "functions": [
+          "Describe weather and seasons",
+          "Say which season you like and why",
+          "Compare seasons in different places"
+        ],
+        "speaking_tasks": [
+          "Describe your favourite season",
+          "Talk about today's weather where you are"
+        ]
+      }
+    },
+    {
+      "position": 7,
+      "title": "The natural world",
+      "title_zh": "自然世界",
+      "theme": "人与自然",
+      "topic": "Earth's main ecosystems and protecting them",
+      "goals": [
+        {
+          "id": "u7-g1",
+          "kind": "speaking",
+          "text": "Describe ecosystems"
+        },
+        {
+          "id": "u7-g2",
+          "kind": "speaking",
+          "text": "Discuss threats to ecosystems and how to protect them"
+        },
+        {
+          "id": "u7-g3",
+          "kind": "grammar",
+          "text": "Use verbs and sentence structures (II)"
+        },
+        {
+          "id": "u7-g4",
+          "kind": "grammar",
+          "text": "Use coordinating conjunctions and / but / or / so"
+        },
+        {
+          "id": "u7-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: ecosystem, coral, reef, wetland, wildlife"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "ecosystem",
+          "coral",
+          "reef",
+          "wetland",
+          "wildlife",
+          "penguin",
+          "climate",
+          "pond",
+          "carbon dioxide",
+          "wastewater"
+        ],
+        "grammar": [
+          "Verbs and sentence structures (II)",
+          "Coordinating conjunctions and / but / or / so"
+        ],
+        "functions": [
+          "Describe ecosystems",
+          "Discuss threats to ecosystems and how to protect them"
+        ],
+        "speaking_tasks": [
+          "Describe a natural place you have visited",
+          "Say what we should do to protect it"
+        ]
+      }
+    },
+    {
+      "position": 8,
+      "title": "Safe and sound",
+      "title_zh": "安然无恙",
+      "theme": "人与自然",
+      "topic": "Emergencies and natural disasters; staying safe",
+      "goals": [
+        {
+          "id": "u8-g1",
+          "kind": "speaking",
+          "text": "Describe emergencies and natural disasters"
+        },
+        {
+          "id": "u8-g2",
+          "kind": "speaking",
+          "text": "Narrate what was happening in the past"
+        },
+        {
+          "id": "u8-g3",
+          "kind": "speaking",
+          "text": "Give safety advice"
+        },
+        {
+          "id": "u8-g4",
+          "kind": "grammar",
+          "text": "Use past continuous tense (with when / while)"
+        },
+        {
+          "id": "u8-g5",
+          "kind": "vocabulary",
+          "text": "Use the unit's key words in your own sentences: emergency, typhoon, lightning, tidal wave, bush fire"
+        }
+      ],
+      "content": {
+        "vocabulary": [
+          "emergency",
+          "typhoon",
+          "lightning",
+          "tidal wave",
+          "bush fire",
+          "shake",
+          "avoid",
+          "calm down",
+          "fireman",
+          "policeman"
+        ],
+        "grammar": [
+          "Past continuous tense (with when / while)"
+        ],
+        "functions": [
+          "Describe emergencies and natural disasters",
+          "Narrate what was happening in the past",
+          "Give safety advice"
+        ],
+        "speaking_tasks": [
+          "Tell what you were doing when something surprising happened",
+          "Give safety advice for a typhoon"
+        ]
+      }
+    }
+  ]
+}

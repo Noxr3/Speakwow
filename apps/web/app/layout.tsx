@@ -1,17 +1,13 @@
-import { Public_Sans } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
 import Link from 'next/link';
+import { AccountLinks } from '@/components/app/account-links';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { cn } from '@/lib/shadcn/utils';
 import { getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
 
-const publicSans = Public_Sans({
-  variable: '--font-public-sans',
-  subsets: ['latin'],
-});
-
+// One typeface throughout: CommitMono.
 const commitMono = localFont({
   display: 'swap',
   variable: '--font-commit-mono',
@@ -50,14 +46,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const { pageTitle, pageDescription, logo } = appConfig;
 
   return (
-    <html
-      lang="en"
-      className={cn(
-        publicSans.variable,
-        commitMono.variable,
-        'dark scroll-smooth font-sans antialiased'
-      )}
-    >
+    <html lang="en" className={cn(commitMono.variable, 'dark scroll-smooth font-sans antialiased')}>
       <head>
         {styles && <style>{styles}</style>}
         <title>{pageTitle}</title>
@@ -65,11 +54,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className="overflow-x-hidden">
         <AuthProvider>
-          <header className="fixed top-0 left-0 z-50 hidden w-full flex-row justify-between p-6 md:flex">
+          <header className="fixed top-0 left-0 z-50 flex w-full flex-row items-center justify-between p-4 md:p-6">
             <Link href="/" className="scale-100 transition-transform duration-300 hover:scale-110">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={logo} alt="Speakwow Logo" className="h-6 w-auto" />
             </Link>
+            <AccountLinks />
           </header>
 
           {children}

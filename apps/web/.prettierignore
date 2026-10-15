@@ -7,3 +7,6 @@ pnpm-lock.yaml
 
 
 
+
+# vendored from React Bits, kept byte-for-byte so upstream updates diff cleanly
+components/CircularCarousel.tsx

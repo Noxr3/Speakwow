@@ -3,26 +3,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSessionContext, useSessionMessages } from '@livekit/components-react';
+import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
 import DotGrid from '@/components/DotGrid';
 import {
   AgentControlBar,
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
-import type { SelectableAgent } from '@/components/app/app';
 import { ChatTranscript } from '@/components/app/chat-transcript';
+import { LiveOverlays } from '@/components/app/live-overlays';
 import { TileLayout } from '@/components/app/tile-layout';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/shadcn/utils';
+import type { CallMode } from '@/lib/token-source';
 import { Shimmer } from '../ai-elements/shimmer';
 
 const MotionBottom = motion.create('div');
 
 const MotionMessage = motion.create(Shimmer);
-
-const AGENT_LABELS: Record<SelectableAgent, string> = {
-  Frank: 'English conversation partner',
-  Lucy: 'OpenAgora agent',
-};
 
 const BOTTOM_VIEW_MOTION_PROPS = {
   variants: {
@@ -90,12 +88,14 @@ export function Fade({ top = false, bottom = false, className }: FadeProps) {
 
 interface SessionViewProps {
   appConfig: AppConfig;
-  selectedAgent: SelectableAgent;
+  persona: PersonaSummary;
+  mode: CallMode;
 }
 
 export const SessionView = ({
   appConfig,
-  selectedAgent,
+  persona,
+  mode,
   ...props
 }: React.ComponentProps<'section'> & SessionViewProps) => {
   const session = useSessionContext();
@@ -146,16 +146,18 @@ export const SessionView = ({
         />
       </div>
       <Fade top className="absolute inset-x-4 top-0 z-10 h-40" />
-      {/* Agent indicator: prominently identifies the current conversation agent (Frank/Lucy)
+      {/* Agent indicator: prominently identifies the current teacher
           so users with multiple tabs open never continue a session in the wrong context. */}
       <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center">
-        <div className="bg-background/70 flex items-center gap-2 rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase backdrop-blur-md">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
-          <span className="text-foreground">{selectedAgent}</span>
-          <span className="text-muted-foreground font-normal normal-case">
-            {AGENT_LABELS[selectedAgent]}
-          </span>
-        </div>
+        <LiquidGlass radius={999} width="auto">
+          <div className="flex items-center gap-2.5 px-4 py-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153)]" />
+            <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
+            <span className="label-mono text-white/50">
+              {mode === 'course' ? 'Lesson' : 'Free talk'}
+            </span>
+          </div>
+        </LiquidGlass>
       </div>
       {/* transcript */}
       <ChatTranscript
@@ -181,11 +183,12 @@ export const SessionView = ({
                 {...SHIMMER_MOTION_PROPS}
                 className="pointer-events-none mx-auto block w-full max-w-2xl pb-4 text-center text-sm font-semibold"
               >
-                Agent is listening, ask it a question
+                {persona.display_name} is joining…
               </MotionMessage>
             )}
           </AnimatePresence>
         )}
+        <LiveOverlays />
         <div className="relative mx-auto max-w-2xl pb-3 md:pb-12">
           <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
           <AgentControlBar

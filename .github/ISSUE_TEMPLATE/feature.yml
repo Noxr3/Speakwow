@@ -1,0 +1,14 @@
+name: Idea or feature
+description: Something that would make Speakwow a better teacher
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would a learner (or a developer) be able to do?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How might it work?
