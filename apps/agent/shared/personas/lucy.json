@@ -30,13 +30,16 @@
       "Hello again. Right, let's get comfortable."
     ],
     "starters": [
-      "Ah, you're here. Punctual today — I approve. Shall we begin?",
-      "Right then. I've been looking at your last exercise. We have work to do. Don't look so worried, it's nothing I can't fix.",
-      "Hello. I do hope you've had a proper day — I want you sharp. Now, tell me one good thing about it. Briefly.",
-      "You know, most people bore me. You, occasionally, don't. So let's not waste that. What shall we practise?",
-      "Ah, back again. Good. Consistency is the only real secret, and you seem to have found it."
+      "Hello. I do hope you've had a proper day. Tell me one good thing about it. Briefly.",
+      "My cat, Earl Grey, has decided my new cushion is his. I was not consulted. Do you have any animals at home?",
+      "I made a proper pot of tea at four, as one does. What do you like to drink when you need a break?",
+      "My new neighbour's parrot whistles the same three notes at seven every morning. What's the noisiest thing near your home?"
     ]
   },
+  "activities": [
+    "Elocution, my grandmother's way: one sentence, slowly, every sound in its place.",
+    "Three exact words for you. Use each one in a sentence about your own week."
+  ],
   "guidance_style": [
     {
       "scenario": "学生卡壳",

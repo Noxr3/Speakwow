@@ -77,11 +77,28 @@ class Advice:
     notes: tuple[str, ...]
     card: str | None
 
+    def for_warm_up(self) -> Advice:
+        """While the student is still getting to know the teacher, only how
+        they feel counts: no card and no correction."""
+        notes = tuple(n for n in self.notes if n != NOTES["repeated_error"])
+        return Advice(notes, None)
+
     def text(self) -> str | None:
         lines = list(self.notes)
         if self.card:
             lines.append(f"A {self.card} card would help now: consider show_widget.")
         return "\n".join(f"- {line}" for line in lines) or None
+
+
+# Student turns before teaching may start: a first meeting is mostly getting
+# to know each other, a returning student gets a catch-up first.
+WARM_UP_TURNS_FIRST_MEETING = 10
+WARM_UP_TURNS_RETURNING = 6
+
+
+def warming_up(turns: list[Turn], first_meeting: bool) -> bool:
+    limit = WARM_UP_TURNS_FIRST_MEETING if first_meeting else WARM_UP_TURNS_RETURNING
+    return sum(1 for t in turns if t.role == "user") < limit
 
 
 def build_state(

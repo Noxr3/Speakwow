@@ -76,3 +76,18 @@ def test_switch(monkeypatch) -> None:
     assert Coach.from_env() is not None
     monkeypatch.setenv("COACH", "off")
     assert Coach.from_env() is None
+
+
+def test_no_cards_or_corrections_while_getting_to_know_each_other() -> None:
+    from coach import NOTES, Advice, warming_up
+    from reflect import Turn
+
+    advice = Advice((NOTES["stuck"], NOTES["repeated_error"]), "word_card")
+    calm = advice.for_warm_up()
+    assert calm.notes == (NOTES["stuck"],) and calm.card is None
+
+    five = [Turn("user", "hi")] * 5
+    assert warming_up(five, first_meeting=True)
+    assert warming_up(five, first_meeting=False)
+    assert not warming_up(five * 2, first_meeting=False)
+    assert not warming_up(five * 2, first_meeting=True)

@@ -42,7 +42,11 @@ def test_lesson_plan_lists_weakest_goal_first_and_course_mode_uses_it() -> None:
     assert "## Today's lesson" not in build_instructions(FRANK, SNAPSHOT, mode="free")
     # The lesson waits for the warm-up: the hello never mentions it.
     assert "lesson" not in opening_instructions(FRANK, SNAPSHOT).lower()
-    assert "2. Topic" in build_instructions(FRANK, SNAPSHOT, mode="course")
+    # A course student with nothing remembered yet is meeting the teacher for
+    # the first time: the lesson is only offered, after getting to know them.
+    first = build_instructions(FRANK, SNAPSHOT, mode="course")
+    assert "a first taste of today's lesson topic" in first
+    assert first.index("1. Get to know each other") < first.index("a first taste")
     assert lesson_section({"current_course": None}) is None
     assert current_unit({}) is None
 

@@ -35,10 +35,11 @@ learning for life.
 | 🎙️ **Real-time voice** | Speech-to-speech, so the teacher hears hesitation and excitement and answers with feeling. Defaults to Grok Voice (`grok-voice-3.0`, pinned), with OpenAI Realtime one setting away. Turn-taking is tuned for learners who pause to find a word. |
 | 🧠 **Remembers you** | After every call the lesson is reflected on: a summary, what you are working on, things a teacher would remember (your goals, your cat's name), and an estimated CEFR level. Next time, the teacher picks up where you left off. |
 | 🧑‍🏫 **A teacher, not a chatbot** | Recasts mistakes instead of lecturing, stretches you when it is easy, scaffolds when you are stuck, and praises specifically. A fast background "coach" model notices when you are stuck or bored and quietly tells the teacher, without adding any delay. |
-| 🏡 **Ten teachers, each with a life** | Frank, Lucy, Lily, Leo, Kai, Grace, Diego, Priya, Nora and Max: different accents, teaching styles and specialities (beginners, interviews, stories, science, songs…). Each has a backstory and storylines that move forward every few days, so small talk is two-way and consistent. Pick one on a 3D ring of animated cards and hear their voice. |
+| 🏡 **Ten teachers, each with a life** | Frank, Lucy, Lily, Leo, Kai, Grace, Diego, Priya, Nora and Max: different accents, teaching styles and specialities (beginners, interviews, stories, science, songs…). Each has a backstory and storylines that move forward every few days, so small talk is two-way and consistent. Pick one from the menu beside the start button. |
 | 📚 **Your textbook, unit by unit** | Courses are data: units with goals, vocabulary, grammar and speaking tasks. In lesson mode the teacher works on your weakest goals, scores them after the call, and moves you on when a unit is mastered. Ships with the Jiangsu Yilin junior-high English course. |
 | 🃏 **Cards and stickers mid-call** | The teacher can put a word card, quick quiz, fill-the-gap, sentence builder or "say it out loud" card on screen, and react with animated stickers. Your taps and stickers go straight back to the teacher. |
 | 🗂️ **Your learning record** | One page with your course map, every unit's mastery, recent lessons, and everything the teacher remembers, each item erasable. |
+| 📞 **Call or text your teacher** | Link your phone and call the teacher's number, or text it between lessons. Same teacher, same memory: a call knows what you texted, a text knows your last call. Texts can use a different model. See [docs/PHONE_AND_SMS.md](docs/PHONE_AND_SMS.md). |
 | 🔑 **Bring your own key** | Use your own xAI or OpenAI key. It is encrypted (AES-256-GCM) before it is stored or handed to the voice service, and never appears in clear text in the database, LiveKit or logs. |
 | 🧩 **Built to be forked** | A new teacher is one JSON file. A new course is a folder of Markdown pages in [`courses/`](courses/), in any subject. Supabase is optional for a first run. |
 
@@ -104,7 +105,9 @@ and `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` for the agent.
 | `MEMORY_LLM_API_KEY`, `MEMORY_LLM_BASE_URL`, `MEMORY_LLM_MODEL` | agent | Any OpenAI-compatible model for post-call reflection (e.g. a local Ollama) |
 | `COACH=off` | agent | Turns the coaching sidecar off |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | web | Accounts, learning record, courses |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | agent | Reading and writing memory (server-side only) |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | agent, web | Reading and writing memory; on the web, linking phone numbers (server-side only) |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`, `SPEAKWOW_PHONE_NUMBER` | web | Linking a phone with a texted code; the teacher line shown in Settings |
+| `TWILIO_AUTH_TOKEN`, `SMS_WEBHOOK_URL`, `SMS_MODEL` / `SMS_LLM_*`, `SMS_DAILY_LIMIT` | sms server | Text messages with the teacher ([docs/PHONE_AND_SMS.md](docs/PHONE_AND_SMS.md)) |
 | `BYOK_ENCRYPTION_KEY` | web, agent | 32 random bytes, base64 (`openssl rand -base64 32`). Enables bring-your-own-key |
 | `REQUIRE_BYOK=true` | web | Every call must bring its own key (public demos that should not spend your credits) |
 | `ALLOW_GUESTS=false` | web | Only signed-in students can start a call |
@@ -147,7 +150,7 @@ Good first issues are labelled [`good first issue`](https://github.com/Noxr3/Spe
 [MIT](LICENSE), with two exceptions noted in the files themselves:
 
 - The animated components in `apps/web/components/` taken from [React Bits](https://reactbits.dev)
-  (`CircularCarousel`, `ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
+  (`ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
   `LiquidEther`) are © David Haz under MIT + Commons Clause: use them as part of an
   app, but do not sell or redistribute the components on their own.
 - Animated stickers are [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)

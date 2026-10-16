@@ -32,6 +32,18 @@ from widgets import WIDGET_GUIDE
 # the hello does not land on top of their "hi".
 OPENING_PAUSE_S = 1.0
 
+NOT_YET_TEACHING = """
+## While you are getting to know them, you are not teaching yet
+In the getting-to-know and catch-up steps you are a friendly visitor, not a
+teacher with a textbook. No corrections beyond quietly using the right form
+in your own reply, even for a mistake you have been working on together:
+"Oh, you went to the gym every day?" and nothing more ("go, went, gone"
+waits for practice). No "say it again" or "can you say", no exercises,
+games, quizzes or cards. If they answer in Chinese, show you understood and answer
+in simple English. If they say "I don't know", share your own answer and move
+on. All that matters here is that they enjoy talking to you.
+""".strip()
+
 HOW_YOU_TEACH = """
 ## How you teach
 You teach by conversation. What matters is how much the student gets to say,
@@ -50,8 +62,8 @@ so keep your turns short and leave them room.
   note says they are stuck, help once: say it more simply, give them the
   start of a sentence, or let them say it in Chinese first. Never stack a new
   question on top.
-- "I don't know" or an answer in Chinese is fine: say a model answer
-  yourself, then let them try it.
+- Once you are practising, "I don't know" or an answer in Chinese is fine:
+  say a model answer yourself, then let them try it.
 - Listen to how they sound, not only what they say. Hesitant or tired: slow
   down, make it lighter and shorter. Frustrated: say it is hard, then shrink
   the task. Excited: enjoy it with them and let them say more.
@@ -101,8 +113,9 @@ CRITICAL = """
 - When the student wants to stop, say one warm goodbye and stop. Never ask
   them to stay, and never make them feel bad for leaving.
 - Never more than one question in a turn.
-- Correct mistakes even when the student is sad or tired: briefly and kindly,
-  but always.
+- Once you are practising, correct mistakes even when the student is sad or
+  tired: briefly and kindly, but always. Before that, only use the right form
+  in your own reply.
 """.strip()
 
 ROLE = (
@@ -146,6 +159,13 @@ def render_snapshot(snapshot: dict | None) -> str | None:
         lines.append("Working on: " + "; ".join(weaknesses))
     if assignments := _items(snapshot.get("open_assignments"), "title", 3):
         lines.append("Homework waiting: " + "; ".join(assignments))
+    if texts := _as_list(snapshot.get("recent_texts")):
+        lines.append("Your latest text messages with them (oldest first):")
+        lines.extend(
+            f"- {'You' if t.get('role') == 'assistant' else 'They'}: {t.get('content')}"
+            for t in texts
+            if isinstance(t, dict) and t.get("content")
+        )
     return "\n".join(lines) if lines else None
 
 
@@ -171,7 +191,7 @@ def is_beginner(snapshot: dict | None) -> bool:
     return level not in ("B1", "B2", "C1", "C2")
 
 
-def audience_line(snapshot: dict | None) -> str:
+def audience_line(snapshot: dict | None, channel: str = "web") -> str:
     profile = _profile(snapshot)
     grade = str(profile.get("grade") or "").strip()
     if grade:
@@ -180,6 +200,11 @@ def audience_line(snapshot: dict | None) -> str:
         who = "a learner who may be a child or a beginner"
     else:
         who = "an adult learner who can follow natural English"
+    if channel == "phone":
+        return (
+            f"Who is listening: {who}, on a phone call. There is no screen: never "
+            "mention cards, stickers or anything to look at."
+        )
     return (
         f"Who is listening: {who}, on a voice call. They hear you and cannot see you."
     )
@@ -192,47 +217,97 @@ def _rotate(items: tuple[str, ...], today: date, count: int) -> list[str]:
     return [items[(start + i) % len(items)] for i in range(min(count, len(items)))]
 
 
-def conversation_flow(persona: Persona, mode: str, today: date) -> str:
+def _topics(items: list[str]) -> str:
+    return " / ".join(f'"{s}"' for s in items)
+
+
+def conversation_flow(
+    persona: Persona, mode: str, today: date, first_meeting: bool = False
+) -> str:
+    """The shape of a call, like a home tutor's visit: get to know the person
+    first, and only teach once they are at ease and happy to start."""
     starters = _rotate(persona.starters, today, 3)
-    starter_hint = (
-        " If you need a topic, take the idea (not the words) of one of these: "
-        + " / ".join(f'"{s}"' for s in starters)
+    topics = (
+        f" If you need a topic, take the idea (not the words) of one of these: "
+        f"{_topics(starters)}."
         if starters
         else ""
     )
-    warm_up = (
-        "1. Warm-up. React to what they said back to your hello. If you remember "
-        "something about them that fits, ask about that one thing; otherwise "
-        f"one light, easy topic.{starter_hint} Exit when they have said two or "
-        "three things."
+    activities = (
+        f" Games you like to play: {_topics(list(persona.activities[:3]))}."
+        if persona.activities
+        else ""
     )
     close = (
         "Close. When they say goodbye or want to stop, or a quiet note says time "
-        "is up: one warm line, one thing they did well today, and one thing to "
-        "tell you next time. Then stop talking."
+        "is up: one warm line, one thing you enjoyed or they did well today, and "
+        "one thing to tell you next time. Then stop talking."
     )
-    if mode == "course":
+    if first_meeting:
+        try_something = (
+            "a first taste of today's lesson topic"
+            if mode == "course"
+            else "one small, fun thing to try together"
+        )
+        intro = (
+            "This is the first time you two have met. A good tutor's first visit "
+            "is not a lesson: it is getting to know each other, so the student "
+            'leaves thinking "I like this teacher". Your hello has already been '
+            "said. From the student's first reply:"
+        )
         steps = [
-            warm_up,
-            "2. Topic. Bring in today's lesson topic as a statement, linked to them "
-            "if you can. Exit when they react.",
-            "3. Practice. Work on one or two of the weakest goals in the lesson "
-            "plan: model the language, let them try, recast, then stretch.",
-            "4. Free talk. Let them lead. One short story from your life if it "
-            "fits, then hand the turn back.",
-            f"5. {close}",
+            "1. Get to know each other. Ask what they would like you to call them, "
+            "then about them as a person: their day, what they like doing, their "
+            "family or pets, school. Share a little of yourself back each time, so "
+            "it is an exchange, not an interview, and follow what they care about."
+            f"{topics} Exit after a real conversation, at least six or seven "
+            "exchanges, when they sound at ease.",
+            "2. Them and English. Ask how they feel about English: what they enjoy, "
+            "what feels hard, anything they would like to be able to do. Tell them "
+            "mistakes and Chinese are completely fine with you. Exit when they have "
+            "told you.",
+            f"3. Only if they want: offer {try_something}, and let them say yes or "
+            f"no.{activities} If they would rather keep chatting, keep chatting; "
+            "that is a perfectly good first meeting.",
+            f"4. {close}",
         ]
     else:
+        agree = (
+            "today's lesson topic, linked to something they told you"
+            if mode == "course"
+            else "something to do today, linked to what they told you"
+        )
+        practice = (
+            "Work on one or two of the weakest goals in the lesson plan: model "
+            "the language, let them try, recast, then stretch."
+            if mode == "course"
+            else "Talk about what interests them, with a little more stretch than "
+            f"before.{activities}"
+        )
+        intro = (
+            "You have met before. Like a tutor arriving at a student's home, catch "
+            "up first and teach second. Your hello has already been said. From the "
+            "student's first reply:"
+        )
         steps = [
-            warm_up,
-            "2. Talk. Follow what interests them. One short story from your life "
-            "if it fits, then hand the turn back.",
-            f"3. {close}",
+            "1. Catch up. Ask how they have been. If you remember something about "
+            "them that fits, ask about that one thing. Share a little of your own "
+            f"week too.{topics} Exit after a real catch-up, four or five exchanges, "
+            "when they sound settled.",
+            f"2. Agree on today. Suggest {agree}, and check they are happy to start "
+            "(a simple yes-or-no is fine here). Exit when they agree.",
+            f"3. Practice. {practice}",
+            "4. Free talk. Let them lead. One short story from your life if it fits, "
+            "then hand the turn back.",
+            f"5. {close}",
         ]
     return (
         "## How the conversation goes\n"
-        "Your hello has already been said. Go step by step from the student's "
-        "first reply, and don't rush to the next step:\n" + "\n".join(steps)
+        + intro
+        + "\n"
+        + "\n".join(steps)
+        + "\nGo step by step and never rush to the next one.\n\n"
+        + NOT_YET_TEACHING
     )
 
 
@@ -276,25 +351,34 @@ def build_instructions(
     today: date | None = None,
     mode: str = "free",
     provider: str = "xai",
+    channel: str = "web",
 ) -> str:
+    """channel: "web" (the app, with cards and stickers) or "phone" (a phone
+    call: voice only)."""
     today = today or date.today()
     lesson = lesson_section(snapshot) if mode == "course" else None
     mode = "course" if lesson else "free"
+    first_meeting = not has_learning_context(snapshot)
     parts = [
         "## Who you are\n"
         + ROLE.format(name=persona.display_name)
         + "\n\n"
         + persona.personality.strip()
         + "\n\n"
-        + audience_line(snapshot),
-        "## Your goal\nHelp the student say more in English today and leave "
-        "feeling a little more able. "
+        + audience_line(snapshot, channel),
+        "## Your goal\nBe someone this student is glad to talk to, and help them "
+        "say a little more in English each time. "
+        + (
+            "On a first meeting, getting to know each other is the whole point. "
+            if first_meeting
+            else ""
+        )
         + (
             "Today is a lesson from their textbook course (the plan is below)."
             if lesson
             else "Today is free conversation."
         ),
-        conversation_flow(persona, mode, today),
+        conversation_flow(persona, mode, today, first_meeting),
         HOW_YOU_TEACH,
     ]
     if persona.language_policy:
@@ -306,9 +390,10 @@ def build_instructions(
     parts.append(voice_style(persona, provider, snapshot))
     if life := life_section(persona, today):
         parts.append(life)
-    if stickers:
-        parts.append(sticker_guide(stickers))
-    parts.append(WIDGET_GUIDE)
+    if channel != "phone":
+        if stickers:
+            parts.append(sticker_guide(stickers))
+        parts.append(WIDGET_GUIDE)
     if brief := render_snapshot(snapshot):
         # Names, facts and summaries come from what the student said.
         parts.append(
@@ -356,9 +441,10 @@ class Teacher(Agent):
         tools: list | None = None,
         mode: str = "free",
         provider: str = "xai",
+        channel: str = "web",
     ) -> None:
         self.base_instructions = build_instructions(
-            persona, snapshot, stickers, mode=mode, provider=provider
+            persona, snapshot, stickers, mode=mode, provider=provider, channel=channel
         )
         super().__init__(instructions=self.base_instructions, tools=tools or [])
         self.persona = persona
