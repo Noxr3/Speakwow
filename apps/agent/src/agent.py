@@ -155,7 +155,9 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
     if memory and student_id and session_id:
-        known_level = ((snapshot or {}).get("profile") or {}).get("level")
+        profile = (snapshot or {}).get("profile") or {}
+        known_level = profile.get("level")
+        student_name = profile.get("display_name")
         lesson = (
             {"course_id": snapshot["current_course"]["id"], "unit": unit}
             if unit
@@ -166,7 +168,9 @@ async def entrypoint(ctx: JobContext) -> None:
             turns = transcript(session)
             reflector = Reflector.from_env()
             reflection = (
-                await reflector.reflect(turns, persona.display_name, unit_goals(unit))
+                await reflector.reflect(
+                    turns, persona.display_name, unit_goals(unit), student=student_name
+                )
                 if reflector
                 else None
             )
