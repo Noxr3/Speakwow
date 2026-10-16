@@ -133,6 +133,84 @@ class SupabaseMemory:
             if r.get("role") in ("user", "assistant") and r.get("content")
         ]
 
+    async def language_courses(self) -> list[tuple[str, str]]:
+        """(slug, title) of the courses a new student can be started on: the
+        language ones, which is all the teacher teaches for now."""
+        res = await self._request(
+            "GET",
+            "/courses",
+            params={
+                "select": "slug,title,subject",
+                "order": "slug",
+                "source": "eq.repo",
+            },
+        )
+        rows = res.json() if res is not None else None
+        if not isinstance(rows, list):
+            return []
+        return [
+            (r["slug"], r["title"])
+            for r in rows
+            if r.get("slug") and r.get("subject") == "english"
+        ]
+
+    async def save_intake(
+        self,
+        *,
+        student_id: str,
+        session_id: str,
+        memories: list[dict],
+        snapshot: list[dict] | None,
+        course: str | None = None,
+    ) -> bool:
+        """The first-call interview (intake.intake_memories): its memories, and
+        the course their textbook matches. True when every write went through.
+        snapshot: the memories read at the start of the call; without one
+        nothing is written (a failed read is not an empty memory)."""
+        if snapshot is None:
+            return False
+        saved = await self._apply_memory_ops(student_id, session_id, memories, snapshot)
+        if course and not await self.enroll(student_id, course):
+            saved = False
+        return saved
+
+    async def enroll(self, student_id: str, slug: str) -> bool:
+        """Start the course (at its first unit) and pause any other: the same
+        rule as the web's "Start this course"."""
+        res = await self._request(
+            "GET",
+            "/courses",
+            params={
+                "slug": f"eq.{slug}",
+                "select": "id,course_units(id,position)",
+                "course_units.order": "position.asc",
+                "course_units.limit": "1",
+            },
+        )
+        rows = res.json() if res is not None else None
+        if not isinstance(rows, list) or not rows or not rows[0].get("course_units"):
+            return False
+        course_id, unit_id = rows[0]["id"], rows[0]["course_units"][0]["id"]
+        now = datetime.now(UTC).isoformat()
+        await self._request(
+            "PATCH",
+            f"/enrollments?student_id=eq.{student_id}&status=eq.active&course_id=neq.{course_id}",
+            json={"status": "paused", "updated_at": now},
+        )
+        done = await self._request(
+            "POST",
+            "/enrollments?on_conflict=student_id,course_id",
+            headers={"Prefer": "resolution=merge-duplicates"},
+            json={
+                "student_id": student_id,
+                "course_id": course_id,
+                "current_unit_id": unit_id,
+                "status": "active",
+                "updated_at": now,
+            },
+        )
+        return done is not None
+
     async def set_sms_opt_out(self, phone: str, opted_out: bool) -> None:
         await self._request(
             "PATCH",
@@ -211,6 +289,21 @@ class SupabaseMemory:
         rows = res.json() if res is not None else None
         return rows[0]["id"] if isinstance(rows, list) and rows else None
 
+    async def save_transcript(self, *, session_id: str, turns: list[Turn]) -> None:
+        """The call's words and its end, stored first: the reflection after it
+        is a slow model call, and a call that ended while it ran used to lose
+        everything (production, 2026-10-16: "process did not exit in time")."""
+        messages = [
+            {"session_id": session_id, "role": t.role, "content": t.text}
+            for t in turns
+            if t.role in ("user", "assistant") and t.text.strip()
+        ]
+        if messages:
+            await self._request("POST", "/messages", json=messages)
+        await self._request(
+            "PATCH", f"/sessions?id=eq.{session_id}", json={"ended_at": _now()}
+        )
+
     async def finish_session(
         self,
         *,
@@ -220,23 +313,19 @@ class SupabaseMemory:
         reflection: Reflection | None,
         memory_snapshot: list[dict] | None = None,
         lesson: dict | None = None,
+        transcript_saved: bool = False,
     ) -> None:
-        """lesson: {"course_id", "unit"} from the snapshot when in course mode."""
-        messages = [
-            {"session_id": session_id, "role": t.role, "content": t.text}
-            for t in turns
-            if t.role in ("user", "assistant") and t.text.strip()
-        ]
-        if messages:
-            await self._request("POST", "/messages", json=messages)
-
-        patch: dict = {"ended_at": _now()}
-        if reflection:
-            patch["summary"] = reflection.summary
-        await self._request("PATCH", f"/sessions?id=eq.{session_id}", json=patch)
-
+        """lesson: {"course_id", "unit"} from the snapshot when in course mode.
+        transcript_saved: save_transcript already stored the turns."""
+        if not transcript_saved:
+            await self.save_transcript(session_id=session_id, turns=turns)
         if not reflection:
             return
+        await self._request(
+            "PATCH",
+            f"/sessions?id=eq.{session_id}",
+            json={"summary": reflection.summary},
+        )
         evidence = {"session_id": session_id}
         if reflection.weaknesses:
             await self._request(
@@ -270,10 +359,21 @@ class SupabaseMemory:
                     "content": f"The student's English was estimated at CEFR {reflection.level} in a lesson.",
                 }
             )
+        await self._apply_memory_ops(student_id, session_id, ops, memory_snapshot)
+
+    async def _apply_memory_ops(
+        self,
+        student_id: str,
+        session_id: str,
+        ops: list[dict],
+        snapshot: list[dict],
+    ) -> bool:
+        """Write memory operations through apply_user_memory (compare-and-set,
+        bound to this session). What the user wrote or deleted themselves is
+        never touched. False when a request failed."""
+        ok = True
         for op in ops:
-            previous = next(
-                (r for r in memory_snapshot if r.get("key") == op["key"]), None
-            )
+            previous = next((r for r in snapshot if r.get("key") == op["key"]), None)
             if previous and (
                 previous.get("deleted_at") or not previous.get("source_session_id")
             ):
@@ -282,7 +382,7 @@ class SupabaseMemory:
                 continue
             if op["action"] != "create" and not previous:
                 continue
-            await self._request(
+            res = await self._request(
                 "POST",
                 "/rpc/apply_user_memory",
                 json={
@@ -296,6 +396,8 @@ class SupabaseMemory:
                     else None,
                 },
             )
+            ok = ok and res is not None
+        return ok
 
     async def _record_unit_progress(
         self, student_id: str, lesson: dict, scores: dict[str, float]

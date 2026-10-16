@@ -21,6 +21,7 @@ from typing import Any
 
 from livekit.agents import Agent
 
+from intake import Intake, intake_flow, intake_opening
 from lesson import lesson_section
 from life import life_section
 from personas import Persona
@@ -363,9 +364,11 @@ def build_instructions(
     mode: str = "free",
     provider: str = "xai",
     channel: str = "web",
+    intake: Intake | None = None,
 ) -> str:
     """channel: "web" (the app, with cards and stickers) or "phone" (a phone
-    call: voice only)."""
+    call: voice only). intake: a first call that starts with the onboarding
+    interview in the student's own language (intake.py)."""
     today = today or date.today()
     lesson = lesson_section(snapshot) if mode == "course" else None
     mode = "course" if lesson else "free"
@@ -380,20 +383,33 @@ def build_instructions(
         "## Your goal\nBe someone this student is glad to talk to, and help them "
         "say a little more in English each time. "
         + (
-            "On a first meeting, getting to know each other is the whole point. "
-            if first_meeting
-            else ""
-        )
-        + (
-            "Today is a lesson from their textbook course (the plan is below)."
-            if lesson
-            else "Today is free conversation."
+            "This first call is an onboarding interview in their own language, "
+            "so that you understand who they are and what they want to learn."
+            if intake
+            else (
+                "On a first meeting, getting to know each other is the whole point. "
+                if first_meeting
+                else ""
+            )
+            + (
+                "Today is a lesson from their textbook course (the plan is below)."
+                if lesson
+                else "Today is free conversation."
+            )
         ),
-        conversation_flow(persona, mode, today, first_meeting),
+        intake_flow(intake)
+        if intake
+        else conversation_flow(persona, mode, today, first_meeting),
         HOW_YOU_TEACH,
     ]
     if persona.language_policy:
-        parts.append(f"## Language policy\n{persona.language_policy}")
+        policy = persona.language_policy
+        if intake:
+            policy = (
+                f"For the onboarding interview, speak {intake.language}. From the "
+                f"English part on: {policy}"
+            )
+        parts.append(f"## Language policy\n{policy}")
     if persona.guidance_style:
         moves = "\n".join(f"- {s}: {e}" for s, e in persona.guidance_style)
         parts.append(f"## Your moves in common situations\n{moves}")
@@ -478,10 +494,18 @@ class Teacher(Agent):
         provider: str = "xai",
         channel: str = "web",
         warm_up_turns: int | None = None,
+        intake: Intake | None = None,
     ) -> None:
         self.base_instructions = build_instructions(
-            persona, snapshot, stickers, mode=mode, provider=provider, channel=channel
+            persona,
+            snapshot,
+            stickers,
+            mode=mode,
+            provider=provider,
+            channel=channel,
+            intake=intake,
         )
+        self.intake = intake
         self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
         self.coaching_note: str | None = None
         super().__init__(instructions=self._compose_instructions(), tools=tools or [])
@@ -528,9 +552,11 @@ class Teacher(Agent):
             getattr(item, "role", None) == "user" for item in session.history.items
         ):
             return  # they spoke first; the answer to them is the hello
+        opening = (
+            intake_opening(self.intake, self.persona.display_name)
+            if self.intake
+            else opening_instructions(self.persona, self.snapshot)
+        )
         await session.generate_reply(
-            instructions=self.with_note(
-                opening_instructions(self.persona, self.snapshot)
-            ),
-            allow_interruptions=True,
+            instructions=self.with_note(opening), allow_interruptions=True
         )
