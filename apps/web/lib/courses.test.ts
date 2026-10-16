@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { READY_SUBJECTS, gradeLabel, safeNext, subjectLabel } from './courses.ts';
+import { catalogHref } from './course-catalog.ts';
+import { safeNext } from './courses.ts';
 
 test('sign-in only returns to a page on this site', () => {
   assert.equal(safeNext('/courses'), '/courses');
@@ -10,15 +11,7 @@ test('sign-in only returns to a page on this site', () => {
   assert.equal(safeNext(null), '/');
 });
 
-test('subjects and grades read like words', () => {
-  assert.equal(subjectLabel('english'), 'English');
-  assert.equal(subjectLabel('venture-fundraising'), 'Fundraising');
-  assert.equal(subjectLabel('music-theory'), 'music theory');
-  assert.equal(gradeLabel('7'), 'Grade 7');
-  assert.equal(gradeLabel(null), null);
-});
-
-test('only language courses are offered for now', () => {
-  assert.ok(READY_SUBJECTS.has('english'));
-  assert.ok(!READY_SUBJECTS.has('venture-fundraising'));
+test('the catalog links stay on the page it sits on', () => {
+  assert.equal(catalogHref('译林', 2, '/courses'), '/courses?q=%E8%AF%91%E6%9E%97&page=2#courses');
+  assert.equal(catalogHref('', 1), '/profile#courses');
 });

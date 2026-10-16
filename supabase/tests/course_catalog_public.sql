@@ -1,4 +1,4 @@
--- Regression test for 0006_course_catalog_public.sql. Runs inside one
+-- Regression test for 0008_course_catalog_public.sql. Runs inside one
 -- transaction and rolls back. CI: .github/workflows/supabase.yml.
 begin;
 
