@@ -64,7 +64,7 @@ from pacing import (  # noqa: E402
     warm_up_silence_steps,
 )
 from personas import Persona, load_personas, resolve_persona  # noqa: E402
-from phone import normalize_phone  # noqa: E402
+from phone import caller_verified, normalize_phone, phone_access  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
 from reactions import ReactionInbox  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
@@ -167,9 +167,10 @@ def parse_job_metadata(raw: str | None) -> JobRequest:
     )
 
 
-async def caller_number(ctx: JobContext) -> str | None:
-    """The number calling in. LiveKit SIP puts it on the caller's participant;
-    the student is whoever linked that number on the website."""
+async def caller_number(ctx: JobContext) -> tuple[str | None, bool]:
+    """The number calling in, and whether the carrier verified it. LiveKit SIP
+    puts both on the caller's participant; the student is whoever linked that
+    number on the website."""
     await ctx.connect()
     try:
         participant = await asyncio.wait_for(
@@ -177,8 +178,11 @@ async def caller_number(ctx: JobContext) -> str | None:
             timeout=15,
         )
     except TimeoutError:
-        return None
-    return normalize_phone(participant.attributes.get("sip.phoneNumber"))
+        return None, False
+    attributes = dict(participant.attributes)
+    return normalize_phone(attributes.get("sip.phoneNumber")), caller_verified(
+        attributes
+    )
 
 
 def transcript(session: AgentSession) -> list[Turn]:
@@ -196,11 +200,18 @@ async def entrypoint(ctx: JobContext) -> None:
     job = parse_job_metadata(ctx.job.metadata)
     persona, student_id, user_key = job.persona, job.student_id, job.user_key
     provider = user_key.provider if user_key else default_provider()
-    caller = await caller_number(ctx) if job.channel == "phone" else None
+    caller, verified = (
+        await caller_number(ctx) if job.channel == "phone" else (None, False)
+    )
     memory = SupabaseMemory.from_env() if (student_id or caller) else None
-    if memory and caller and not student_id:
-        link = await memory.student_for_phone(caller)
-        student_id = link["student_id"] if link else None
+    if job.channel == "phone":
+        link = await memory.student_for_phone(caller) if memory and caller else None
+        access, why = phone_access(verified, bool(link), dict(os.environ))
+        logger.info("phone caller: %s (%s)", access, why)
+        if access == "refuse":
+            ctx.shutdown(reason=f"phone line: {why}")
+            return
+        student_id = link["student_id"] if access == "student" else None
     if memory and not student_id:
         # an unlinked number is a guest: no memory to read or write
         await memory.aclose()
@@ -372,6 +383,8 @@ async def entrypoint(ctx: JobContext) -> None:
     if coach:
         attach_coach(ctx, session, teacher, coach, unit, first_meeting, job.channel)
     attach_pacing(ctx, session, teacher, first_meeting)
+    if job.channel == "phone":
+        attach_call_limit(ctx, session, teacher)
     reactions = attach_reactions(ctx, session, teacher)
 
     await session.start(
@@ -457,6 +470,43 @@ def attach_pacing(
             student_share(turns),
             handoff_rate([t.text for t in turns if t.role == "assistant"]),
         )
+
+    ctx.add_shutdown_callback(finish)
+
+
+PHONE_MAX_MINUTES = 40.0
+HANG_UP_NOTE = (
+    "The call has reached its time limit. Say one warm goodbye now: one thing "
+    "they did well today, and that they can call again tomorrow. Then stop."
+)
+
+
+def attach_call_limit(ctx: JobContext, session: AgentSession, teacher: Teacher) -> None:
+    """A phone call has no window to close and someone pays for every minute:
+    after PHONE_MAX_MINUTES the teacher says goodbye and the line hangs up."""
+    try:
+        minutes = float(os.getenv("PHONE_MAX_MINUTES") or PHONE_MAX_MINUTES)
+    except ValueError:
+        minutes = PHONE_MAX_MINUTES
+
+    async def limit() -> None:
+        await asyncio.sleep(minutes * 60)
+        for _ in range(60):  # let a sentence finish, up to half a minute
+            if not _busy(session):
+                break
+            await asyncio.sleep(0.5)
+        with contextlib.suppress(RuntimeError):
+            session.generate_reply(
+                user_input=BREAK_TIME, instructions=teacher.with_note(HANG_UP_NOTE)
+            )
+        await asyncio.sleep(20)
+        ctx.shutdown(reason="phone call reached its maximum length")
+
+    task = asyncio.create_task(limit(), name="call-limit")
+    task.add_done_callback(_report_failure)
+
+    async def finish() -> None:
+        task.cancel()
 
     ctx.add_shutdown_callback(finish)
 

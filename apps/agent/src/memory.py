@@ -118,7 +118,7 @@ class SupabaseMemory:
             params={
                 "select": "role,content,created_at,sessions!inner(student_id,channel)",
                 "sessions.student_id": f"eq.{student_id}",
-                "sessions.channel": "eq.sms",
+                "sessions.channel": "in.(sms,whatsapp)",
                 "created_at": f"gte.{since}",
                 "order": "created_at.desc",
                 "limit": str(limit),
@@ -218,16 +218,19 @@ class SupabaseMemory:
             json={"sms_opted_out": opted_out},
         )
 
-    async def text_session(self, student_id: str, persona_id: str) -> str | None:
-        """Today's text conversation with this student (UTC day), started on
-        the first text of the day, so texts sit in the same history as calls."""
+    async def text_session(
+        self, student_id: str, persona_id: str, channel: str = "sms"
+    ) -> str | None:
+        """Today's text conversation with this student on one channel (SMS or
+        WhatsApp, UTC day), started on the first text of the day, so texts sit
+        in the same history as calls."""
         today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         res = await self._request(
             "GET",
             "/sessions",
             params={
                 "student_id": f"eq.{student_id}",
-                "channel": "eq.sms",
+                "channel": f"eq.{channel}",
                 "started_at": f"gte.{today.isoformat()}",
                 "select": "id",
                 "order": "started_at.desc",
@@ -237,7 +240,7 @@ class SupabaseMemory:
         rows = res.json() if res is not None else None
         if isinstance(rows, list) and rows:
             return rows[0]["id"]
-        return await self.start_session(student_id, persona_id, None, channel="sms")
+        return await self.start_session(student_id, persona_id, None, channel=channel)
 
     async def count_texts_from(self, session_id: str, limit: int) -> int:
         """How many texts the student sent in this session, counted up to limit."""

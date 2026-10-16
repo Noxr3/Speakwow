@@ -19,6 +19,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+from dataclasses import dataclass
 from datetime import date
 
 import httpx
@@ -27,23 +28,34 @@ from life import life_section
 from memory import SupabaseMemory
 from personas import Persona
 from promptdata import as_data
-from reflect import GATEWAY_MODEL, GATEWAY_URL, OPENAI_MODEL, OPENAI_URL, Turn
+from reflect import GATEWAY_MODEL, GATEWAY_URL, OPENAI_MODEL, OPENAI_URL
 from teacher import CRITICAL, MEMORY_RULES, RED_LINES, ROLE, render_snapshot
 
 logger = logging.getLogger("speakwow-agent.texting")
 
-MAX_TEXT_CHARS = 320
 DAILY_LIMIT = 60
 HISTORY_TEXTS = 20
 
+# An SMS is billed per segment: 153 characters of plain Latin text, but only
+# 67 once a single Chinese character or emoji is in it. Two segments at most.
+SMS_GSM_CHARS = 306
+SMS_UNICODE_CHARS = 134
+WHATSAPP_CHARS = 700
+_GSM7 = set(
+    "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€"
+)
+# a sentence ends at ". ", "! ", "? " or a Chinese full stop, ! or ? (U+3002, U+FF01, U+FF1F)
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s|(?<=[\u3002\uff01\uff1f])")
+
 TEXTING = """
 ## How you text
-Right now you are texting this student, by SMS: there is no voice, only the
-words of your message. You are the same teacher they talk to on calls, and
-you remember your calls and your texts with them.
-- Write like a person texting: one to three short sentences, under 300
-  characters. Plain text only: no lists, markdown, links or stage
-  directions. A single real emoji now and then is fine.
+Right now you are texting this student, by {door}: there is no voice, only
+the words of your message. You are the same teacher they talk to on calls,
+and you remember your calls and your texts with them.
+- Write like a person texting: {length}. Plain text only: no lists,
+  markdown, links or stage directions. A single real emoji now and then is
+  fine.
 - React to what they wrote before anything else. At most one question, and
   many texts need none.
 - Texts are for keeping in touch, not lessons: no drills, quizzes or
@@ -54,9 +66,20 @@ you remember your calls and your texts with them.
 - Never ask them to keep texting and never make them feel bad for stopping.
 """.strip()
 
+TEXT_LENGTH = {
+    "sms": "one to three short sentences, under 300 characters (under 120 "
+    "if you write any Chinese)",
+    "whatsapp": "one to four short sentences",
+}
+DOOR = {"sms": "SMS", "whatsapp": "WhatsApp"}
+
 UNLINKED = (
     "Hi! This is the Speakwow teacher line. To text and call your teacher, "
     "link this number at speakwow.ai/settings first."
+)
+NO_MEDIA = (
+    "I can only read words here, not pictures or voice notes. Type it to me, "
+    "or call me and say it!"
 )
 TOO_MANY = (
     "That's a lot of texts for one day! Let's pick it up tomorrow, or call me "
@@ -69,14 +92,17 @@ START_WORDS = {"start", "unstop", "yes"}
 
 
 def build_text_instructions(
-    persona: Persona, snapshot: dict | None, today: date | None = None
+    persona: Persona,
+    snapshot: dict | None,
+    today: date | None = None,
+    channel: str = "sms",
 ) -> str:
     parts = [
         "## Who you are\n"
         + ROLE.format(name=persona.display_name)
         + "\n\n"
         + persona.personality.strip(),
-        TEXTING,
+        TEXTING.format(door=DOOR[channel], length=TEXT_LENGTH[channel]),
     ]
     if persona.language_policy:
         parts.append(f"## Language policy\n{persona.language_policy}")
@@ -91,17 +117,30 @@ def build_text_instructions(
     return "\n\n".join(parts)
 
 
-def as_sms(text: str) -> str:
-    """What the model wrote, made fit for an SMS: plain, short, whole
-    sentences."""
+def is_gsm(text: str) -> bool:
+    """True when the text fits the cheap 7-bit SMS alphabet."""
+    return all(c in _GSM7 for c in text)
+
+
+def as_text(text: str, channel: str = "sms") -> str:
+    """What the model wrote, made fit to send: plain, short, whole sentences.
+    An SMS stays within two segments, which for Chinese or an emoji means
+    134 characters, and is cut at a sentence end (Chinese ones too)."""
     text = re.sub(r"[*_#`>]+", "", text or "")
     text = re.sub(r"^\s*[-•]\s*", "", text, flags=re.M)
-    text = re.sub(r"\s+", " ", text).strip()
-    if len(text) <= MAX_TEXT_CHARS:
+    text = re.sub(r"\s+", " ", text).strip().replace("…", "...")
+    if channel == "whatsapp":
+        limit = WHATSAPP_CHARS
+    else:
+        limit = SMS_GSM_CHARS if is_gsm(text) else SMS_UNICODE_CHARS
+    if len(text) <= limit:
         return text
-    cut = text[:MAX_TEXT_CHARS]
-    end = max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? "))
-    return cut[: end + 1] if end > 40 else cut.rsplit(" ", 1)[0] + "…"
+    cut = text[:limit]
+    ends = [m.end() for m in _SENTENCE_END.finditer(cut)]
+    if ends and ends[-1] > limit // 4:
+        return cut[: ends[-1]].strip()
+    head = cut[: limit - 3]
+    return (head.rsplit(" ", 1)[0] if " " in head else head) + "..."
 
 
 class TextModel:
@@ -147,7 +186,9 @@ class TextModel:
                 json={
                     "model": self.model,
                     "temperature": 0.7,
-                    "max_tokens": 200,
+                    # the default text model thinks before it writes (300-550
+                    # characters); at 200 tokens a long thought left no reply
+                    "max_tokens": 1000,
                     "messages": messages,
                 },
             )
@@ -156,7 +197,17 @@ class TextModel:
         except Exception:
             logger.exception("text reply failed")
             return None
-        return as_sms(content) or None
+        return content or None
+
+
+@dataclass
+class TextReply:
+    """What to send back (None: stay silent), and where the exchange is kept
+    once the reply has really gone out."""
+
+    text: str | None
+    session_id: str | None = None
+    body: str = ""
 
 
 async def answer_text(
@@ -167,43 +218,44 @@ async def answer_text(
     phone: str,
     body: str,
     daily_limit: int = DAILY_LIMIT,
-) -> str | None:
-    """The teacher's reply to one text, or None to stay silent."""
+    channel: str = "sms",
+    has_media: bool = False,
+) -> TextReply:
+    """The teacher's reply to one text. Nothing is stored here: the server
+    stores the exchange after the reply was sent."""
     body = body.strip()
-    if not body:
-        return None
+    if not body and not has_media:
+        return TextReply(None)
     link = await memory.student_for_phone(phone)
     if not link:
-        return UNLINKED
+        return TextReply(UNLINKED)
     word = body.lower().strip(" .!")
     if word in STOP_WORDS:
-        # the carrier confirms the opt-out itself; the teacher goes quiet
+        # SMS carriers confirm the opt-out themselves; the teacher goes quiet
         await memory.set_sms_opt_out(phone, True)
-        return None
+        return TextReply(None)
     if word in START_WORDS and link.get("sms_opted_out"):
         await memory.set_sms_opt_out(phone, False)
         link["sms_opted_out"] = False
     if link.get("sms_opted_out"):
-        return None
+        return TextReply(None)
+    if not body:
+        return TextReply(NO_MEDIA)
 
     student_id = link["student_id"]
     last = await memory.last_persona(student_id)
     persona = personas.get(last or "", default_persona)
-    session_id = await memory.text_session(student_id, persona.id)
+    session_id = await memory.text_session(student_id, persona.id, channel)
     sent = (
         await memory.count_texts_from(session_id, daily_limit + 1) if session_id else 0
     )
     if sent > daily_limit:
-        return None
+        return TextReply(None)
     if sent == daily_limit:
-        reply = TOO_MANY
-    else:
-        snapshot = await memory.load_snapshot(student_id)
-        history = await memory.recent_texts(student_id, limit=HISTORY_TEXTS)
-        system = build_text_instructions(persona, snapshot)
-        reply = (await model.reply(system, history, body) if model else None) or LOST
-    if session_id:
-        await memory.add_messages(
-            session_id, [Turn("user", body), Turn("assistant", reply)]
-        )
-    return reply
+        return TextReply(TOO_MANY, session_id, body)
+    snapshot = await memory.load_snapshot(student_id)
+    history = await memory.recent_texts(student_id, limit=HISTORY_TEXTS)
+    system = build_text_instructions(persona, snapshot, channel=channel)
+    written = await model.reply(system, history, body) if model else None
+    reply = as_text(written, channel) if written else LOST
+    return TextReply(reply or LOST, session_id, body)
