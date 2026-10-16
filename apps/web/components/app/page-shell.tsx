@@ -13,6 +13,7 @@ export function PageBackdrop() {
 }
 
 interface PageShellProps {
+  wide?: boolean;
   eyebrow?: string;
   title: string;
   subtitle?: React.ReactNode;
@@ -20,9 +21,9 @@ interface PageShellProps {
 }
 
 /** The layout every inner page shares: back link, heading block, a column of panels. */
-export function PageShell({ eyebrow, title, subtitle, children }: PageShellProps) {
+export function PageShell({ eyebrow, title, subtitle, children, wide = false }: PageShellProps) {
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pt-28 pb-24 md:pt-32">
+    <div className={`mx-auto w-full ${wide ? 'max-w-6xl' : 'max-w-2xl'} px-4 pt-28 pb-24 md:pt-32`}>
       <PageBackdrop />
       <Link href="/" className="label-mono hover:text-foreground text-white/50 transition-colors">
         ← Back
