@@ -26,6 +26,7 @@ from life import life_section
 from personas import Persona
 from promptdata import as_data
 from stickers import sticker_guide
+from user_memory import live_memories, memory_context, remembered_level
 from widgets import WIDGET_GUIDE
 
 # A beat between joining and saying hello, so the student is settled and
@@ -121,6 +122,7 @@ a good teacher who remembers their student:
   the natural place. Prefer recent things.
 - Never recite the list or mention that you have notes, a database or a
   "snapshot".
+- Current user statements take precedence over older memories.
 - If something here is missing, do not invent it. Never make up a memory or
   something you did together.
 """.strip()
@@ -151,25 +153,13 @@ def _items(rows: Any, key: str, limit: int) -> list[str]:
     return [str(v) for v in values if v][:limit]
 
 
-def _profile(snapshot: dict | None) -> dict:
-    profile = (snapshot or {}).get("profile")
-    return profile if isinstance(profile, dict) else {}
-
-
 def render_snapshot(snapshot: dict | None) -> str | None:
     """Turn get_student_snapshot() output into a short, readable brief."""
     if not snapshot:
         return None
     lines: list[str] = []
-    profile = _profile(snapshot)
-    if name := profile.get("display_name"):
-        lines.append(f"Name: {name}")
-    if level := profile.get("level"):
-        lines.append(f"Level (CEFR): {level}")
-    if topics := _as_list(profile.get("preferred_topics")):
-        lines.append("Likes talking about: " + ", ".join(map(str, topics[:5])))
-    if facts := _items(snapshot.get("facts"), "fact", 8):
-        lines.append("What you know about them: " + "; ".join(facts))
+    if context := memory_context(snapshot):
+        lines.append("What you know about them:\n" + context)
     if summary := snapshot.get("last_session_summary"):
         lines.append(f"Last session: {summary}")
     if weaknesses := _items(snapshot.get("top_weaknesses"), "item", 5):
@@ -192,7 +182,7 @@ def has_learning_context(snapshot: dict | None) -> bool:
         return False
     return bool(
         snapshot.get("last_session_summary")
-        or _as_list(snapshot.get("facts"))
+        or any(r.get("source_session_id") for r in live_memories(snapshot))
         or _as_list(snapshot.get("top_weaknesses"))
         or _as_list(snapshot.get("open_assignments"))
         or _as_list(snapshot.get("recent_texts"))
@@ -200,24 +190,16 @@ def has_learning_context(snapshot: dict | None) -> bool:
 
 
 def is_beginner(snapshot: dict | None) -> bool:
-    """School students and A1/A2 learners need simpler English and more time.
-    Unknown learners count as beginners: too patient is the safer mistake."""
-    profile = _profile(snapshot)
-    if profile.get("grade"):
-        return True
-    level = str(profile.get("level") or "").strip().upper()
-    return level not in ("B1", "B2", "C1", "C2")
+    """Use the remembered assessment; unknown learners get patient pacing."""
+    return remembered_level(snapshot) not in ("B1", "B2", "C1", "C2")
 
 
 def audience_line(snapshot: dict | None, channel: str = "web") -> str:
-    profile = _profile(snapshot)
-    grade = str(profile.get("grade") or "").strip()
-    if grade:
-        who = f"a school student in grade {as_data(grade)}"
-    elif is_beginner(snapshot):
-        who = "a learner who may be a child or a beginner"
-    else:
-        who = "an adult learner who can follow natural English"
+    who = (
+        "a learner whose age is unknown; use simple English and patient pacing"
+        if is_beginner(snapshot)
+        else "a learner who can follow natural English"
+    )
     if channel == "phone":
         return (
             f"Who is listening: {who}, on a phone call. There is no screen: never "
@@ -468,8 +450,7 @@ def opening_instructions(
     back; everything else waits for their reply (see conversation_flow)."""
     rng = rng or random.Random()
     if has_learning_context(snapshot):
-        name = str(_profile(snapshot).get("display_name") or "").strip()
-        who = f"the student, {as_data(name)}," if name else "the student"
+        who = "the student (use their preferred name from memory if known)"
         tone = " ".join(f'"{line}"' for line in persona.welcome_backs[:2])
         return (
             f"Say hello to {who} like a teacher glad to see them again: one short "

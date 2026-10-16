@@ -20,6 +20,7 @@ import httpx
 
 from lesson import updated_progress
 from reflect import CEFR_LEVELS, Reflection, Turn
+from user_memory import memory_ops
 
 logger = logging.getLogger("speakwow-agent.memory")
 
@@ -217,7 +218,7 @@ class SupabaseMemory:
         session_id: str,
         turns: list[Turn],
         reflection: Reflection | None,
-        known_level: str | None,
+        memory_snapshot: list[dict] | None = None,
         lesson: dict | None = None,
     ) -> None:
         """lesson: {"course_id", "unit"} from the snapshot when in course mode."""
@@ -251,24 +252,49 @@ class SupabaseMemory:
                     for item in reflection.weaknesses
                 ],
             )
-        if reflection.facts:
-            await self._request(
-                "POST",
-                "/student_facts",
-                json=[
-                    {"student_id": student_id, "fact": fact, "session_id": session_id}
-                    for fact in reflection.facts
-                ],
-            )
         if lesson and reflection.goal_scores:
             await self._record_unit_progress(student_id, lesson, reflection.goal_scores)
-        # One lesson is thin evidence for a level, so it only fills a blank;
-        # it never overwrites a level a teacher or a placement test set.
-        if not known_level and reflection.level in CEFR_LEVELS:
+        # A failed read is not an empty memory. Never write without a snapshot.
+        if memory_snapshot is None:
+            return
+        ops = memory_ops(reflection.memories)
+        if (
+            reflection.level in CEFR_LEVELS
+            and not any(r.get("key") == "english-level" for r in memory_snapshot)
+            and not any(op["key"] == "english-level" for op in ops)
+        ):
+            ops.append(
+                {
+                    "action": "create",
+                    "key": "english-level",
+                    "content": f"The student's English was estimated at CEFR {reflection.level} in a lesson.",
+                }
+            )
+        for op in ops:
+            previous = next(
+                (r for r in memory_snapshot if r.get("key") == op["key"]), None
+            )
+            if previous and (
+                previous.get("deleted_at") or not previous.get("source_session_id")
+            ):
+                continue
+            if op["action"] == "create" and previous:
+                continue
+            if op["action"] != "create" and not previous:
+                continue
             await self._request(
-                "PATCH",
-                f"/profiles?id=eq.{student_id}",
-                json={"level": reflection.level},
+                "POST",
+                "/rpc/apply_user_memory",
+                json={
+                    "p_student": student_id,
+                    "p_session": session_id,
+                    "p_key": op["key"],
+                    "p_action": op["action"],
+                    "p_content": op.get("content"),
+                    "p_expected_updated_at": previous.get("updated_at")
+                    if previous
+                    else None,
+                },
             )
 
     async def _record_unit_progress(

@@ -62,6 +62,7 @@ from teacher import (  # noqa: E402
     is_beginner,
     warm_up_note,
 )
+from user_memory import review_memories  # noqa: E402
 from widgets import make_widget_tool  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
@@ -225,9 +226,9 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
     if memory and student_id and session_id:
-        profile = (snapshot or {}).get("profile") or {}
-        known_level = profile.get("level")
-        student_name = profile.get("display_name")
+        memory_snapshot = review_memories(
+            snapshot.get("memories") if snapshot else None
+        )
         lesson = (
             {"course_id": snapshot["current_course"]["id"], "unit": unit}
             if unit
@@ -239,7 +240,10 @@ async def entrypoint(ctx: JobContext) -> None:
             reflector = Reflector.from_env()
             reflection = (
                 await reflector.reflect(
-                    turns, persona.display_name, unit_goals(unit), student=student_name
+                    turns,
+                    persona.display_name,
+                    unit_goals(unit),
+                    memories=memory_snapshot,
                 )
                 if reflector
                 else None
@@ -249,7 +253,7 @@ async def entrypoint(ctx: JobContext) -> None:
                 session_id=session_id,
                 turns=turns,
                 reflection=reflection,
-                known_level=known_level,
+                memory_snapshot=memory_snapshot,
                 lesson=lesson,
             )
             await memory.aclose()

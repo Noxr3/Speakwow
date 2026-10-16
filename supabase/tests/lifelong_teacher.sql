@@ -7,9 +7,9 @@ insert into auth.users (id, email) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'ada@test.local'),
   ('bbbbbbbb-0000-4000-8000-000000000002', 'bo@test.local');
 
-insert into public.student_facts (student_id, fact) values
-  ('aaaaaaaa-0000-4000-8000-000000000001', 'has an exam in December'),
-  ('bbbbbbbb-0000-4000-8000-000000000002', 'Bo''s private fact');
+insert into public.user_memories (user_id, key, content) values
+  ('aaaaaaaa-0000-4000-8000-000000000001', 'exam', 'has an exam in December'),
+  ('bbbbbbbb-0000-4000-8000-000000000002', 'private', 'Bo''s private fact');
 
 insert into public.courses (id, title, slug) values
   ('cccccccc-0000-4000-8000-000000000003', 'Test 7A', 'test-7a');
@@ -39,8 +39,8 @@ do $$
 declare s jsonb;
 begin
   s := public.get_student_snapshot('aaaaaaaa-0000-4000-8000-000000000001');
-  assert s->'profile'->>'display_name' = 'ada', 'profile';
-  assert jsonb_array_length(s->'facts') = 1, 'own facts only';
+  assert not (s ? 'profile'), 'no fixed profile in context';
+  assert jsonb_array_length(s->'memories') = 1, 'own facts only';
   assert s->'current_course'->'current_unit'->>'title' = 'Unit 1', 'current unit';
   assert s->'current_course'->'current_unit'->'goals'->0->>'id' = 'u1-g1', 'unit goals';
   assert (s->'current_course'->>'units_total')::int = 2, 'units total';
@@ -55,9 +55,9 @@ begin
     null;  -- expected
   end;
 
-  assert (select count(*) from public.student_facts) = 1, 'RLS hides Bo''s facts';
-  delete from public.student_facts;  -- a student can erase what the teacher remembers
-  assert (select count(*) from public.student_facts) = 0, 'own facts deletable';
+  assert (select count(*) from public.user_memories) = 1, 'RLS hides Bo''s facts';
+  update public.user_memories set deleted_at = now();  -- content is erased, key guards stale writes
+  assert (select count(*) from public.user_memories where content <> '') = 0, 'own facts deletable';
 end $$;
 
 -- ---------- as an anonymous visitor ----------
@@ -82,7 +82,7 @@ do $$
 declare s jsonb;
 begin
   s := public.get_student_snapshot('bbbbbbbb-0000-4000-8000-000000000002');
-  assert jsonb_array_length(s->'facts') = 1, 'agent reads any student';
+  assert jsonb_array_length(s->'memories') = 1, 'agent reads any student';
   assert s->'current_course' = 'null'::jsonb or s->'current_course' is null, 'Bo has no course';
 end $$;
 

@@ -152,7 +152,9 @@ def test_replies_are_plain_short_texts() -> None:
 
 
 def test_the_text_teacher_is_the_same_teacher_without_a_screen() -> None:
-    text = build_text_instructions(FRANK, {"facts": [{"fact": "plays basketball"}]})
+    text = build_text_instructions(
+        FRANK, {"memories": [{"content": "plays basketball"}]}
+    )
     assert "You are Frank" in text and "## How you text" in text
     assert "plays basketball" in text and "## Red lines" in text
     assert "show_widget" not in text and "send_sticker" not in text
@@ -182,7 +184,7 @@ class FakeMemory:
         return min(self.sent, limit)
 
     async def load_snapshot(self, student_id):
-        return {"facts": [{"fact": "has a cat called Mimi"}]}
+        return {"memories": [{"content": "has a cat called Mimi"}]}
 
     async def recent_texts(self, student_id, limit=12, days=7):
         return [
