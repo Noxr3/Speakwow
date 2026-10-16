@@ -13,6 +13,7 @@ people and AI agents alike, are in [AGENTS.md](AGENTS.md).
 | [译林版初中英语 七年级下册](yilin-2024-7b/index.md) | English | 8 |
 | [译林版初中英语 八年级上册](yilin-2025-8a/index.md) | English | 8 |
 | [译林版初中英语 八年级下册](yilin-2025-8b/index.md) | English | 8 |
+| [Raising venture capital, from a16z’s published advice](venture-fundraising-a16z/index.md)（按 a16z 公开的方法论学融资） | Venture fundraising | 7 |
 
 **Most wanted:** checking the Yilin units against a printed copy or the
 teacher's book (look for `cross-checked` or `draft` in each course's unit
