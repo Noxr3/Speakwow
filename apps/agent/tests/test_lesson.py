@@ -98,3 +98,27 @@ async def test_a_mastered_unit_moves_the_student_to_the_next_one() -> None:
     assert "position=gt.1" in str(lookup.url)
     advance = next(c for c in calls if c.url.path.endswith("/enrollments"))
     assert json.loads(advance.content)["current_unit_id"] == "next-unit"
+
+
+def test_lesson_plan_reads_subject_neutral_course_pages() -> None:
+    unit = {
+        **SNAPSHOT["current_course"]["current_unit"],
+        "content": {
+            "terms": ["photosynthesis", "chlorophyll"],
+            "points": ["plants turn light into sugar"],
+            "activities": ["explain why leaves are green"],
+            "pitfalls": ["thinking plants eat soil"],
+            "vocabulary": ["old word list, unused once terms exist"],
+        },
+    }
+    plan = lesson_section(
+        {
+            **SNAPSHOT,
+            "current_course": {**SNAPSHOT["current_course"], "current_unit": unit},
+        }
+    )
+    assert "Key words and terms: photosynthesis, chlorophyll" in plan
+    assert "Key points: plants turn light into sugar" in plan
+    assert "Things to do together: explain why leaves are green" in plan
+    assert "Common mistakes to watch for: thinking plants eat soil" in plan
+    assert "old word list" not in plan

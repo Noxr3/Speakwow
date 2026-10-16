@@ -1,0 +1,38 @@
+name: courses
+
+on:
+  pull_request:
+    paths:
+      - 'courses/**'
+      - 'scripts/courses*.mjs'
+      - 'scripts/course-import*.mjs'
+      - '.github/workflows/courses.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'courses/**'
+      - 'scripts/courses*.mjs'
+      - 'scripts/course-import*.mjs'
+      - '.github/workflows/courses.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check every course (rules in courses/AGENTS.md)
+        run: pnpm courses:check
+
+      - name: Course script tests
+        run: node --test scripts/courses.test.mjs scripts/course-import.test.mjs
