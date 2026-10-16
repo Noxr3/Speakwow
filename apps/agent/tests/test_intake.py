@@ -75,6 +75,12 @@ def test_what_their_memories_say_is_not_asked_again() -> None:
     }
     assert known_from_memories(snapshot) == {"name"}
     assert known_from_memories(None) == set()
+    from intake import intake_opening
+
+    assert "what you should call them" in intake_opening(ZH, "Lily")
+    named = Intake("Mandarin Chinese", "zh-CN", True, known=frozenset({"name"}))
+    opening = intake_opening(named, "Lily")
+    assert "do not ask for it" in opening and "call them" not in opening
 
 
 def test_the_first_call_is_an_interview_in_their_language() -> None:

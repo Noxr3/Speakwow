@@ -254,6 +254,7 @@ async def entrypoint(ctx: JobContext) -> None:
             tag=tag,
             signed_in=signed_in,
             courses=tuple(await memory.language_courses()) if signed_in else (),
+            known=frozenset(known_from_memories(snapshot)),
         )
         logger.info("onboarding interview: language=%s signed_in=%s", tag, signed_in)
 
@@ -365,9 +366,7 @@ async def entrypoint(ctx: JobContext) -> None:
     coach = Coach.from_env()
     if intake:
         if coach:
-            attach_intake(
-                session, teacher, intake, coach, known_from_memories(snapshot)
-            )
+            attach_intake(session, teacher, intake, coach)
     else:
         attach_phase(session, teacher, first_meeting)
     if coach:
@@ -483,11 +482,7 @@ def attach_phase(session: AgentSession, teacher: Teacher, first_meeting: bool) -
 
 
 def attach_intake(
-    session: AgentSession,
-    teacher: Teacher,
-    intake: Intake,
-    coach: Coach,
-    remembered: set[str] | None = None,
+    session: AgentSession, teacher: Teacher, intake: Intake, coach: Coach
 ) -> None:
     """During the onboarding interview, after each of the student's turns,
     Jev judges what the teacher already knows and what is still missing, and
@@ -498,7 +493,7 @@ def attach_intake(
     # Once told, stays told: Jev reads the last few turns, and the name said
     # in the first minute had dropped out of them (it reported "nothing yet").
     # What their memories already say counts as told from the start.
-    known: set[str] = set(remembered or ()) & set(questions)
+    known: set[str] = set(intake.known) & set(questions)
 
     async def check() -> None:
         state = build_state(transcript(session), teacher.persona.display_name)

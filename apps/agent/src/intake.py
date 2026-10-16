@@ -100,6 +100,8 @@ class Intake:
     tag: str | None  # e.g. "zh-CN"
     signed_in: bool
     courses: tuple[tuple[str, str], ...] = field(default_factory=tuple)  # (slug, title)
+    # slots their memories already answer (known_from_memories), e.g. {"name"}
+    known: frozenset[str] = frozenset()
 
 
 def intake_flow(intake: Intake) -> str:
@@ -160,12 +162,19 @@ first call; nothing is taught in it.
 
 
 def intake_opening(intake: Intake, name: str) -> str:
-    return (
+    hello = (
         f"Say hello in {intake.language}, in one or two short sentences: you "
         f"are {name}, their English teacher, and before any English you would "
-        "like to get to know them a little. Then ask what you should call "
-        "them, and stop and let them answer."
+        "like to get to know them a little."
     )
+    if "name" in intake.known:
+        return (
+            f"{hello} Greet them by the name they go by (under "
+            "student_memory); do not ask for it. Then ask the first easy "
+            "question of the interview they have not answered yet, and stop "
+            "and let them answer."
+        )
+    return f"{hello} Then ask what you should call them, and stop and let them answer."
 
 
 Save = Callable[[dict], Awaitable[str]]
