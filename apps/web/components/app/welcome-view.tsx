@@ -1,9 +1,14 @@
+import { CaretDownIcon } from '@phosphor-icons/react/dist/ssr';
 import type { PersonaSummary } from '@speakwow/shared';
 import GlassSurface from '@/components/GlassSurface';
 import Magnet from '@/components/Magnet';
 import type { CourseSpot } from '@/components/app/app';
-import { TeacherCarousel } from '@/components/app/teacher-carousel';
-import { LiquidGlass } from '@/components/ui/liquid-glass';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/shadcn/utils';
 import type { CallMode } from '@/lib/token-source';
 import ColorBends from '../ColorBends';
@@ -19,8 +24,8 @@ interface WelcomeViewProps {
 }
 
 /**
- * One job: pick a teacher and start talking. The ring is the hero; below it,
- * one line about the teacher and one button.
+ * The first screen, kept as plain as the very first Speakwow: the name, one
+ * line, and one button. The caret beside it switches teacher.
  */
 export const WelcomeView = ({
   personas,
@@ -34,74 +39,103 @@ export const WelcomeView = ({
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   return (
     <div ref={ref}>
-      <section className="flex flex-col items-center gap-5 px-4 pt-14 text-center md:gap-6">
-        <h1 className="text-sm font-normal tracking-wide text-white/75 md:text-base">
-          A teacher who remembers you.
-        </h1>
+      <section className="flex flex-col items-center justify-center gap-6 text-center">
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/wow5-logo-white.png" alt="" className="h-10 w-auto" />
+          <span className="text-foreground font-mono text-2xl font-bold tracking-tight">
+            Speakwow
+          </span>
+        </div>
 
-        <TeacherCarousel personas={personas} onSelect={onSelectPersona} />
+        <p className="text-foreground text-sm md:text-base">A teacher who remembers you.</p>
 
-        <p className="label-mono text-white/50" aria-live="polite">
-          {persona.specialty_en}
-        </p>
+        <div className="mt-2 flex items-stretch">
+          <Magnet padding={10} disabled={false} magnetStrength={10}>
+            <button
+              type="button"
+              onClick={onStartCall}
+              className="cursor-pointer rounded-full transition-transform duration-400 hover:scale-105 active:scale-95"
+            >
+              <GlassSurface
+                className="w-60 rounded-full font-mono text-xs uppercase"
+                displace={0.5}
+                width={240}
+                height={48}
+                distortionScale={-180}
+                redOffset={70}
+                borderRadius={50}
+                greenOffset={10}
+                blueOffset={20}
+                brightness={50}
+                opacity={0.63}
+                mixBlendMode="screen"
+                forceDark
+              >
+                <span>Talk with {persona.display_name}</span>
+              </GlassSurface>
+            </button>
+          </Magnet>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Choose a teacher"
+                className="ml-2 flex h-12 w-10 cursor-pointer items-center justify-center rounded-full border border-white/20 text-white transition-transform duration-300 hover:scale-105 active:scale-95"
+              >
+                <CaretDownIcon size={16} weight="bold" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              collisionPadding={12}
+              className="max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-60 overflow-y-auto"
+            >
+              {personas.map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  onSelect={() => onSelectPersona(p.id)}
+                  className={persona.id === p.id ? 'bg-accent' : ''}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{p.display_name}</span>
+                    {p.specialty_en && (
+                      <span className="text-muted-foreground text-xs">{p.specialty_en}</span>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {course && (
-          <LiquidGlass radius={999} width="auto">
-            <div className="flex p-1 text-xs" role="group" aria-label="What to do">
-              {(
-                [
-                  ['course', `Lesson · Unit ${course.unitPosition}`],
-                  ['free', 'Free talk'],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => onSelectMode(value)}
-                  aria-pressed={mode === value}
-                  className={cn(
-                    'rounded-full px-4 py-1.5 font-medium transition-colors',
-                    mode === value
-                      ? 'text-foreground bg-white/15 shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </LiquidGlass>
+          <div className="flex gap-4 font-mono text-xs" role="group" aria-label="What to do">
+            {(
+              [
+                ['course', `Lesson · Unit ${course.unitPosition}`],
+                ['free', 'Free talk'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onSelectMode(value)}
+                aria-pressed={mode === value}
+                className={cn(
+                  'cursor-pointer underline-offset-4 transition-colors',
+                  mode === value ? 'text-foreground underline' : 'text-white/50 hover:text-white'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         )}
-
-        <Magnet padding={10} disabled={false} magnetStrength={10}>
-          <button
-            type="button"
-            onClick={onStartCall}
-            className="cursor-pointer rounded-full transition-transform duration-400 hover:scale-105 active:scale-95"
-          >
-            <GlassSurface
-              className="w-64 rounded-full font-mono text-xs tracking-[0.14em] uppercase"
-              displace={0.5}
-              width={256}
-              height={52}
-              distortionScale={-180}
-              redOffset={70}
-              borderRadius={50}
-              greenOffset={10}
-              blueOffset={20}
-              brightness={50}
-              opacity={0.63}
-              mixBlendMode="screen"
-              forceDark
-            >
-              <span>Talk with {persona.display_name}</span>
-            </GlassSurface>
-          </button>
-        </Magnet>
       </section>
 
-      {/* Dimmed so the teachers are the brightest thing on the page. */}
-      <div className="pointer-events-none fixed inset-0 -z-10 opacity-40">
+      <div className="pointer-events-none fixed inset-0 -z-10">
         <ColorBends
           colors={['#00ff1e', '#2c7be2', '#501b35']}
           rotation={0}

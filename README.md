@@ -35,7 +35,7 @@ learning for life.
 | 🎙️ **Real-time voice** | Speech-to-speech, so the teacher hears hesitation and excitement and answers with feeling. Defaults to Grok Voice (`grok-voice-3.0`, pinned), with OpenAI Realtime one setting away. Turn-taking is tuned for learners who pause to find a word. |
 | 🧠 **Remembers you** | After every call the lesson is reflected on: a summary, what you are working on, things a teacher would remember (your goals, your cat's name), and an estimated CEFR level. Next time, the teacher picks up where you left off. |
 | 🧑‍🏫 **A teacher, not a chatbot** | Recasts mistakes instead of lecturing, stretches you when it is easy, scaffolds when you are stuck, and praises specifically. A fast background "coach" model notices when you are stuck or bored and quietly tells the teacher, without adding any delay. |
-| 🏡 **Ten teachers, each with a life** | Frank, Lucy, Lily, Leo, Kai, Grace, Diego, Priya, Nora and Max: different accents, teaching styles and specialities (beginners, interviews, stories, science, songs…). Each has a backstory and storylines that move forward every few days, so small talk is two-way and consistent. Pick one on a 3D ring of animated cards and hear their voice. |
+| 🏡 **Ten teachers, each with a life** | Frank, Lucy, Lily, Leo, Kai, Grace, Diego, Priya, Nora and Max: different accents, teaching styles and specialities (beginners, interviews, stories, science, songs…). Each has a backstory and storylines that move forward every few days, so small talk is two-way and consistent. Pick one from the menu beside the start button. |
 | 📚 **Your textbook, unit by unit** | Courses are data: units with goals, vocabulary, grammar and speaking tasks. In lesson mode the teacher works on your weakest goals, scores them after the call, and moves you on when a unit is mastered. Ships with the Jiangsu Yilin junior-high English course. |
 | 🃏 **Cards and stickers mid-call** | The teacher can put a word card, quick quiz, fill-the-gap, sentence builder or "say it out loud" card on screen, and react with animated stickers. Your taps and stickers go straight back to the teacher. |
 | 🗂️ **Your learning record** | One page with your course map, every unit's mastery, recent lessons, and everything the teacher remembers, each item erasable. |
@@ -151,7 +151,7 @@ Good first issues are labelled [`good first issue`](https://github.com/Noxr3/Spe
 [MIT](LICENSE), with two exceptions noted in the files themselves:
 
 - The animated components in `apps/web/components/` taken from [React Bits](https://reactbits.dev)
-  (`CircularCarousel`, `ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
+  (`ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
   `LiquidEther`) are © David Haz under MIT + Commons Clause: use them as part of an
   app, but do not sell or redistribute the components on their own.
 - Animated stickers are [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)

@@ -28,7 +28,7 @@
   表扬说得具体。后台还有一个极速「助教」模型，发现你卡住或走神就悄悄提醒老师，不增加任何延迟。
 - 🏡 **十位老师，各有各的生活**：Frank、Lucy、Lily、Leo、Kai、Grace、Diego、Priya、Nora、Max，
   口音、教法和擅长方向各不相同（零基础、面试、故事、科学、唱歌……）。每位都有身世和每隔几天推进一格的
-  生活线，闲聊是双向的，而且前后一致。首页在一圈动态声纹卡里挑老师，转到谁就能听到谁的声音。
+  生活线，闲聊是双向的，而且前后一致。在首页按钮旁的菜单里选老师。
 - 📚 **按教材一单元一单元地教**：内置江苏译林版初中英语（新课标）课程大纲。上课模式下老师围绕你最弱的
   单元目标来教，课后给每个目标打分，整单元掌握后自动进入下一单元。
 - 🃏 **通话中的卡片和表情包**：老师可以弹出单词卡、选择题、填空、连词成句、跟读句、本课目标，
@@ -86,6 +86,6 @@ pnpm course:import packages/shared/courses/yilin-2024-7a.json
 ## 许可证
 
 [MIT](LICENSE)，两处例外：`apps/web/components/` 里来自 [React Bits](https://reactbits.dev) 的动效组件
-（CircularCarousel、ColorBends、GlassSurface 等）版权归 David Haz，采用 MIT + Commons Clause，可作为应用的一部分使用，
+（ColorBends、GlassSurface 等）版权归 David Haz，采用 MIT + Commons Clause，可作为应用的一部分使用，
 但不能单独出售或再分发组件本身；动态表情来自 Google [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)，
 CC BY 4.0。web 与 agent 起步于 LiveKit 的 MIT 开源模板。
