@@ -22,7 +22,10 @@ this folder).
 
 `/profile` reads and edits `user_memories`, a flat list of declarative facts with
 stable keys, source session IDs and versions, following Dokki's memory design.
-There are no fixed name, grade, level or goal form fields. After a voice lesson,
+The page presents a short paragraph drawn from the newest complete memories;
+the full editor sits under “Manage memory”. The brief is derived on read, so
+corrections and forgetting immediately change it. There are no fixed name,
+grade, level or goal form fields. After a voice lesson,
 the agent reviews a bounded snapshot and writes validated create/update/delete
 operations. The next voice call or text conversation reads the same memories.
 Course progress, lesson summaries and practice evidence remain separate.

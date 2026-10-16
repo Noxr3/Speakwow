@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { GlassPanel, PageShell } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
+import { memorySummary } from '@/lib/memory-summary';
 import { getSessionUser } from '@/lib/supabase/server';
 import { enroll, forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
 
@@ -70,60 +71,73 @@ export default async function ProfilePage() {
     : [];
   const byUnit = new Map(progress.map((p) => [p.unit_id, p]));
   if (memories.error) throw new Error('Could not load your memories. Please try again.');
+  const summary = memorySummary(memories.data ?? []);
 
   return (
     <PageShell title="Learning record">
-      <GlassPanel title="What your teacher remembers">
-        <p className="text-muted-foreground text-sm">
-          Your teacher gets to know you through your conversations. You can add, correct, or forget
-          anything here.
+      <GlassPanel title="About you">
+        <p className="text-foreground text-sm leading-relaxed break-words">
+          {summary ||
+            'Your teacher is still getting to know you. As you talk, a picture of your interests, preferences, and experiences will take shape here.'}
         </p>
-        {memories.data?.length ? (
-          <ul className="space-y-4">
-            {memories.data.map((memory) => (
-              <li key={memory.id} className="space-y-2">
-                <form action={saveMemory} className="grid gap-2">
-                  <input type="hidden" name="id" value={memory.id} />
-                  <input type="hidden" name="updated_at" value={memory.updated_at} />
-                  <textarea
-                    name="content"
-                    aria-label="Remembered information"
-                    defaultValue={memory.content}
-                    maxLength={800}
-                    required
-                    rows={2}
-                    className={field}
-                  />
-                  <Button type="submit" variant="outline" size="sm" className="justify-self-start">
-                    Save changes
-                  </Button>
-                </form>
-                <form action={forgetMemory}>
-                  <input type="hidden" name="id" value={memory.id} />
-                  <input type="hidden" name="updated_at" value={memory.updated_at} />
-                  <button type="submit" className="text-muted-foreground text-xs underline">
-                    Forget
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            Nothing yet. Tell your teacher a little about yourself when you next talk.
-          </p>
-        )}
-        <form action={saveMemory} className="grid gap-3">
-          <label className="grid gap-1 text-sm">
-            <span className="text-muted-foreground">
-              Something you would like your teacher to remember
-            </span>
-            <textarea name="content" maxLength={800} required rows={2} className={field} />
-          </label>
-          <Button type="submit" className="justify-self-start rounded-full px-5">
-            Remember
-          </Button>
-        </form>
+        <details className="border-t border-white/10 pt-4">
+          <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs">
+            Manage memory
+          </summary>
+          <div className="mt-4 space-y-5">
+            {memories.data?.length ? (
+              <ul className="space-y-4">
+                {memories.data.map((memory) => (
+                  <li key={memory.id} className="space-y-2">
+                    <form action={saveMemory} className="grid gap-2">
+                      <input type="hidden" name="id" value={memory.id} />
+                      <input type="hidden" name="updated_at" value={memory.updated_at} />
+                      <textarea
+                        name="content"
+                        aria-label="Remembered information"
+                        defaultValue={memory.content}
+                        maxLength={800}
+                        required
+                        rows={2}
+                        className={field}
+                      />
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        className="justify-self-start"
+                      >
+                        Save changes
+                      </Button>
+                    </form>
+                    <form action={forgetMemory}>
+                      <input type="hidden" name="id" value={memory.id} />
+                      <input type="hidden" name="updated_at" value={memory.updated_at} />
+                      <button type="submit" className="text-muted-foreground text-xs underline">
+                        Forget
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Nothing yet. Tell your teacher a little about yourself when you next talk.
+              </p>
+            )}
+            <form action={saveMemory} className="grid gap-3">
+              <label className="grid gap-1 text-sm">
+                <span className="text-muted-foreground">
+                  Something you would like your teacher to remember
+                </span>
+                <textarea name="content" maxLength={800} required rows={2} className={field} />
+              </label>
+              <Button type="submit" className="justify-self-start rounded-full px-5">
+                Remember
+              </Button>
+            </form>
+          </div>
+        </details>
       </GlassPanel>
 
       <GlassPanel title="Course">
