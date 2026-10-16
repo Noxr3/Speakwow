@@ -195,6 +195,7 @@ def has_learning_context(snapshot: dict | None) -> bool:
         or _as_list(snapshot.get("facts"))
         or _as_list(snapshot.get("top_weaknesses"))
         or _as_list(snapshot.get("open_assignments"))
+        or _as_list(snapshot.get("recent_texts"))
     )
 
 
@@ -310,7 +311,7 @@ def conversation_flow(
             "student's first reply:"
         )
         steps = [
-            "1. Catch up. Greet them by name. Bring back one thing you remember "
+            "1. Catch up. Use their name. Bring back one thing you remember "
             'that fits, best of all something that was about to happen ("Did '
             'you win the match?"), share one line of what is going on in your '
             "own life, and ask one easy question about today. Never ask again "
@@ -433,18 +434,23 @@ def build_instructions(
     return "\n\n".join(parts)
 
 
-def warm_up_note(spoken: int, needed: int) -> str:
+def warm_up_note(spoken: int, needed: int, first_meeting: bool = True) -> str:
     """The warm-up's length is counted, not left to the model: told "a few
     exchanges", it started teaching after two or three. The agent sets this
     after each of the student's turns."""
     if spoken < needed:
         left = needed - spoken
+        phase = (
+            "Still getting to know each other"
+            if first_meeting
+            else "Still catching up, as people who have met before"
+        )
         return (
-            f"Still getting to know each other: the student has spoken {spoken} "
-            f"times. At least {left} more of their turns stay a friendly chat "
-            "before anything else. React to what they say, share a little of "
-            "your own life, and ask one easy question about them. No teaching "
-            "yet: no corrections, practice, games or lesson topic, and do not "
+            f"{phase}: the student has spoken {spoken} times. At least {left} "
+            "more of their turns stay a friendly chat before anything else. "
+            "React to what they say and share a little of your own life; ask "
+            "an easy question when it fits, not every turn. No teaching yet: "
+            "no corrections, practice, games or lesson topic, and do not "
             "suggest starting one. Only if they ask to start themselves, start."
         )
     return (
@@ -513,6 +519,13 @@ class Teacher(Agent):
             )
         return text
 
+    def with_note(self, note: str) -> str:
+        """The whole prompt plus a note for one reply. A realtime reply's own
+        instructions replace the session's for that reply (checked on
+        grok-voice-3.0: the persona and red lines were gone), so a nudge,
+        a reaction or the hello must carry everything."""
+        return f"{self._compose_instructions()}\n\n## Right now\n{note}"
+
     async def set_phase_note(self, note: str | None) -> None:
         """How far the warm-up has come (warm_up_note); None clears it."""
         if note == self.phase_note:
@@ -529,7 +542,14 @@ class Teacher(Agent):
 
     async def on_enter(self) -> None:
         await asyncio.sleep(OPENING_PAUSE_S)
-        await self.session.generate_reply(
-            instructions=opening_instructions(self.persona, self.snapshot),
+        session = self.session
+        if session.current_speech is not None or any(
+            getattr(item, "role", None) == "user" for item in session.history.items
+        ):
+            return  # they spoke first; the answer to them is the hello
+        await session.generate_reply(
+            instructions=self.with_note(
+                opening_instructions(self.persona, self.snapshot)
+            ),
             allow_interruptions=True,
         )

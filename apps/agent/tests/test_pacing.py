@@ -137,3 +137,11 @@ def test_a_shy_student_hears_the_teachers_own_news_first() -> None:
     news = news_today(lily, date(2026, 10, 16))
     assert news and news in warm_up_silence_steps(news)[0]
     assert "Go first" in warm_up_silence_steps(None)[0]
+
+
+def test_a_goodbye_ends_the_nudging() -> None:
+    from pacing import said_goodbye
+
+    assert said_goodbye("OK, bye!") and said_goodbye("Goodbye, Ming.")
+    assert said_goodbye("拜拜") and said_goodbye("See you next time")
+    assert not said_goodbye("I bought a new bike") and not said_goodbye(None)

@@ -217,3 +217,58 @@ def test_no_teacher_method_hides_a_livekit_attribute() -> None:
 
     livekit_attributes = set(vars(Agent(instructions="x")))
     assert not livekit_attributes & set(vars(Teacher))
+
+
+def test_a_one_off_note_carries_the_whole_teacher() -> None:
+    # A realtime reply's own instructions replace the session's for that
+    # reply (grok-voice-3.0, 2026-10-16), so nudges and the hello carry all.
+    from teacher import Teacher
+
+    teacher = Teacher(FRANK, None, warm_up_turns=10)
+    text = teacher.with_note("Say hello.")
+    assert text.startswith(teacher.instructions)
+    assert "## Red lines" in text and "## Right now\nSay hello." in text
+
+
+def test_a_returning_student_is_caught_up_with_not_met_again() -> None:
+    from pacing import warm_up_silence_steps
+    from teacher import warm_up_note
+
+    assert warm_up_note(2, 6, first_meeting=False).startswith("Still catching up")
+    assert "not every turn" in warm_up_note(2, 6, first_meeting=False)
+    assert "catching up" in warm_up_silence_steps(None, first_meeting=False)[0]
+    texts_only = {"recent_texts": [{"role": "user", "text": "I won!"}]}
+    assert has_learning_context(texts_only)
+    again = build_instructions(FRANK, SNAPSHOT, today=date(2026, 10, 15))
+    assert "Use their name" in again and "Greet them by name" not in again
+
+
+async def test_no_scripted_hello_when_the_student_spoke_first() -> None:
+    from types import SimpleNamespace
+
+    import teacher as teacher_module
+    from teacher import Teacher
+
+    calls: list[str] = []
+
+    async def generate_reply(**kwargs):
+        calls.append(kwargs["instructions"])
+
+    spoke = SimpleNamespace(role="user")
+    for items, expected in (([spoke], 0), ([], 1)):
+        calls.clear()
+        teacher = Teacher(FRANK, None, warm_up_turns=10)
+        session = SimpleNamespace(
+            current_speech=None,
+            history=SimpleNamespace(items=items),
+            generate_reply=generate_reply,
+        )
+        teacher_module.OPENING_PAUSE_S, pause = 0, teacher_module.OPENING_PAUSE_S
+        try:
+            type(teacher).session = property(lambda self, s=session: s)
+            await teacher.on_enter()
+        finally:
+            teacher_module.OPENING_PAUSE_S = pause
+            del type(teacher).session
+        assert len(calls) == expected
+    assert "## Red lines" in calls[0]

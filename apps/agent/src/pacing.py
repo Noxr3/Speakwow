@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from collections.abc import Awaitable, Callable
 
 from reflect import Turn
@@ -43,7 +44,9 @@ HELP_AFTER_S = 7.0
 REASSURE_AFTER_S = 9.0
 
 
-def warm_up_silence_steps(news: str | None = None) -> tuple[str, ...]:
+def warm_up_silence_steps(
+    news: str | None = None, first_meeting: bool = True
+) -> tuple[str, ...]:
     """While they are still getting to know each other, a quiet student is
     usually shy, not stuck on English: the teacher stays a friendly visitor
     and goes first. No sentence starters or "try saying"; those belong to
@@ -55,8 +58,9 @@ def warm_up_silence_steps(news: str | None = None) -> tuple[str, ...]:
         else "tell them one small, true thing from your life today"
     )
     return (
-        "The student has not answered your last turn. You are still getting "
-        "to know each other, so this is not a lesson: no sentence starters, "
+        "The student has not answered your last turn. You are still "
+        f"{'getting to know each other' if first_meeting else 'catching up'}, "
+        "so this is not a lesson: no sentence starters, "
         'no "try saying", nothing to repeat. Go first instead: '
         f"{share} Then give them an easy way in, like a yes-or-no question "
         "about them, or tell them Chinese is fine too.",
@@ -145,6 +149,17 @@ class SilenceLadder:
         except RuntimeError:
             # the call ended while the timer ran ("AgentSession isn't running")
             logger.debug("silence nudge skipped: session closed")
+        except Exception:
+            logger.exception("silence nudge failed")
+
+
+_GOODBYE = re.compile(r"\b(bye|goodbye|good night|see you)\b|再见|拜拜|下次见", re.I)
+
+
+def said_goodbye(text: str | None) -> bool:
+    """A goodbye from either side: after it, silence is the end of the call,
+    not a cue to nudge."""
+    return bool(_GOODBYE.search(text or ""))
 
 
 def student_share(turns: list[Turn]) -> float | None:
