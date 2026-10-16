@@ -33,7 +33,7 @@ from livekit.agents import (  # noqa: E402
 from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
-from coach import Coach, build_state  # noqa: E402
+from coach import Coach, build_state, warming_up  # noqa: E402
 from lesson import current_unit, unit_goals  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
 from pacing import (  # noqa: E402
@@ -49,7 +49,7 @@ from personas import Persona, load_personas, resolve_persona  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
-from teacher import Teacher, is_beginner  # noqa: E402
+from teacher import Teacher, has_learning_context, is_beginner  # noqa: E402
 from widgets import make_widget_tool  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
@@ -212,7 +212,9 @@ async def entrypoint(ctx: JobContext) -> None:
         provider=provider,
     )
     if coach := Coach.from_env():
-        attach_coach(ctx, session, teacher, coach, unit)
+        attach_coach(
+            ctx, session, teacher, coach, unit, not has_learning_context(snapshot)
+        )
     attach_pacing(ctx, session)
 
     await session.start(
@@ -253,15 +255,20 @@ def attach_coach(
     teacher: Teacher,
     coach: Coach,
     unit: dict | None,
+    first_meeting: bool,
 ) -> None:
     """After each student turn, ask the sidecar in the background (coach.py).
-    One check at a time; a turn that lands while one runs is skipped."""
+    One check at a time; a turn that lands while one runs is skipped. While
+    they are still getting to know each other, no cards or corrections."""
     goal = "; ".join(g.get("text", "") for g in unit_goals(unit)) if unit else None
     running: set[asyncio.Task] = set()
 
     async def check() -> None:
-        state = build_state(transcript(session), teacher.persona.display_name, goal)
+        turns = transcript(session)
+        state = build_state(turns, teacher.persona.display_name, goal)
         advice = await coach.advise(state)
+        if advice is not None and warming_up(turns, first_meeting):
+            advice = advice.for_warm_up()
         if advice is not None:
             await teacher.set_coaching_note(advice.text())
 

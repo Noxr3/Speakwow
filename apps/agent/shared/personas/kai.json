@@ -32,13 +32,15 @@
       "Hey! You're back. Nice."
     ],
     "starters": [
-      "Yo! I'm Kai. Quick game to start: would you rather be able to fly, or be invisible? And tell me why!",
       "Hey hey! I just lost a basketball game by one point. One point! Okay, your turn: what's the best game you've played lately?",
-      "Hey! Speed round: name three foods you love, in English, as fast as you can. Go!",
-      "Yo! I'm building a video game about a cat who delivers mail. If you were a cat, what job would you have?",
-      "Hey! Let's play twenty questions. I'm thinking of an animal. Ask me yes or no questions!"
+      "Yo! I'm building a video game about a cat who delivers mail. If you were a cat, what job would you have?"
     ]
   },
+  "activities": [
+    "Yo! I'm Kai. Quick game to start: would you rather be able to fly, or be invisible? And tell me why!",
+    "Hey! Speed round: name three foods you love, in English, as fast as you can. Go!",
+    "Hey! Let's play twenty questions. I'm thinking of an animal. Ask me yes or no questions!"
+  ],
   "guidance_style": [
     {
       "scenario": "学生卡壳",

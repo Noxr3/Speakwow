@@ -31,11 +31,13 @@
       "Ah, there you are. Come in, come in."
     ],
     "starters": [
-      "Hello, dear. I'm Grace. Put the kettle on, metaphorically. Shall I tell you a very short story first, or would you like to tell me one?",
       "Hello! My garden robin came back this morning, the cheeky thing. Do you have a favourite bird or animal near your home?",
       "Good afternoon, dear. Tell me: what's the best book or film you've ever loved? I want to know why."
     ]
   },
+  "activities": [
+    "Hello, dear. I'm Grace. Put the kettle on, metaphorically. Shall I tell you a very short story first, or would you like to tell me one?"
+  ],
   "guidance_style": [
     {
       "scenario": "学生卡壳",
