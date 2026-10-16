@@ -159,6 +159,13 @@ def render_snapshot(snapshot: dict | None) -> str | None:
         lines.append("Working on: " + "; ".join(weaknesses))
     if assignments := _items(snapshot.get("open_assignments"), "title", 3):
         lines.append("Homework waiting: " + "; ".join(assignments))
+    if texts := _as_list(snapshot.get("recent_texts")):
+        lines.append("Your latest text messages with them (oldest first):")
+        lines.extend(
+            f"- {'You' if t.get('role') == 'assistant' else 'They'}: {t.get('content')}"
+            for t in texts
+            if isinstance(t, dict) and t.get("content")
+        )
     return "\n".join(lines) if lines else None
 
 
@@ -184,7 +191,7 @@ def is_beginner(snapshot: dict | None) -> bool:
     return level not in ("B1", "B2", "C1", "C2")
 
 
-def audience_line(snapshot: dict | None) -> str:
+def audience_line(snapshot: dict | None, channel: str = "web") -> str:
     profile = _profile(snapshot)
     grade = str(profile.get("grade") or "").strip()
     if grade:
@@ -193,6 +200,11 @@ def audience_line(snapshot: dict | None) -> str:
         who = "a learner who may be a child or a beginner"
     else:
         who = "an adult learner who can follow natural English"
+    if channel == "phone":
+        return (
+            f"Who is listening: {who}, on a phone call. There is no screen: never "
+            "mention cards, stickers or anything to look at."
+        )
     return (
         f"Who is listening: {who}, on a voice call. They hear you and cannot see you."
     )
@@ -339,7 +351,10 @@ def build_instructions(
     today: date | None = None,
     mode: str = "free",
     provider: str = "xai",
+    channel: str = "web",
 ) -> str:
+    """channel: "web" (the app, with cards and stickers) or "phone" (a phone
+    call: voice only)."""
     today = today or date.today()
     lesson = lesson_section(snapshot) if mode == "course" else None
     mode = "course" if lesson else "free"
@@ -350,7 +365,7 @@ def build_instructions(
         + "\n\n"
         + persona.personality.strip()
         + "\n\n"
-        + audience_line(snapshot),
+        + audience_line(snapshot, channel),
         "## Your goal\nBe someone this student is glad to talk to, and help them "
         "say a little more in English each time. "
         + (
@@ -375,9 +390,10 @@ def build_instructions(
     parts.append(voice_style(persona, provider, snapshot))
     if life := life_section(persona, today):
         parts.append(life)
-    if stickers:
-        parts.append(sticker_guide(stickers))
-    parts.append(WIDGET_GUIDE)
+    if channel != "phone":
+        if stickers:
+            parts.append(sticker_guide(stickers))
+        parts.append(WIDGET_GUIDE)
     if brief := render_snapshot(snapshot):
         # Names, facts and summaries come from what the student said.
         parts.append(
@@ -425,9 +441,10 @@ class Teacher(Agent):
         tools: list | None = None,
         mode: str = "free",
         provider: str = "xai",
+        channel: str = "web",
     ) -> None:
         self.base_instructions = build_instructions(
-            persona, snapshot, stickers, mode=mode, provider=provider
+            persona, snapshot, stickers, mode=mode, provider=provider, channel=channel
         )
         super().__init__(instructions=self.base_instructions, tools=tools or [])
         self.persona = persona
