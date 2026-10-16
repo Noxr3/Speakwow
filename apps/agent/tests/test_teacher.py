@@ -191,3 +191,29 @@ def test_the_warm_up_is_counted_not_left_to_the_model() -> None:
     assert "## Where you are in this call" in teacher.instructions
     assert "spoken 0 times" in teacher.instructions
     assert "## Where you are" not in Teacher(FRANK, None).instructions
+
+
+async def test_notes_reach_the_teacher_during_the_call() -> None:
+    # The notes are set after LiveKit's Agent.__init__ ran; a method named
+    # like one of its attributes was overwritten there (production, 9388efa).
+    from teacher import Teacher, warm_up_note
+
+    teacher = Teacher(FRANK, None, warm_up_turns=10)
+    await teacher.set_phase_note(warm_up_note(4, 10))
+    assert "spoken 4 times" in teacher.instructions
+    await teacher.set_coaching_note("- Slow down a little.")
+    assert "Slow down a little." in teacher.instructions
+    assert "spoken 4 times" in teacher.instructions
+    await teacher.set_phase_note(warm_up_note(10, 10))
+    assert "had its rounds" in teacher.instructions
+    await teacher.set_coaching_note(None)
+    assert "teaching coach" not in teacher.instructions
+
+
+def test_no_teacher_method_hides_a_livekit_attribute() -> None:
+    from livekit.agents import Agent
+
+    from teacher import Teacher
+
+    livekit_attributes = set(vars(Agent(instructions="x")))
+    assert not livekit_attributes & set(vars(Teacher))

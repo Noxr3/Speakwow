@@ -497,12 +497,12 @@ class Teacher(Agent):
         )
         self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
         self.coaching_note: str | None = None
-        super().__init__(instructions=self._instructions(), tools=tools or [])
+        super().__init__(instructions=self._compose_instructions(), tools=tools or [])
         self.persona = persona
         self.snapshot = snapshot
         self.mode = mode
 
-    def _instructions(self) -> str:
+    def _compose_instructions(self) -> str:
         text = self.base_instructions
         if self.phase_note:
             text += f"\n\n## Where you are in this call\n{self.phase_note}"
@@ -518,14 +518,14 @@ class Teacher(Agent):
         if note == self.phase_note:
             return
         self.phase_note = note
-        await self.update_instructions(self._instructions())
+        await self.update_instructions(self._compose_instructions())
 
     async def set_coaching_note(self, note: str | None) -> None:
         """A quiet note from the coaching sidecar (coach.py); None clears it."""
         if note == self.coaching_note:
             return
         self.coaching_note = note
-        await self.update_instructions(self._instructions())
+        await self.update_instructions(self._compose_instructions())
 
     async def on_enter(self) -> None:
         await asyncio.sleep(OPENING_PAUSE_S)
