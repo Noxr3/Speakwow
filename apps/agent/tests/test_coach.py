@@ -79,15 +79,23 @@ def test_switch(monkeypatch) -> None:
 
 
 def test_no_cards_or_corrections_while_getting_to_know_each_other() -> None:
-    from coach import NOTES, Advice, warming_up
+    from coach import NOTES, WARM_UP_STUCK, Advice, warming_up
     from reflect import Turn
 
     advice = Advice((NOTES["stuck"], NOTES["repeated_error"]), "word_card")
     calm = advice.for_warm_up()
-    assert calm.notes == (NOTES["stuck"],) and calm.card is None
+    assert calm.notes == (WARM_UP_STUCK,) and calm.card is None
+    assert "start the sentence" not in WARM_UP_STUCK
 
     five = [Turn("user", "hi")] * 5
     assert warming_up(five, first_meeting=True)
     assert warming_up(five, first_meeting=False)
     assert not warming_up(five * 2, first_meeting=False)
     assert not warming_up(five * 2, first_meeting=True)
+
+
+def test_bored_is_judged_on_tone_not_length() -> None:
+    from coach import QUESTIONS
+
+    question = QUESTIONS["disengaged"]["instructions"]
+    assert "not their length" in question and "short, flat" not in question

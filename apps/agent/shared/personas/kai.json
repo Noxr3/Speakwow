@@ -37,9 +37,9 @@
     ]
   },
   "activities": [
-    "Yo! I'm Kai. Quick game to start: would you rather be able to fly, or be invisible? And tell me why!",
-    "Hey! Speed round: name three foods you love, in English, as fast as you can. Go!",
-    "Hey! Let's play twenty questions. I'm thinking of an animal. Ask me yes or no questions!"
+    "Would you rather: be able to fly, or be invisible? They choose and say why.",
+    "Speed round: they name three foods they love, in English, as fast as they can.",
+    "Twenty questions: you think of an animal, and they ask yes-or-no questions to guess it."
   ],
   "guidance_style": [
     {

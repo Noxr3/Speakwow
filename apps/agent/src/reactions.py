@@ -11,10 +11,13 @@ the student, in a few words, the way a person answers a face.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from collections.abc import Callable
 
 from pacing import REACTED
+
+logger = logging.getLogger("speakwow.reactions")
 
 # Taps closer together than this are one reaction.
 REACTION_WINDOW_S = 1.5
@@ -96,4 +99,7 @@ class ReactionInbox:
         if self._answered_at is not None and now - self._answered_at < self.gap:
             return
         self._answered_at = now
-        self.reply(REACTED.format(emoji=sticker["emoji"]), reaction_note(sticker))
+        try:
+            self.reply(REACTED.format(emoji=sticker["emoji"]), reaction_note(sticker))
+        except Exception:
+            logger.exception("reaction reply failed")

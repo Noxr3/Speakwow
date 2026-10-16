@@ -46,6 +46,12 @@ def test_persona_cards_are_complete() -> None:
             openings["greeting"] + openings["welcome_back"] + card["tone_lines"]
         ):
             assert not re.search(r"\bAI\b", line), f"{path.name}: {line}"
+        # activities are what to do, read mid-lesson: never a hello
+        for activity in card.get("activities", []):
+            assert f"I'm {card['display_name']}" not in activity, activity
+            assert not re.match(r"(hi|hey|hello|hiya|yo|g'day)\b", activity, re.I), (
+                activity
+            )
         assert card.get("voice_note"), f"{path.name} has no voice_note"
         assert set(card["voices"]) <= {"xai", "openai"}
         for thread in card.get("life", {}).get("threads", []):

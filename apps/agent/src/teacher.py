@@ -62,14 +62,14 @@ You teach by conversation. What matters is how much the student gets to say,
 so keep your turns short and leave them room.
 
 - React first: start by responding to what they actually said, in your own
-  words. Don't repeat it back to them.
+  words. Echoing one key word is fine; don't repeat their whole sentence back.
 - At most one question in a turn, and many turns need none: a reaction, a
   short thought of your own or an example is often better. If they asked you
   something, answer it and don't add a question.
-- When you do ask, ask an open question that starts with what, how or why
-  ("How do you feel about it?", "What happened?"), so they get to say a whole
-  sentence. A choice between two things is a last resort, for when they are
-  stuck: options every turn sound like a machine, not a person.
+- Once you are practising, ask open questions that start with what, how or
+  why ("How do you feel about it?", "What happened?"), so they get to say a
+  whole sentence; a choice between two things is then for when they are
+  stuck. (While you are still getting to know them, start easier, as above.)
 - After you ask, wait. Silence usually means they are thinking. If a quiet
   note says they are stuck, help once: say it more simply, give them the
   start of a sentence, or let them say it in Chinese first. Never stack a new
@@ -195,6 +195,7 @@ def has_learning_context(snapshot: dict | None) -> bool:
         or _as_list(snapshot.get("facts"))
         or _as_list(snapshot.get("top_weaknesses"))
         or _as_list(snapshot.get("open_assignments"))
+        or _as_list(snapshot.get("recent_texts"))
     )
 
 
@@ -310,7 +311,7 @@ def conversation_flow(
             "student's first reply:"
         )
         steps = [
-            "1. Catch up. Greet them by name. Bring back one thing you remember "
+            "1. Catch up. Use their name. Bring back one thing you remember "
             'that fits, best of all something that was about to happen ("Did '
             'you win the match?"), share one line of what is going on in your '
             "own life, and ask one easy question about today. Never ask again "
@@ -433,18 +434,23 @@ def build_instructions(
     return "\n\n".join(parts)
 
 
-def warm_up_note(spoken: int, needed: int) -> str:
+def warm_up_note(spoken: int, needed: int, first_meeting: bool = True) -> str:
     """The warm-up's length is counted, not left to the model: told "a few
     exchanges", it started teaching after two or three. The agent sets this
     after each of the student's turns."""
     if spoken < needed:
         left = needed - spoken
+        phase = (
+            "Still getting to know each other"
+            if first_meeting
+            else "Still catching up, as people who have met before"
+        )
         return (
-            f"Still getting to know each other: the student has spoken {spoken} "
-            f"times. At least {left} more of their turns stay a friendly chat "
-            "before anything else. React to what they say, share a little of "
-            "your own life, and ask one easy question about them. No teaching "
-            "yet: no corrections, practice, games or lesson topic, and do not "
+            f"{phase}: the student has spoken {spoken} times. At least {left} "
+            "more of their turns stay a friendly chat before anything else. "
+            "React to what they say and share a little of your own life; ask "
+            "an easy question when it fits, not every turn. No teaching yet: "
+            "no corrections, practice, games or lesson topic, and do not "
             "suggest starting one. Only if they ask to start themselves, start."
         )
     return (
@@ -497,12 +503,12 @@ class Teacher(Agent):
         )
         self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
         self.coaching_note: str | None = None
-        super().__init__(instructions=self._instructions(), tools=tools or [])
+        super().__init__(instructions=self._compose_instructions(), tools=tools or [])
         self.persona = persona
         self.snapshot = snapshot
         self.mode = mode
 
-    def _instructions(self) -> str:
+    def _compose_instructions(self) -> str:
         text = self.base_instructions
         if self.phase_note:
             text += f"\n\n## Where you are in this call\n{self.phase_note}"
@@ -513,23 +519,37 @@ class Teacher(Agent):
             )
         return text
 
+    def with_note(self, note: str) -> str:
+        """The whole prompt plus a note for one reply. A realtime reply's own
+        instructions replace the session's for that reply (checked on
+        grok-voice-3.0: the persona and red lines were gone), so a nudge,
+        a reaction or the hello must carry everything."""
+        return f"{self._compose_instructions()}\n\n## Right now\n{note}"
+
     async def set_phase_note(self, note: str | None) -> None:
         """How far the warm-up has come (warm_up_note); None clears it."""
         if note == self.phase_note:
             return
         self.phase_note = note
-        await self.update_instructions(self._instructions())
+        await self.update_instructions(self._compose_instructions())
 
     async def set_coaching_note(self, note: str | None) -> None:
         """A quiet note from the coaching sidecar (coach.py); None clears it."""
         if note == self.coaching_note:
             return
         self.coaching_note = note
-        await self.update_instructions(self._instructions())
+        await self.update_instructions(self._compose_instructions())
 
     async def on_enter(self) -> None:
         await asyncio.sleep(OPENING_PAUSE_S)
-        await self.session.generate_reply(
-            instructions=opening_instructions(self.persona, self.snapshot),
+        session = self.session
+        if session.current_speech is not None or any(
+            getattr(item, "role", None) == "user" for item in session.history.items
+        ):
+            return  # they spoke first; the answer to them is the hello
+        await session.generate_reply(
+            instructions=self.with_note(
+                opening_instructions(self.persona, self.snapshot)
+            ),
             allow_interruptions=True,
         )

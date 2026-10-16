@@ -34,7 +34,7 @@ from livekit.agents import (  # noqa: E402
 from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
-from coach import Coach, build_state, warm_up_turns, warming_up  # noqa: E402
+from coach import Advice, Coach, build_state, warm_up_turns, warming_up  # noqa: E402
 from lesson import current_unit, unit_goals  # noqa: E402
 from life import news_today  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
@@ -46,6 +46,7 @@ from pacing import (  # noqa: E402
     SILENCE_STEPS,
     SilenceLadder,
     is_stand_in,
+    said_goodbye,
     student_share,
     warm_up_silence_steps,
 )
@@ -274,9 +275,9 @@ async def entrypoint(ctx: JobContext) -> None:
     )
     attach_phase(session, teacher, first_meeting)
     if coach := Coach.from_env():
-        attach_coach(ctx, session, teacher, coach, unit, first_meeting)
-    attach_pacing(ctx, session, first_meeting, persona)
-    reactions = attach_reactions(ctx, session)
+        attach_coach(ctx, session, teacher, coach, unit, first_meeting, job.channel)
+    attach_pacing(ctx, session, teacher, first_meeting)
+    reactions = attach_reactions(ctx, session, teacher)
 
     await session.start(
         agent=teacher,
@@ -290,8 +291,26 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
 
+def _report_failure(task: asyncio.Task) -> None:
+    """Background work never touches the lesson, but its failures are
+    logged with their cause (a swallowed TypeError hid the warm-up note on
+    production, 2026-10-16)."""
+    if not task.cancelled() and (error := task.exception()) is not None:
+        logger.error("background task %s failed", task.get_name(), exc_info=error)
+
+
+def _busy(session: AgentSession) -> bool:
+    """On a realtime model the agent stays "listening" until its first audio
+    frame, so a reply being prepared only shows as current_speech."""
+    return (
+        session.current_speech is not None
+        or session.agent_state == "speaking"
+        or session.user_state == "speaking"
+    )
+
+
 def attach_pacing(
-    ctx: JobContext, session: AgentSession, first_meeting: bool, persona: Persona
+    ctx: JobContext, session: AgentSession, teacher: Teacher, first_meeting: bool
 ) -> None:
     """Patience when the student is quiet, a break after half an hour, and
     the student's share of the talking in the log (pacing.py). While they are
@@ -299,9 +318,11 @@ def attach_pacing(
     nudges, never a sentence starter."""
 
     async def nudge(note: str) -> None:
-        session.generate_reply(user_input=QUIET, instructions=note)
+        if _busy(session):
+            return  # a reply is already on its way
+        session.generate_reply(user_input=QUIET, instructions=teacher.with_note(note))
 
-    warm_up_steps = warm_up_silence_steps(news_today(persona))
+    warm_up_steps = warm_up_silence_steps(news_today(teacher.persona), first_meeting)
 
     def steps() -> tuple[str, ...]:
         if warming_up(transcript(session), first_meeting):
@@ -312,11 +333,25 @@ def attach_pacing(
     session.on("agent_state_changed", lambda ev: ladder.on_agent_state(ev.new_state))
     session.on("user_state_changed", lambda ev: ladder.on_user_state(ev.new_state))
 
+    @session.on("conversation_item_added")
+    def _on_goodbye(event) -> None:
+        # after a goodbye, silence is the end of the call, not a cue to nudge
+        if said_goodbye(getattr(event.item, "text_content", None)):
+            ladder.close()
+
     async def suggest_break() -> None:
         await asyncio.sleep(BREAK_AFTER_S)
-        session.generate_reply(user_input=BREAK_TIME, instructions=BREAK_NOTE)
+        for _ in range(120):  # wait (up to a minute) for a quiet moment
+            if not _busy(session):
+                break
+            await asyncio.sleep(0.5)
+        ladder.close()  # the break closes the call; no nudges after it
+        session.generate_reply(
+            user_input=BREAK_TIME, instructions=teacher.with_note(BREAK_NOTE)
+        )
 
-    break_timer = asyncio.create_task(suggest_break())
+    break_timer = asyncio.create_task(suggest_break(), name="break")
+    break_timer.add_done_callback(_report_failure)
 
     async def finish() -> None:
         ladder.close()
@@ -339,12 +374,16 @@ def attach_phase(session: AgentSession, teacher: Teacher, first_meeting: bool) -
         ):
             return
         spoken = sum(1 for t in transcript(session) if t.role == "user")
-        task = asyncio.create_task(teacher.set_phase_note(warm_up_note(spoken, needed)))
+        note = warm_up_note(spoken, needed, first_meeting)
+        task = asyncio.create_task(teacher.set_phase_note(note), name="phase-note")
         pending.add(task)
         task.add_done_callback(pending.discard)
+        task.add_done_callback(_report_failure)
 
 
-def attach_reactions(ctx: JobContext, session: AgentSession) -> ReactionInbox:
+def attach_reactions(
+    ctx: JobContext, session: AgentSession, teacher: Teacher
+) -> ReactionInbox:
     """A tapped sticker is a face, not a message: it never interrupts, and the
     teacher answers it in a few words only while waiting (reactions.py).
     Typed text is still a turn of its own."""
@@ -356,15 +395,11 @@ def attach_reactions(ctx: JobContext, session: AgentSession) -> ReactionInbox:
     def reply(line: str, note: str) -> None:
         # the call may have ended while the taps were settling
         with contextlib.suppress(RuntimeError):
-            session.generate_reply(user_input=line, instructions=note)
+            session.generate_reply(
+                user_input=line, instructions=teacher.with_note(note)
+            )
 
-    inbox = ReactionInbox(
-        STICKERS,
-        reply,
-        typed,
-        busy=lambda: session.agent_state in ("speaking", "thinking")
-        or session.user_state == "speaking",
-    )
+    inbox = ReactionInbox(STICKERS, reply, typed, busy=lambda: _busy(session))
 
     async def finish() -> None:
         inbox.close()
@@ -380,6 +415,7 @@ def attach_coach(
     coach: Coach,
     unit: dict | None,
     first_meeting: bool,
+    channel: str = "web",
 ) -> None:
     """After each student turn, ask the sidecar in the background (coach.py).
     One check at a time; a turn that lands while one runs is skipped. While
@@ -393,8 +429,11 @@ def attach_coach(
         advice = await coach.advise(state)
         if advice is not None and warming_up(turns, first_meeting):
             advice = advice.for_warm_up()
-        if advice is not None:
-            await teacher.set_coaching_note(advice.text())
+        if advice is not None and channel == "phone":
+            advice = Advice(advice.notes, None)  # a phone has no screen for cards
+        # A note describes this moment only: without fresh advice it goes,
+        # rather than telling the teacher a happy student is still bored.
+        await teacher.set_coaching_note(advice.text() if advice else None)
 
     @session.on("conversation_item_added")
     def _on_item(event) -> None:
@@ -404,9 +443,10 @@ def attach_coach(
             or is_stand_in(getattr(event.item, "text_content", None))
         ):
             return
-        task = asyncio.create_task(check())
+        task = asyncio.create_task(check(), name="coach")
         running.add(task)
         task.add_done_callback(running.discard)
+        task.add_done_callback(_report_failure)
 
     ctx.add_shutdown_callback(coach.aclose)
 
