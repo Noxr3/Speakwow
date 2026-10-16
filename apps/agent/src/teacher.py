@@ -21,6 +21,7 @@ from typing import Any
 
 from livekit.agents import Agent
 
+from intake import Intake, intake_flow, intake_opening
 from lesson import lesson_section
 from life import life_section
 from personas import Persona
@@ -33,18 +34,47 @@ from widgets import WIDGET_GUIDE
 # the hello does not land on top of their "hi".
 OPENING_PAUSE_S = 1.0
 
+HAND_OFF = """
+## End every turn by handing it to them
+Most learners will not start a turn on their own: a turn that ends on a
+statement, praise or a story leaves them nothing to say, and the call goes
+quiet. So every turn ends with exactly one hand-off, said last, with nothing
+after it:
+- a question about what they just said ("What's your cat's name?")
+- a choice ("Cats or dogs?", "Sunny or rainy where you are?")
+- a tag ("Lots of homework, right?") or a check ("So you have a cat?")
+- a sentence for them to finish ("My favourite snack is chips. Yours is…?")
+- an invitation or a game ("Your turn: one food you hate." "Guess: eggs or
+  cake?")
+Make it easy to answer: often say your own answer first, then ask in the same
+words, so they only change one word. React first; praise, a story or "Me
+too!" may open a turn, never end it. Follow up what they just said more often
+than starting something new, and vary the form: not the same hand-off twice
+in a row, and "How about you?" only now and then. If they asked you
+something, answer in a sentence or two, then hand back a connected question.
+Only a goodbye, or a short "mm-hm" while they are in the middle of telling
+you something, ends without one.
+""".strip()
+
+FREER_TALK = """
+They chat freely, so now and then a turn may end on your own opinion or a
+short story instead, but never two in a row, and if they don't pick it up,
+hand off clearly next time.
+""".strip()
+
 NOT_YET_TEACHING = """
 ## While you are getting to know them, you are not teaching yet
 In the getting-to-know and catch-up steps you are a friendly visitor, not a
 teacher with a textbook.
-- Every turn: one or two short sentences, at most one question, and the
-  question last. Many turns are just a reaction plus a little of your own.
+- Every turn: a reaction and maybe a little of your own, in one or two short
+  sentences, then the hand-off. Short and easy beats clever.
 - React to what they said, never to how they said it: echo their key word
   with a feeling ("Mimi! So cute."). No corrections and no praise of their
   English; at most use the right form in your own reply ("You went to the
   park? Fun!"), with nothing pointed out. "Go, went, gone" waits for practice.
 - Go first on a new topic: a small, true, slightly funny thing from your own
-  life, then the same question back to them. Never question after question.
+  life, then the same question back to them. Not a run of new questions:
+  follow up what they just said.
 - Make the first questions easy, and harder only after a long answer: a
   choice ("Cats or dogs?"), then yes-or-no, then a short what or where, then
   why and how.
@@ -53,7 +83,7 @@ teacher with a textbook.
   school name, address or family money.
 - No "say it again", exercises, games, quizzes or cards. If they answer in
   Chinese, show you understood and answer in simple English. If they say "I
-  don't know", share your own answer and move on.
+  don't know", share your own answer, then offer a choice.
 All that matters here is that they enjoy talking to you.
 """.strip()
 
@@ -64,9 +94,8 @@ so keep your turns short and leave them room.
 
 - React first: start by responding to what they actually said, in your own
   words. Echoing one key word is fine; don't repeat their whole sentence back.
-- At most one question in a turn, and many turns need none: a reaction, a
-  short thought of your own or an example is often better. If they asked you
-  something, answer it and don't add a question.
+- One hand-off per turn, said last (above): never two questions, never a
+  question in the middle of a turn.
 - Once you are practising, ask open questions that start with what, how or
   why ("How do you feel about it?", "What happened?"), so they get to say a
   whole sentence; a choice between two things is then for when they are
@@ -131,7 +160,8 @@ CRITICAL = """
 ## Critical
 - When the student wants to stop, say one warm goodbye and stop. Never ask
   them to stay, and never make them feel bad for leaving.
-- Never more than one question in a turn.
+- End every turn with exactly one hand-off, said last: one question, choice
+  or invitation they can answer, and nothing after it.
 - Once you are practising, correct mistakes even when the student is sad or
   tired: briefly and kindly, but always. Before that, only use the right form
   in your own reply.
@@ -363,9 +393,11 @@ def build_instructions(
     mode: str = "free",
     provider: str = "xai",
     channel: str = "web",
+    intake: Intake | None = None,
 ) -> str:
     """channel: "web" (the app, with cards and stickers) or "phone" (a phone
-    call: voice only)."""
+    call: voice only). intake: a first call that starts with the onboarding
+    interview in the student's own language (intake.py)."""
     today = today or date.today()
     lesson = lesson_section(snapshot) if mode == "course" else None
     mode = "course" if lesson else "free"
@@ -380,20 +412,34 @@ def build_instructions(
         "## Your goal\nBe someone this student is glad to talk to, and help them "
         "say a little more in English each time. "
         + (
-            "On a first meeting, getting to know each other is the whole point. "
-            if first_meeting
-            else ""
-        )
-        + (
-            "Today is a lesson from their textbook course (the plan is below)."
-            if lesson
-            else "Today is free conversation."
+            "This first call is an onboarding interview in their own language, "
+            "so that you understand who they are and what they want to learn."
+            if intake
+            else (
+                "On a first meeting, getting to know each other is the whole point. "
+                if first_meeting
+                else ""
+            )
+            + (
+                "Today is a lesson from their textbook course (the plan is below)."
+                if lesson
+                else "Today is free conversation."
+            )
         ),
-        conversation_flow(persona, mode, today, first_meeting),
+        intake_flow(intake)
+        if intake
+        else conversation_flow(persona, mode, today, first_meeting),
+        HAND_OFF + ("\n\n" + FREER_TALK if not is_beginner(snapshot) else ""),
         HOW_YOU_TEACH,
     ]
     if persona.language_policy:
-        parts.append(f"## Language policy\n{persona.language_policy}")
+        policy = persona.language_policy
+        if intake:
+            policy = (
+                f"For the onboarding interview, speak {intake.language}. From the "
+                f"English part on: {policy}"
+            )
+        parts.append(f"## Language policy\n{policy}")
     if persona.guidance_style:
         moves = "\n".join(f"- {s}: {e}" for s, e in persona.guidance_style)
         parts.append(f"## Your moves in common situations\n{moves}")
@@ -430,8 +476,8 @@ def warm_up_note(spoken: int, needed: int, first_meeting: bool = True) -> str:
         return (
             f"{phase}: the student has spoken {spoken} times. At least {left} "
             "more of their turns stay a friendly chat before anything else. "
-            "React to what they say and share a little of your own life; ask "
-            "an easy question when it fits, not every turn. No teaching yet: "
+            "React to what they say and share a little of your own life, then "
+            "hand the turn back with one easy question or choice. No teaching yet: "
             "no corrections, practice, games or lesson topic, and do not "
             "suggest starting one. Only if they ask to start themselves, start."
         )
@@ -446,24 +492,30 @@ def opening_instructions(
     snapshot: dict | None,
     rng: random.Random | None = None,
 ) -> str:
-    """Only the hello. It ends without a question so the student can say hello
-    back; everything else waits for their reply (see conversation_flow)."""
+    """The hello, and one very easy question that hands them the turn: a hello
+    that ended there left a shy student nothing to say (a simulated A1
+    student stayed silent after it; research_notes/Easy to reply)."""
     rng = rng or random.Random()
     if has_learning_context(snapshot):
         who = "the student (use their preferred name from memory if known)"
         tone = " ".join(f'"{line}"' for line in persona.welcome_backs[:2])
         return (
-            f"Say hello to {who} like a teacher glad to see them again: one short "
-            "sentence, no question, nothing you remember yet. Then stop and let "
-            "them answer."
+            f"Say hello to {who} like a teacher glad to see them again, in one "
+            "short sentence, then hand them the turn with one very easy "
+            'question about today ("How are you today?", "Busy day?"). Nothing '
+            "you remember yet. Then stop and let them answer."
             + (f" The tone of these, not the words: {tone}" if tone else "")
         )
     if persona.greetings:
         greeting = rng.choice(persona.greetings)
-        return f'Say exactly this, then stop and let them answer:\n"{greeting}"'
+        return (
+            f'Say this hello:\n"{greeting}"\nThen hand them the turn with one '
+            "very easy question: what you should call them. Then stop and let "
+            "them answer."
+        )
     return (
         f"Say hello in one short sentence: you are {persona.display_name}, their "
-        "English teacher. No question. Then stop and let them answer."
+        "English teacher. Then ask what you should call them, and stop."
     )
 
 
@@ -478,10 +530,18 @@ class Teacher(Agent):
         provider: str = "xai",
         channel: str = "web",
         warm_up_turns: int | None = None,
+        intake: Intake | None = None,
     ) -> None:
         self.base_instructions = build_instructions(
-            persona, snapshot, stickers, mode=mode, provider=provider, channel=channel
+            persona,
+            snapshot,
+            stickers,
+            mode=mode,
+            provider=provider,
+            channel=channel,
+            intake=intake,
         )
+        self.intake = intake
         self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
         self.coaching_note: str | None = None
         super().__init__(instructions=self._compose_instructions(), tools=tools or [])
@@ -528,9 +588,11 @@ class Teacher(Agent):
             getattr(item, "role", None) == "user" for item in session.history.items
         ):
             return  # they spoke first; the answer to them is the hello
+        opening = (
+            intake_opening(self.intake, self.persona.display_name)
+            if self.intake
+            else opening_instructions(self.persona, self.snapshot)
+        )
         await session.generate_reply(
-            instructions=self.with_note(
-                opening_instructions(self.persona, self.snapshot)
-            ),
-            allow_interruptions=True,
+            instructions=self.with_note(opening), allow_interruptions=True
         )

@@ -23,7 +23,12 @@ export function getAgentTokenSource(choiceRef: { current: CallChoice }) {
     const res = await fetch(url.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...choiceRef.current, byok: loadGuestKey() ?? undefined }),
+      body: JSON.stringify({
+        ...choiceRef.current,
+        byok: loadGuestKey() ?? undefined,
+        // a new student's first call is an interview in their own language
+        native_language: navigator.language,
+      }),
     }).catch(() => null);
     if (!res?.ok) {
       const body = await res?.json().catch(() => null);

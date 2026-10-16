@@ -73,16 +73,17 @@ def test_the_teacher_never_brings_up_being_an_ai_but_never_lies() -> None:
     assert "AI" not in opening_instructions(nameless, None).split()
 
 
-def test_the_opening_is_only_a_hello() -> None:
+def test_the_opening_is_a_hello_that_hands_over_the_turn() -> None:
     first = opening_instructions(FRANK, None, random.Random(0))
-    assert first.startswith("Say exactly this, then stop")
+    assert first.startswith("Say this hello:")
     hello = first.split('"')[1]
     assert "?" not in hello and "Frank" in hello and "AI" not in hello.split()
+    assert "what you should call them" in first  # a shy student needs a way in
 
     assert has_learning_context(SNAPSHOT)
     again = opening_instructions(FRANK, SNAPSHOT)
-    assert "preferred name from memory" in again and "no question" in again
-    assert "nothing you remember yet" in again
+    assert "preferred name from memory" in again and "one very easy" in again
+    assert "nothing you remember yet" in again.lower()
     assert not has_learning_context({"profile": {"display_name": "New"}})
 
 
@@ -99,7 +100,9 @@ def test_a_first_meeting_is_getting_to_know_each_other_not_a_lesson() -> None:
     assert "Guess: do I have a dog or a cat?" in first
     assert "teach you one Chinese word" in first
     assert 'Never "Tell me about yourself"' in first
-    assert "Never question after question" in first
+    assert "Not a run of new questions" in first
+    assert "## End every turn by handing it to them" in first
+    assert "many turns need none" not in first and "reaction plus a little" not in first
     assert "Now let's begin today's lesson" in first  # named only as banned
     assert "3. Only if they want" in first and "4. Close" in first
     assert "you are not teaching yet" in first
@@ -235,7 +238,7 @@ def test_a_returning_student_is_caught_up_with_not_met_again() -> None:
     from teacher import warm_up_note
 
     assert warm_up_note(2, 6, first_meeting=False).startswith("Still catching up")
-    assert "not every turn" in warm_up_note(2, 6, first_meeting=False)
+    assert "hand the turn back" in warm_up_note(2, 6, first_meeting=False)
     assert "catching up" in warm_up_silence_steps(None, first_meeting=False)[0]
     texts_only = {"recent_texts": [{"role": "user", "text": "I won!"}]}
     assert has_learning_context(texts_only)
@@ -272,3 +275,15 @@ async def test_no_scripted_hello_when_the_student_spoke_first() -> None:
             del type(teacher).session
         assert len(calls) == expected
     assert "## Red lines" in calls[0]
+
+
+def test_every_turn_hands_off_for_beginners_and_mostly_for_freer_talkers() -> None:
+    def at(level: str) -> dict:
+        memories = [m for m in SNAPSHOT["memories"] if m["key"] != "english-level"]
+        level_memory = {"key": "english-level", "content": f"CEFR {level}"}
+        return {**SNAPSHOT, "memories": [*memories, level_memory]}
+
+    beginner = build_instructions(FRANK, at("A2"))
+    assert "every turn ends with exactly one hand-off" in beginner
+    assert "never two in a row" not in beginner
+    assert "never two in a row" in build_instructions(FRANK, at("B2"))

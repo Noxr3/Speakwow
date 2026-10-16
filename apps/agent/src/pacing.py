@@ -42,6 +42,17 @@ def is_stand_in(text: str | None) -> bool:
 
 HELP_AFTER_S = 7.0
 REASSURE_AFTER_S = 9.0
+REOPEN_AFTER_S = 8.0
+
+# The ladder: help with an easier hand-off; one "no rush" per call (the only
+# turn allowed to end without a hand-off); then re-open with an easy choice.
+# A call is never left in a silence nobody owns: with the old two steps
+# ("no question at all" last), a simulated shy student went quiet for good.
+REOPEN = (
+    "The student is still quiet. Re-open gently with one very easy choice "
+    'about something new and concrete ("Cats or dogs?", "Noodles or rice for '
+    'lunch?"): one short sentence, the choice last.'
+)
 
 
 def warm_up_silence_steps(
@@ -62,11 +73,11 @@ def warm_up_silence_steps(
         f"{'getting to know each other' if first_meeting else 'catching up'}, "
         "so this is not a lesson: no sentence starters, "
         'no "try saying", nothing to repeat. Go first instead: '
-        f"{share} Then give them an easy way in, like a yes-or-no question "
-        "about them, or tell them Chinese is fine too.",
-        "The student is still quiet. One short, warm sentence with no "
-        "question: there is no rush, and they can just listen for a bit. "
-        "Then wait.",
+        f"{share} Then end with an easy choice or yes-or-no question about "
+        "them; Chinese is fine for the answer too.",
+        "The student is still quiet. One short, warm sentence: there is no "
+        "rush, and they can just listen for a bit. This once, no question.",
+        REOPEN,
     )
 
 
@@ -74,12 +85,13 @@ WARM_UP_SILENCE_STEPS = warm_up_silence_steps()
 
 SILENCE_STEPS = (
     "The student has been quiet for a while after your last turn; they may be "
-    "stuck. Help once, in one short sentence and with no new question: make it "
-    "easier to answer (say it more simply, or give them the start of a "
-    "sentence), or tell them they can say it in Chinese first.",
+    "stuck. Help once, in one short sentence, and end by handing it back "
+    "easier: ask it more simply, give them the start of a sentence to finish, "
+    "turn it into a choice of two, or tell them they can say it in Chinese "
+    "first. Not a new question on top.",
     "The student is still quiet. Say one short, warm sentence that takes the "
-    "pressure off, with no question at all: there is no rush, or a tiny thought "
-    "of your own about the topic. Then wait.",
+    "pressure off: there is no rush. This once, no question.",
+    REOPEN,
 )
 
 # Minors' services in China remind about a rest after 30 minutes; a break is
@@ -101,13 +113,14 @@ class SilenceLadder:
     def __init__(
         self,
         nudge: Callable[[str], Awaitable[None]],
-        delays: tuple[float, ...] = (HELP_AFTER_S, REASSURE_AFTER_S),
+        delays: tuple[float, ...] = (HELP_AFTER_S, REASSURE_AFTER_S, REOPEN_AFTER_S),
         steps: Callable[[], tuple[str, ...]] = lambda: SILENCE_STEPS,
     ) -> None:
         self.nudge = nudge
         self.delays = delays
         self.steps = steps
         self.step = 0
+        self.reassured = False  # the one "no rush" a call gets
         self.agent_state = "initializing"
         self.user_state = "listening"
         self._timer: asyncio.Task | None = None
@@ -144,8 +157,13 @@ class SilenceLadder:
         self.step = step + 1
         self._timer = None
         steps = self.steps()
+        index = min(step, len(steps) - 1)
+        if index == 1 and len(steps) > 2:
+            if self.reassured:
+                index = 2  # later silences re-open instead of a second "no rush"
+            self.reassured = True
         try:
-            await self.nudge(steps[min(step, len(steps) - 1)])
+            await self.nudge(steps[index])
         except RuntimeError:
             # the call ended while the timer ran ("AgentSession isn't running")
             logger.debug("silence nudge skipped: session closed")

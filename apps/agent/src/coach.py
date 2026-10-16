@@ -169,16 +169,22 @@ class Coach:
     async def aclose(self) -> None:
         await self.client.aclose()
 
-    async def advise(self, state: dict) -> Advice | None:
+    async def evaluate(self, state: dict, questions: dict) -> dict | None:
+        """Jev's answers to any set of questions about the call, or None when
+        it is slow, failing or off (the call goes on without it)."""
         try:
             res = await self.client.post(
                 f"{GATEWAY_URL}/v1/evaluate",
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                json={"model": MODEL, "state": state, "questions": QUESTIONS},
+                json={"model": MODEL, "state": state, "questions": questions},
             )
             res.raise_for_status()
             answers = res.json().get("answers")
         except Exception as error:  # never let the sidecar touch the lesson
             logger.info("coach skipped: %s", type(error).__name__)
             return None
-        return advice_from(answers) if isinstance(answers, dict) else None
+        return answers if isinstance(answers, dict) else None
+
+    async def advise(self, state: dict) -> Advice | None:
+        answers = await self.evaluate(state, QUESTIONS)
+        return advice_from(answers) if answers is not None else None

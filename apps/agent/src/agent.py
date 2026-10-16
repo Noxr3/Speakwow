@@ -35,6 +35,19 @@ from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
 from coach import Advice, Coach, build_state, warm_up_turns, warming_up  # noqa: E402
+from handoff import handoff_rate  # noqa: E402
+from intake import (  # noqa: E402
+    Intake,
+    heard,
+    intake_memories,
+    known_from_memories,
+    language_name,
+    language_tag,
+    make_profile_tool,
+    needs_intake,
+    progress_note,
+    slot_questions,
+)
 from lesson import current_unit, unit_goals  # noqa: E402
 from life import news_today  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
@@ -95,6 +108,9 @@ server = AgentServer(
     num_idle_processes=1,
     # Heavy imports can take >10s cold on a small box.
     initialize_process_timeout=60.0,
+    # After a call, the reflection (a model call, up to ~30 s) still runs; the
+    # 10 s default killed it mid-way.
+    shutdown_process_timeout=45.0,
 )
 
 
@@ -116,6 +132,8 @@ class JobRequest:
     # sets it in the job metadata; the caller is found by their number.
     channel: str = "web"
     persona_given: bool = False
+    # the browser's language ("zh-CN"): the onboarding interview speaks it
+    native_language: str | None = None
 
 
 def parse_job_metadata(raw: str | None) -> JobRequest:
@@ -138,7 +156,15 @@ def parse_job_metadata(raw: str | None) -> JobRequest:
     mode = "course" if meta.get("mode") == "course" and student_id else "free"
     channel = "phone" if meta.get("channel") == "phone" else "web"
     persona_given = bool(meta.get("persona") or meta.get("agent"))
-    return JobRequest(persona, student_id, user_key, mode, channel, persona_given)
+    return JobRequest(
+        persona,
+        student_id,
+        user_key,
+        mode,
+        channel,
+        persona_given,
+        language_tag(meta.get("native_language")),
+    )
 
 
 async def caller_number(ctx: JobContext) -> str | None:
@@ -215,6 +241,23 @@ async def entrypoint(ctx: JobContext) -> None:
         mode,
     )
 
+    # A student the teacher knows nothing about starts with the onboarding
+    # interview, in their own language (intake.py).
+    intake = None
+    signed_in = bool(memory and student_id)
+    if job.channel != "phone" and needs_intake(
+        snapshot, has_learning_context(snapshot), signed_in
+    ):
+        tag = job.native_language
+        intake = Intake(
+            language=language_name(tag) or "English",
+            tag=tag,
+            signed_in=signed_in,
+            courses=tuple(await memory.language_courses()) if signed_in else (),
+            known=frozenset(known_from_memories(snapshot)),
+        )
+        logger.info("onboarding interview: language=%s signed_in=%s", tag, signed_in)
+
     session = AgentSession(
         llm=build_realtime_model(
             persona,
@@ -225,10 +268,10 @@ async def entrypoint(ctx: JobContext) -> None:
         min_interruption_duration=0.3,
     )
 
+    # set when the interview's memories were written during this call
+    intake_saved = [False]
+
     if memory and student_id and session_id:
-        memory_snapshot = review_memories(
-            snapshot.get("memories") if snapshot else None
-        )
         lesson = (
             {"course_id": snapshot["current_course"]["id"], "unit": unit}
             if unit
@@ -237,6 +280,14 @@ async def entrypoint(ctx: JobContext) -> None:
 
         async def remember_lesson() -> None:
             turns = transcript(session)
+            # the words first: the reflection below is slow
+            await memory.save_transcript(session_id=session_id, turns=turns)
+            # The reviewer must see what the interview just wrote, or it
+            # files the same facts again under other keys.
+            fresh = (
+                await memory.load_snapshot(student_id) if intake_saved[0] else snapshot
+            )
+            memory_snapshot = review_memories(fresh.get("memories") if fresh else None)
             reflector = Reflector.from_env()
             reflection = (
                 await reflector.reflect(
@@ -255,6 +306,7 @@ async def entrypoint(ctx: JobContext) -> None:
                 reflection=reflection,
                 memory_snapshot=memory_snapshot,
                 lesson=lesson,
+                transcript_saved=True,
             )
             await memory.aclose()
             logger.info(
@@ -264,21 +316,60 @@ async def entrypoint(ctx: JobContext) -> None:
         ctx.add_shutdown_callback(remember_lesson)
 
     first_meeting = not has_learning_context(snapshot)
+
+    async def save_profile(profile: dict) -> str:
+        if (
+            intake
+            and memory
+            and student_id
+            and session_id
+            and await memory.save_intake(
+                student_id=student_id,
+                session_id=session_id,
+                memories=intake_memories(profile, intake, persona.display_name),
+                snapshot=(snapshot or {}).get("memories"),
+                course=profile.get("course"),
+            )
+        ):
+            intake_saved[0] = True
+            return (
+                "Saved to their profile"
+                + (" and started their course" if profile.get("course") else "")
+                + ". Now say in two short sentences what you understood and the plan."
+            )
+        return (
+            "Noted for this call only: they are not signed in. Say in two short "
+            "sentences what you understood, and that if they sign in you will "
+            "remember it next time."
+        )
+
+    tools = (
+        []
+        if job.channel == "phone"
+        else [make_sticker_tool(STICKERS), make_widget_tool()]
+    )
+    if intake:
+        tools.append(make_profile_tool(intake, save_profile))
     teacher = Teacher(
         persona,
         snapshot,
         STICKERS,
         # a phone has no screen: no stickers, no cards
-        tools=[]
-        if job.channel == "phone"
-        else [make_sticker_tool(STICKERS), make_widget_tool()],
+        tools=tools,
         mode=mode,
         provider=provider,
         channel=job.channel,
-        warm_up_turns=warm_up_turns(first_meeting),
+        # the onboarding's progress note comes from Jev instead (attach_intake)
+        warm_up_turns=None if intake else warm_up_turns(first_meeting),
+        intake=intake,
     )
-    attach_phase(session, teacher, first_meeting)
-    if coach := Coach.from_env():
+    coach = Coach.from_env()
+    if intake:
+        if coach:
+            attach_intake(session, teacher, intake, coach)
+    else:
+        attach_phase(session, teacher, first_meeting)
+    if coach:
         attach_coach(ctx, session, teacher, coach, unit, first_meeting, job.channel)
     attach_pacing(ctx, session, teacher, first_meeting)
     reactions = attach_reactions(ctx, session, teacher)
@@ -360,7 +451,12 @@ def attach_pacing(
     async def finish() -> None:
         ladder.close()
         break_timer.cancel()
-        logger.info("call pace: student_share=%s", student_share(transcript(session)))
+        turns = transcript(session)
+        logger.info(
+            "call pace: student_share=%s handoff=%s",
+            student_share(turns),
+            handoff_rate([t.text for t in turns if t.role == "assistant"]),
+        )
 
     ctx.add_shutdown_callback(finish)
 
@@ -382,6 +478,44 @@ def attach_phase(session: AgentSession, teacher: Teacher, first_meeting: bool) -
         task = asyncio.create_task(teacher.set_phase_note(note), name="phase-note")
         pending.add(task)
         task.add_done_callback(pending.discard)
+        task.add_done_callback(_report_failure)
+
+
+def attach_intake(
+    session: AgentSession, teacher: Teacher, intake: Intake, coach: Coach
+) -> None:
+    """During the onboarding interview, after each of the student's turns,
+    Jev judges what the teacher already knows and what is still missing, and
+    the teacher is told (intake.progress_note): the interview neither repeats
+    itself nor moves on before the essentials are known."""
+    questions = slot_questions(intake)
+    running: set[asyncio.Task] = set()
+    # Once told, stays told: Jev reads the last few turns, and the name said
+    # in the first minute had dropped out of them (it reported "nothing yet").
+    # What their memories already say counts as told from the start.
+    known: set[str] = set(intake.known) & set(questions)
+
+    async def check() -> None:
+        state = build_state(transcript(session), teacher.persona.display_name)
+        answers = await coach.evaluate(state, questions)
+        if answers is None:
+            return
+        known.update(k for k in questions if heard(answers, k))
+        merged = {k: {"probability": 1.0 if k in known else 0.0} for k in questions}
+        if note := progress_note(merged, intake):
+            await teacher.set_phase_note(note)
+
+    @session.on("conversation_item_added")
+    def _on_item(event) -> None:
+        if (
+            getattr(event.item, "role", None) != "user"
+            or running
+            or is_stand_in(getattr(event.item, "text_content", None))
+        ):
+            return
+        task = asyncio.create_task(check(), name="intake-progress")
+        running.add(task)
+        task.add_done_callback(running.discard)
         task.add_done_callback(_report_failure)
 
 

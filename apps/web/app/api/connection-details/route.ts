@@ -35,6 +35,13 @@ function refuse(status: number, error: string, message: string) {
  *   ALLOW_GUESTS=false  only signed-in students may start a call
  *   REQUIRE_BYOK=true   every call must bring its own model key
  */
+/** A BCP 47 tag like "zh-CN" from the browser, or undefined. */
+function languageTag(value: unknown): string | undefined {
+  return typeof value === 'string' && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$/.test(value)
+    ? value
+    : undefined;
+}
+
 export async function POST(req: Request) {
   try {
     if (LIVEKIT_URL === undefined) throw new Error('LIVEKIT_URL is not defined');
@@ -81,6 +88,7 @@ export async function POST(req: Request) {
       student_id: user?.id,
       mode,
       byok: sealedKey,
+      native_language: languageTag(body.native_language),
     };
 
     const participantToken = await createParticipantToken(
