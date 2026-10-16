@@ -148,7 +148,7 @@ Good first issues are labelled [`good first issue`](https://github.com/Noxr3/Spe
 [MIT](LICENSE), with two exceptions noted in the files themselves:
 
 - The animated components in `apps/web/components/` taken from [React Bits](https://reactbits.dev)
-  (`CircularCarousel`, `ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
+  (`ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
   `LiquidEther`) are © David Haz under MIT + Commons Clause: use them as part of an
   app, but do not sell or redistribute the components on their own.
 - Animated stickers are [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)

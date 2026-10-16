@@ -85,6 +85,6 @@ pnpm course:import packages/shared/courses/yilin-2024-7a.json
 ## 许可证
 
 [MIT](LICENSE)，两处例外：`apps/web/components/` 里来自 [React Bits](https://reactbits.dev) 的动效组件
-（CircularCarousel、ColorBends、GlassSurface 等）版权归 David Haz，采用 MIT + Commons Clause，可作为应用的一部分使用，
+（ColorBends、GlassSurface 等）版权归 David Haz，采用 MIT + Commons Clause，可作为应用的一部分使用，
 但不能单独出售或再分发组件本身；动态表情来自 Google [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)，
 CC BY 4.0。web 与 agent 起步于 LiveKit 的 MIT 开源模板。
