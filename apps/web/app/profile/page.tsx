@@ -1,33 +1,28 @@
 import { redirect } from 'next/navigation';
+import { LearningCourses } from '@/components/app/learning-courses';
 import { GlassPanel, PageShell } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
+import type { CatalogParams } from '@/lib/course-catalog';
 import { memorySummary } from '@/lib/memory-summary';
 import { getSessionUser } from '@/lib/supabase/server';
 import { enroll, forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
 
 export const metadata = { title: 'Learning record · Speakwow' };
 
-const STATUS_LABEL: Record<string, string> = {
-  learning: 'Learning',
-  reviewing: 'Reviewing',
-  mastered: 'Mastered',
-};
-
 const field = 'field';
 
 /** 学习档案: who the student is, where they are in their course, and what the
  * teacher remembers — every remembered thing can be erased here. */
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<CatalogParams>;
+}) {
+  const params = await searchParams;
   const { supabase, user } = await getSessionUser();
   if (!supabase || !user) redirect('/login');
 
-  const [enrollments, courses, memories, weaknesses, sessions] = await Promise.all([
-    supabase
-      .from('enrollments')
-      .select('course_id, current_unit_id, status, updated_at')
-      .eq('student_id', user.id)
-      .order('updated_at', { ascending: false }),
-    supabase.from('courses').select('id, title').order('slug'),
+  const [memories, weaknesses, sessions] = await Promise.all([
     supabase
       .from('user_memories')
       .select('id, content, updated_at')
@@ -47,34 +42,11 @@ export default async function ProfilePage() {
       .limit(10),
   ]);
 
-  const active = enrollments.data?.find((e) => e.status === 'active') ?? null;
-  const course = active ? courses.data?.find((c) => c.id === active.course_id) : null;
-  const units = active
-    ? ((
-        await supabase
-          .from('course_units')
-          .select('id, position, title, theme, topic')
-          .eq('course_id', active.course_id)
-          .order('position')
-      ).data ?? [])
-    : [];
-  const progress = units.length
-    ? ((
-        await supabase
-          .from('unit_progress')
-          .select('unit_id, status, mastery')
-          .in(
-            'unit_id',
-            units.map((u) => u.id)
-          )
-      ).data ?? [])
-    : [];
-  const byUnit = new Map(progress.map((p) => [p.unit_id, p]));
   if (memories.error) throw new Error('Could not load your memories. Please try again.');
   const summary = memorySummary(memories.data ?? []);
 
   return (
-    <PageShell title="Learning record">
+    <PageShell title="Learning record" wide>
       <GlassPanel title="About you">
         <p className="text-foreground text-sm leading-relaxed break-words">
           {summary ||
@@ -140,78 +112,13 @@ export default async function ProfilePage() {
         </details>
       </GlassPanel>
 
-      <GlassPanel title="Course">
-        {course ? (
-          <div className="space-y-3">
-            <p className="text-foreground text-sm font-medium">{course.title}</p>
-            <ol className="space-y-1.5">
-              {units.map((u) => {
-                const prog = byUnit.get(u.id);
-                const current = u.id === active!.current_unit_id;
-                return (
-                  <li
-                    key={u.id}
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm ${
-                      current
-                        ? 'border border-white/30 bg-white/[0.09] shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]'
-                        : 'bg-white/[0.03]'
-                    }`}
-                  >
-                    <span className="label-mono w-16 shrink-0 text-white/45">
-                      Unit {u.position}
-                    </span>
-                    <span className="text-foreground min-w-0 flex-1 truncate">
-                      {u.title}
-                      {u.topic && (
-                        <span className="text-muted-foreground ml-2 text-xs">{u.topic}</span>
-                      )}
-                    </span>
-                    <span className="text-muted-foreground w-24 text-right text-xs">
-                      {prog
-                        ? `${STATUS_LABEL[prog.status] ?? prog.status} · ${Math.round(Number(prog.mastery) * 100)}%`
-                        : current
-                          ? 'Up next'
-                          : ''}
-                    </span>
-                    {!current && (
-                      <form action={setCurrentUnit}>
-                        <input type="hidden" name="course_id" value={active!.course_id} />
-                        <input type="hidden" name="unit_id" value={u.id} />
-                        <button type="submit" className="text-primary text-xs underline">
-                          Study
-                        </button>
-                      </form>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            Pick your textbook and your teacher will teach it unit by unit, remember your progress.
-          </p>
-        )}
-        {courses.data?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {courses.data
-              .filter((c) => c.id !== course?.id)
-              .map((c) => (
-                <form key={c.id} action={enroll}>
-                  <input type="hidden" name="course_id" value={c.id} />
-                  <Button type="submit" variant="outline" size="sm">
-                    {course ? 'Switch to ' : 'Start '}
-                    {c.title}
-                  </Button>
-                </form>
-              ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-xs">
-            No courses on this server yet. Import one with <code>pnpm course:import</code>.
-          </p>
-        )}
-      </GlassPanel>
+      <LearningCourses
+        supabase={supabase}
+        userId={user.id}
+        params={params}
+        enroll={enroll}
+        setCurrentUnit={setCurrentUnit}
+      />
 
       {weaknesses.data?.length ? (
         <GlassPanel title="What you are practising">
