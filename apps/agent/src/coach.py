@@ -42,8 +42,13 @@ QUESTIONS = {
     },
     "disengaged": {
         "type": "boolean",
-        "instructions": "Are the student's recent answers short, flat or off-hand, "
-        "as if they are bored or tired?",
+        # Measured on Jev 2026-10-16: asked about "short" answers it flagged
+        # an ordinary beginner as bored (0.70); judged on tone it is 0.06 for
+        # them, 0.02 for an excited student and 0.99 for a bored one.
+        "instructions": "Does the student sound bored, tired or unwilling to "
+        'talk (e.g. "whatever", "I\'m tired", "I don\'t care", refusing to '
+        "answer)? Judge their tone and words, not their length: beginners "
+        "and children give short answers even when they are happy.",
     },
     "repeated_error": {
         "type": "boolean",
@@ -65,6 +70,13 @@ QUESTIONS = {
     },
 }
 
+# While they are still getting to know each other, a stuck student gets
+# help that is not a lesson (no sentence starters), as in the silence ladder.
+WARM_UP_STUCK = (
+    "They seem stuck: make it easier, not a lesson. Go first with a little of "
+    "your own, then an easy choice or yes-or-no question; Chinese is fine."
+)
+
 NOTES = {
     "stuck": "They seem stuck: slow down, say it more simply or start the sentence for them; they may say it in Chinese first.",
     "disengaged": "They seem bored or tired: switch to something they care about, light and short.",
@@ -80,7 +92,10 @@ class Advice:
     def for_warm_up(self) -> Advice:
         """While the student is still getting to know the teacher, only how
         they feel counts: no card and no correction."""
-        notes = tuple(n for n in self.notes if n != NOTES["repeated_error"])
+        swap = {NOTES["stuck"]: WARM_UP_STUCK}
+        notes = tuple(
+            swap.get(n, n) for n in self.notes if n != NOTES["repeated_error"]
+        )
         return Advice(notes, None)
 
     def text(self) -> str | None:

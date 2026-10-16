@@ -393,8 +393,9 @@ def attach_coach(
         advice = await coach.advise(state)
         if advice is not None and warming_up(turns, first_meeting):
             advice = advice.for_warm_up()
-        if advice is not None:
-            await teacher.set_coaching_note(advice.text())
+        # A note describes this moment only: without fresh advice it goes,
+        # rather than telling the teacher a happy student is still bored.
+        await teacher.set_coaching_note(advice.text() if advice else None)
 
     @session.on("conversation_item_added")
     def _on_item(event) -> None:
