@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Noxr3/Speakwow/courses/schema/course.schema.json",
+  "title": "Speakwow course",
+  "description": "The front matter of courses/<slug>/index.md. A course is anything a teacher can teach by talking: a textbook volume, a school subject, a skill. Its units are the pages in courses/<slug>/units/. 一门课：可以是一册课本、一门学科或一项技能。",
+  "type": "object",
+  "required": [
+    "slug",
+    "title",
+    "description",
+    "subject",
+    "teaching_language"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "slug": {
+      "description": "Stable id, the same as the folder name, lowercase with dashes. Never rename it: students' progress points at it. 稳定 ID，与目录名相同，发布后不要改名。",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 60
+    },
+    "title": {
+      "description": "The name students see. 学生看到的课程名。",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "description": "What the course covers and where its outline came from. 课程简介和提纲来源。",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 800
+    },
+    "subject": {
+      "description": "What is taught, as one lowercase word or two: english, math, physics, history, programming, piano… 科目，小写英文。",
+      "type": "string",
+      "pattern": "^[a-z]+(-[a-z]+)*$",
+      "maxLength": 30
+    },
+    "teaching_language": {
+      "description": "The language the lessons are held in, as a BCP 47 tag: en, zh, ja… For a language course, usually the language taught. 上课用的语言。",
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
+    },
+    "level": {
+      "description": "Who it is for, in words: \"Grade 7\", \"CEFR A1–A2\", \"beginner adult\". 适用水平。",
+      "type": "string",
+      "maxLength": 60
+    },
+    "grade": {
+      "description": "School grade, e.g. \"7\", for school courses. 年级。",
+      "type": "string",
+      "maxLength": 10
+    },
+    "term": {
+      "description": "\"A\" for the first term (上册), \"B\" for the second (下册).",
+      "type": "string",
+      "maxLength": 10
+    },
+    "region": {
+      "description": "Where this course or textbook is used, e.g. \"江苏\". 使用地区。",
+      "type": "string",
+      "maxLength": 40
+    },
+    "publisher": {
+      "description": "Textbook publisher, if the course follows a textbook. 出版社。",
+      "type": "string",
+      "maxLength": 60
+    },
+    "edition": {
+      "description": "Textbook edition, e.g. \"2024\". 版本。",
+      "type": "string",
+      "maxLength": 20
+    },
+    "standard": {
+      "description": "The curriculum standard it follows, if any. 对应的课程标准。",
+      "type": "string",
+      "maxLength": 80
+    },
+    "sources": {
+      "description": "Where the content comes from, so learners and maintainers can read the original. Cite, never copy. 资料来源：只引用，不照抄。",
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://",
+            "maxLength": 400
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20
+          }
+        }
+      }
+    },
+    "maintainers": {
+      "description": "GitHub usernames of the people who look after this course. 维护者的 GitHub 用户名。",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9-]{1,39}$"
+      },
+      "uniqueItems": true
+    }
+  }
+}

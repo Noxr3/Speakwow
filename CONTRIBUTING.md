@@ -39,21 +39,13 @@ Migrations and `supabase/tests/*.sql` run in CI against a fresh Postgres.
 Personas set the voice and the flavour. They cannot change the shared teacher
 layer (`apps/agent/src/teacher.py`): the red lines apply to every teacher.
 
-### Add a course
+### Add or improve a course
 
-A course is `packages/shared/courses/<slug>.json`: the course's fields plus units
-with `goals`, `content.vocabulary`, `content.grammar`, `content.functions` and
-`content.speaking_tasks`. Write goals as things a student can *do* ("introduce
-yourself and a friend"), and give each a kind in brackets when it is not
-speaking (`[grammar] use am / is / are`).
-
-**Copyright:** outlines only. Unit titles, topics, grammar points and short word
-lists are fine; never copy reading passages, dialogues or exercises from a
-textbook.
-
-Teachers can also keep a course in a [Dokki](https://dokki.one) table and import
-it with `pnpm course:import <course.json> --from-dokki <tableId>`; the column
-names are listed at the top of `scripts/course-import.mjs`.
+Courses live in [`courses/`](courses/), one folder per course with a Markdown
+page per unit, in any subject. Read [`courses/AGENTS.md`](courses/AGENTS.md)
+first: it has the layout, what each field means, and the rules (outlines only,
+ids that never change, a review status on every unit, a log of every change).
+Run `pnpm courses:index` and `pnpm courses:check` before you open the PR.
 
 ### Add a card type
 

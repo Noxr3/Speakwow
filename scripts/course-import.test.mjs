@@ -1,56 +1,34 @@
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
 import { test } from 'node:test';
-import { parseGoal, splitList, unitsFromDokkiTable } from './course-import.mjs';
+import { importCourse } from './course-import.mjs';
+import { ROOT } from './courses.mjs';
 
-test('list cells split on lines, commas and Chinese separators, not inside numbers', () => {
-  assert.deepEqual(splitList('hobby, classmate\nafter school；play football、swim'), [
-    'hobby',
-    'classmate',
-    'after school',
-    'play football',
-    'swim',
-  ]);
-  assert.deepEqual(splitList('1,000 steps'), ['1,000 steps']);
-  assert.deepEqual(splitList(undefined), []);
-});
-
-test('goals get stable ids and an optional kind', () => {
-  assert.deepEqual(parseGoal('[grammar] Use am / is / are', 1, 0), {
-    id: 'u1-g1',
-    kind: 'grammar',
-    text: 'Use am / is / are',
+test('a dry run returns the rows without writing anything', async () => {
+  const rows = await importCourse(join(ROOT, 'yilin-2024-7a'), {
+    dryRun: true,
+    send: () => assert.fail('a dry run must not write'),
   });
-  assert.equal(parseGoal('Introduce yourself', 2, 1).kind, 'speaking');
-  assert.equal(parseGoal('[unknown] x', 2, 1).kind, 'speaking');
+  assert.equal(rows.course.slug, 'yilin-2024-7a');
+  assert.equal(rows.course.source_ref, 'courses/yilin-2024-7a');
+  assert.equal(rows.units.length, 8);
+  assert.equal(rows.units[0].goals[0].id, 'u1-g1');
+  assert.ok(rows.units[0].content.terms.includes('classmate'));
 });
 
-test('a Dokki table becomes ordered units by column header', () => {
-  const table = {
-    id: 'tbl',
-    json_content: {
-      columns: [
-        { id: 'c1', headerName: 'Unit' },
-        { id: 'c2', headerName: 'Title' },
-        { id: 'c3', headerName: 'Goals' },
-        { id: 'c4', headerName: 'Vocabulary' },
-        { id: 'c5', headerName: 'theme' },
-      ],
-      rows: [
-        { id: 'r2', c1: '2', c2: 'Hobbies', c3: 'Talk about hobbies', c4: 'hobby' },
-        { id: 'r1', c1: 1, c2: 'This is me!', c3: 'Introduce yourself\n[grammar] Use be', c5: '人与自我' },
-        { id: 'r3', c1: '', c2: 'No unit number' },
-      ],
-    },
+test('a course is upserted by slug, then its units by position', async () => {
+  const calls = [];
+  const send = async (path, init) => {
+    calls.push({ path, body: JSON.parse(init.body) });
+    return path.startsWith('/courses') ? [{ id: 'course-1' }] : [];
   };
-  const units = unitsFromDokkiTable(table);
+  await importCourse(join(ROOT, 'yilin-2025-8b'), { send });
+  assert.equal(calls[0].path, '/courses?on_conflict=slug');
+  assert.equal(calls[0].body.slug, 'yilin-2025-8b');
+  assert.equal(calls[1].path, '/course_units?on_conflict=course_id,position');
+  assert.ok(calls[1].body.every((u) => u.course_id === 'course-1'));
   assert.deepEqual(
-    units.map((u) => [u.position, u.title]),
-    [
-      [1, 'This is me!'],
-      [2, 'Hobbies'],
-    ]
+    calls[1].body.map((u) => u.position),
+    [1, 2, 3, 4, 5, 6, 7, 8]
   );
-  assert.equal(units[0].theme, '人与自我');
-  assert.deepEqual(units[0].goals[1], { id: 'u1-g2', kind: 'grammar', text: 'Use be' });
-  assert.equal(units[0].source_ref, 'dokki:tbl#r1');
 });

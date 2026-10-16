@@ -40,7 +40,7 @@ learning for life.
 | 🃏 **Cards and stickers mid-call** | The teacher can put a word card, quick quiz, fill-the-gap, sentence builder or "say it out loud" card on screen, and react with animated stickers. Your taps and stickers go straight back to the teacher. |
 | 🗂️ **Your learning record** | One page with your course map, every unit's mastery, recent lessons, and everything the teacher remembers, each item erasable. |
 | 🔑 **Bring your own key** | Use your own xAI or OpenAI key. It is encrypted (AES-256-GCM) before it is stored or handed to the voice service, and never appears in clear text in the database, LiveKit or logs. |
-| 🧩 **Built to be forked** | A new teacher is one JSON file. A new course is one JSON file, or a table in [Dokki](https://dokki.one) your teachers edit together. Supabase is optional for a first run. |
+| 🧩 **Built to be forked** | A new teacher is one JSON file. A new course is a folder of Markdown pages in [`courses/`](courses/), in any subject. Supabase is optional for a first run. |
 
 ## How it works
 
@@ -53,7 +53,7 @@ flowchart LR
   A -. after each student turn .-> C[Coach: Jev decision model]
   A -- snapshot / lesson record --> S[(Supabase<br/>Postgres + RLS)]
   A -. after the call .-> R[Reflection: flash model]
-  D[(Dokki table<br/>optional)] -- pnpm course:import --> S
+  D[(courses/<br/>Markdown wiki)] -- pnpm course:import --> S
 ```
 
 - `apps/web` — Next.js 15: the call UI, login, learning record, settings (BYOK).
@@ -85,7 +85,7 @@ Supabase:
 
 ```bash
 supabase start && supabase db reset           # local Postgres with the schema
-pnpm course:import packages/shared/courses/yilin-2024-7a.json
+pnpm course:import courses/yilin-2024-7a    # or --all
 ```
 
 then set `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the web
@@ -108,7 +108,6 @@ and `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` for the agent.
 | `BYOK_ENCRYPTION_KEY` | web, agent | 32 random bytes, base64 (`openssl rand -base64 32`). Enables bring-your-own-key |
 | `REQUIRE_BYOK=true` | web | Every call must bring its own key (public demos that should not spend your credits) |
 | `ALLOW_GUESTS=false` | web | Only signed-in students can start a call |
-| `DOKKI_API_KEY`, `DOKKI_BASE_URL` | scripts | `pnpm course:import <file> --from-dokki <tableId>` |
 | `XAI_API_KEY` / `OPENAI_API_KEY` | scripts | `pnpm voices:generate` writes each teacher's voice sample to `apps/web/public/voices/` |
 
 ## Design choices
@@ -136,7 +135,7 @@ The easiest ways in:
 - **Add a teacher** — one JSON file in `packages/shared/personas/` (personality,
   voices, openings, a life with storylines, two colours and a voiceprint motif for
   the card, a one-line voice sample). See [CONTRIBUTING.md](CONTRIBUTING.md).
-- **Add a course** — one JSON file in `packages/shared/courses/`, or a Dokki table.
+- **Add a course** — a folder of Markdown pages in `courses/`, in any subject; the rules are in [`courses/AGENTS.md`](courses/AGENTS.md).
   Curriculum outlines only; never copy textbook passages.
 - **Add a card type** — `apps/agent/src/widgets.py` + `apps/web/components/app/widget-card.tsx`;
   try it on `/playground` without a call.

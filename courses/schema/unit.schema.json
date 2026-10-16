@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Noxr3/Speakwow/courses/schema/unit.schema.json",
+  "title": "Speakwow course unit",
+  "description": "The front matter of one unit page, courses/<slug>/units/NN-title.md: what the student should be able to do, and what the teacher needs to get them there. An outline only: never copy passages, dialogues, worked examples or exercises from a textbook. 一个单元的提纲，不要抄课本原文、例题或练习。",
+  "type": "object",
+  "required": [
+    "position",
+    "title",
+    "goals",
+    "review"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "position": {
+      "description": "1 for the first unit; must match the file number (01-….md). Never renumber a published unit: students' progress points at it. Add new units at the end. 单元序号，与文件名一致；已发布的单元不要改序号。",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99
+    },
+    "title": {
+      "description": "Unit title, as printed when the course follows a book. 单元标题。",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "subtitle": {
+      "description": "A second title, e.g. the Chinese title of an English unit. 副标题，例如中文标题。",
+      "type": "string",
+      "maxLength": 80
+    },
+    "theme": {
+      "description": "A theme category, e.g. 人与自我 / 人与社会 / 人与自然 in the 2022 English standard. 主题。",
+      "type": "string",
+      "maxLength": 40
+    },
+    "topic": {
+      "description": "What the unit is about, in a sentence. 话题。",
+      "type": "string",
+      "maxLength": 200
+    },
+    "goals": {
+      "description": "What the student can do by the end: 3 to 8 goals the teacher works on and scores after each lesson. 学完能做到什么，3–8 条，课后会逐条评分。",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "u<position>-g<number>, e.g. u3-g2. Never change or reuse an id: each student's score for the goal is stored under it. To retire a goal, delete it and give the next one a new number. 目标 ID，永远不要改或复用。",
+            "type": "string",
+            "pattern": "^u[1-9][0-9]?-g[1-9][0-9]?$"
+          },
+          "kind": {
+            "description": "What kind of goal, one lowercase word. Language courses: speaking, listening, reading, writing, vocabulary, grammar, pronunciation. Any subject: concept (know and explain an idea), skill (do something step by step), application (use it in a new situation), reasoning (argue, compare, judge). 目标类型。",
+            "type": "string",
+            "pattern": "^[a-z]+(-[a-z]+)*$",
+            "maxLength": 20
+          },
+          "text": {
+            "description": "Something the student can do, starting with a verb: \"Introduce yourself and a friend\", \"Explain why the moon has phases\". 用动词开头，写成能做到的事。",
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          }
+        }
+      }
+    },
+    "terms": {
+      "description": "Key words and terms: the vocabulary of a language unit, the terminology of any other subject. Up to 30. 词汇或术语。",
+      "$ref": "#/$defs/list"
+    },
+    "points": {
+      "description": "Key points the teacher makes sure land: grammar points, concepts, rules, formulas, each in a short phrase. 知识点：语法、概念、规则、公式。",
+      "$ref": "#/$defs/list"
+    },
+    "activities": {
+      "description": "Things to do together on a call, written for Speakwow (never copied): a role play, explaining a step, a question to argue about, a problem to talk through. 通话里可以一起做的事，原创。",
+      "$ref": "#/$defs/list"
+    },
+    "pitfalls": {
+      "description": "Mistakes and misunderstandings students at this level often have. 学生常见的错误和误解。",
+      "$ref": "#/$defs/list"
+    },
+    "sources": {
+      "description": "Where the content comes from, so learners and maintainers can read the original. Cite, never copy. 资料来源：只引用，不照抄。",
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://",
+            "maxLength": 400
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20
+          }
+        }
+      }
+    },
+    "review": {
+      "description": "How far this outline has been checked, so maintainers know what still needs a look. 核对状态。",
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "draft: not checked yet / cross-checked: matched against at least two independent sources / source-checked: checked against the textbook itself or another primary source.",
+          "enum": [
+            "draft",
+            "cross-checked",
+            "source-checked"
+          ]
+        },
+        "notes": {
+          "description": "What was checked against what, and what is still uncertain. 核对说明。",
+          "type": "string",
+          "maxLength": 400
+        }
+      }
+    }
+  },
+  "$defs": {
+    "list": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    }
+  }
+}

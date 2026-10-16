@@ -51,16 +51,23 @@ def lesson_section(snapshot: dict | None) -> str | None:
         for g in goals
     )
     content = unit.get("content") or {}
-    language = [
+    # courses/ pages use subject-neutral names; rows imported before them
+    # still say vocabulary / grammar / speaking_tasks.
+    material = [
         f"{label}: {text}"
         for label, text in (
-            ("Words and phrases", _join(content.get("vocabulary"))),
-            ("Grammar", _join(content.get("grammar"))),
-            ("Language functions", _join(content.get("functions"))),
             (
-                "Speaking tasks you can use",
-                "; ".join(content.get("speaking_tasks") or []),
+                "Key words and terms",
+                _join(content.get("terms") or content.get("vocabulary")),
             ),
+            ("Key points", _join(content.get("points") or content.get("grammar"))),
+            (
+                "Things to do together",
+                "; ".join(
+                    content.get("activities") or content.get("speaking_tasks") or []
+                ),
+            ),
+            ("Common mistakes to watch for", "; ".join(content.get("pitfalls") or [])),
         )
         if text
     ]
@@ -76,15 +83,15 @@ def lesson_section(snapshot: dict | None) -> str | None:
             f"after {unit.get('sessions') or 0} lessons.",
             "Goals, weakest first:",
             goal_lines or "- (no goals listed: practise the unit's topic)",
-            *language,
+            *material,
         ]
     )
     return f"""## Today's lesson
-This is a lesson from the student's school textbook course. Teach it the way
-you always talk: through real conversation, not drills or lectures, and in
-the order of "How the conversation goes" above.
-- Check learning by having them USE the language, never by asking "do you
-  understand?".
+This is a lesson from the student's course. Teach it the way you always
+talk: through real conversation, not drills or lectures, and in the order of
+"How the conversation goes" above.
+- Check learning by having them use what they learn (say it, explain it,
+  apply it), never by asking "do you understand?".
 <lesson_plan>
 {as_data(body)}
 </lesson_plan>"""

@@ -36,8 +36,8 @@
 - 🗂️ **学习档案**：课程地图、每单元掌握度、最近的课，以及老师记得的所有事，每一条都可以删除。
 - 🔑 **自带 API Key（BYOK）**：用你自己的 xAI / OpenAI key。key 在存储或交给语音服务之前就用
   AES-256-GCM 加密，数据库、LiveKit、日志里都不会出现明文。
-- 🧩 **方便二次开发**：新增一位老师 = 一个 JSON 文件；新增一门课 = 一个 JSON 文件，或者老师们在
-  [Dokki](https://dokki.one) 里共同维护的一张表。第一次跑起来不需要 Supabase。
+- 🧩 **方便二次开发**：新增一位老师 = 一个 JSON 文件；新增一门课 = [`courses/`](courses/) 里的一个
+  Markdown 文件夹，任何科目都可以。第一次跑起来不需要 Supabase。
 
 ## 快速开始
 
@@ -61,7 +61,7 @@ pnpm dev                                      # http://localhost:3000
 
 ```bash
 supabase start && supabase db reset
-pnpm course:import packages/shared/courses/yilin-2024-7a.json
+pnpm course:import courses/yilin-2024-7a    # 或 --all
 ```
 
 全部配置项见英文 README 的 [Configuration](README.md#configuration)。
