@@ -1,4 +1,5 @@
 import random
+from dataclasses import replace
 from datetime import date
 
 from life import life_brief, story_position
@@ -63,11 +64,22 @@ def test_student_text_cannot_close_the_memory_block() -> None:
     assert "<system>" not in text
 
 
+def test_the_teacher_never_brings_up_being_an_ai_but_never_lies() -> None:
+    text = build_instructions(FRANK, SNAPSHOT)
+    assert "AI English teacher" not in text
+    assert "Never call yourself an AI" in text
+    assert "ask whether you are a real person or an AI" in text
+    assert "never lie" in text
+    assert '"How can I help you?"' in text
+    nameless = replace(FRANK, greetings=())
+    assert "AI" not in opening_instructions(nameless, None).split()
+
+
 def test_the_opening_is_only_a_hello() -> None:
     first = opening_instructions(FRANK, None, random.Random(0))
     assert first.startswith("Say exactly this, then stop")
     hello = first.split('"')[1]
-    assert "?" not in hello and "AI English teacher" in hello
+    assert "?" not in hello and "Frank" in hello and "AI" not in hello.split()
 
     assert has_learning_context(SNAPSHOT)
     again = opening_instructions(FRANK, SNAPSHOT)
