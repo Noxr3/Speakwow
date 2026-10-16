@@ -43,9 +43,10 @@ def reaction_note(sticker: dict) -> str:
     return (
         f"The student tapped a reaction instead of speaking: {sticker['emoji']} "
         f"({sticker.get('label', '')}). Answer it the way you would answer a "
-        "face across the table: a few warm words in your own voice, then leave "
-        "them room. Never say emoji, sticker, icon, smiley or reaction, never "
-        "describe the picture or count the taps, and no new question."
+        "face across the table: a few warm words in your own voice, then hand "
+        "them the turn with one easy question or choice. Never say emoji, "
+        "sticker, icon, smiley or reaction, and never describe the picture or "
+        "count the taps."
     )
 
 

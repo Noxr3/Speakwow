@@ -163,8 +163,8 @@ def intake_opening(intake: Intake, name: str) -> str:
     return (
         f"Say hello in {intake.language}, in one or two short sentences: you "
         f"are {name}, their English teacher, and before any English you would "
-        "like to get to know them a little. No question yet. Then stop and let "
-        "them answer."
+        "like to get to know them a little. Then ask what you should call "
+        "them, and stop and let them answer."
     )
 
 
@@ -297,7 +297,8 @@ def profile_schema(intake: Intake) -> dict:
         "parameters": {
             "type": "object",
             "properties": properties,
-            "required": ["reason", "hard_parts"],
+            # name and grade too: left optional, grok saved without them
+            "required": ["name", "grade", "reason", "hard_parts"],
         },
     }
 

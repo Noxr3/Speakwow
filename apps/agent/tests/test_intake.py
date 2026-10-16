@@ -299,3 +299,14 @@ async def test_the_profile_is_saved_once() -> None:
     )
     assert (await tool(raw_arguments={"reason": "exam"})).startswith("Already saved")
     assert len(saves) == 1
+
+
+def test_the_profile_asks_for_name_and_grade() -> None:
+    from intake import profile_schema
+
+    assert profile_schema(ZH)["parameters"]["required"] == [
+        "name",
+        "grade",
+        "reason",
+        "hard_parts",
+    ]

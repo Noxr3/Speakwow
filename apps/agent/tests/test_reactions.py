@@ -38,7 +38,7 @@ async def test_three_quick_taps_are_one_short_answer() -> None:
     assert len(replies) == 1 and typed == []
     line, note = replies[0]
     assert line == "(the student reacts with 😅)" and is_stand_in(line)
-    assert "Never say emoji" in note and "no new question" in note
+    assert "Never say emoji" in note and "hand them the turn" in note
 
 
 async def test_typed_words_are_still_a_turn() -> None:

@@ -35,6 +35,7 @@ from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
 from coach import Advice, Coach, build_state, warm_up_turns, warming_up  # noqa: E402
+from handoff import handoff_rate  # noqa: E402
 from intake import (  # noqa: E402
     Intake,
     heard,
@@ -451,7 +452,12 @@ def attach_pacing(
     async def finish() -> None:
         ladder.close()
         break_timer.cancel()
-        logger.info("call pace: student_share=%s", student_share(transcript(session)))
+        turns = transcript(session)
+        logger.info(
+            "call pace: student_share=%s handoff=%s",
+            student_share(turns),
+            handoff_rate([t.text for t in turns if t.role == "assistant"]),
+        )
 
     ctx.add_shutdown_callback(finish)
 
