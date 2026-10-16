@@ -1,4 +1,4 @@
--- Regression test for 0006_whatsapp_channel.sql. Runs inside one transaction
+-- Regression test for 0009_whatsapp_channel.sql. Runs inside one transaction
 -- and rolls back. CI: .github/workflows/supabase.yml.
 begin;
 

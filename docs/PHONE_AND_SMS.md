@@ -57,7 +57,7 @@ a call knows what you texted this week, a text knows your last call.
 You need a Twilio account and a LiveKit Cloud project. Use one Twilio number
 for calls and texts; WhatsApp gets a sender of its own.
 
-1. **Database.** Apply the migrations up to `0006_whatsapp_channel.sql`
+1. **Database.** Apply the migrations up to `0009_whatsapp_channel.sql`
    (`supabase db push`).
 2. **A number.** In Twilio, buy a number with Voice and SMS. In the US,
    texting from a local number needs **A2P 10DLC registration** (brand and
