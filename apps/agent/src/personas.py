@@ -29,12 +29,14 @@ class Persona:
     # Hellos end without a question, so the student can say hello back.
     greetings: tuple[str, ...]
     welcome_backs: tuple[str, ...]
-    # Warm-up topics, one at a time, once the hellos are done.
+    # Chat topics for getting to know the student, one at a time.
     starters: tuple[str, ...]
     guidance_style: tuple[tuple[str, str], ...]
     life: dict
     voice_note: str = ""
     tone_lines: tuple[str, ...] = ()
+    # Practice games and drills, only once the student is ready.
+    activities: tuple[str, ...] = ()
 
     @classmethod
     def from_card(cls, card: dict) -> Persona:
@@ -56,6 +58,7 @@ class Persona:
             life=card.get("life") or {},
             voice_note=card.get("voice_note", ""),
             tone_lines=tuple(card.get("tone_lines") or ()),
+            activities=tuple(card.get("activities") or ()),
         )
 
 

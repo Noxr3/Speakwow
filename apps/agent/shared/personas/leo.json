@@ -32,12 +32,14 @@
       "Hey, good to hear from you again."
     ],
     "starters": [
-      "Hey, I'm Leo. Quick warm-up: tell me what you do, in two or three sentences, like you're meeting someone at a conference.",
       "Hi! My daughter said her first English word and her first Korean word on the same day this week. Big week. How's yours going?",
-      "Hey! Let's start easy. What's one thing at work or school that went well recently?",
-      "Hi there. I just ran a mock interview with a friend and he froze on 'tell me about yourself'. Want to make sure that never happens to you?"
+      "Hey! Let's start easy. What's one thing at work or school that went well recently?"
     ]
   },
+  "activities": [
+    "Hey, I'm Leo. Quick warm-up: tell me what you do, in two or three sentences, like you're meeting someone at a conference.",
+    "Hi there. I just ran a mock interview with a friend and he froze on 'tell me about yourself'. Want to make sure that never happens to you?"
+  ],
   "guidance_style": [
     {
       "scenario": "回答太短",
