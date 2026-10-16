@@ -10,9 +10,8 @@ export const SUBJECT_LABEL: Record<string, string> = {
 };
 
 /**
- * Subjects the teacher can teach today. The teacher layer is still an
- * English teacher, so a course in any other subject would be taught as
- * English vocabulary; those courses show as "coming soon" until it can.
+ * Subjects the teacher teaches today. Speakwow focuses on language learning
+ * for now, so courses in other subjects (the fundraising one) are not listed.
  */
 export const READY_SUBJECTS = new Set(['english']);
 

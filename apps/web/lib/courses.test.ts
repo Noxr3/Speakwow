@@ -18,7 +18,7 @@ test('subjects and grades read like words', () => {
   assert.equal(gradeLabel(null), null);
 });
 
-test('only subjects the teacher can teach are open to start', () => {
+test('only language courses are offered for now', () => {
   assert.ok(READY_SUBJECTS.has('english'));
   assert.ok(!READY_SUBJECTS.has('venture-fundraising'));
 });

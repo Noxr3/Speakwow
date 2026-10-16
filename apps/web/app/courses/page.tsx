@@ -56,7 +56,11 @@ export default async function CoursesPage() {
   const active = enrolment.data as { course_id: string; current_unit_id: string } | null;
 
   const bySubject = new Map<string, CourseRow[]>();
-  for (const course of (courses.data ?? []) as CourseRow[]) {
+  // Language courses only, for now: the teacher is a language teacher.
+  const offered = ((courses.data ?? []) as CourseRow[]).filter((c) =>
+    READY_SUBJECTS.has(c.subject ?? '')
+  );
+  for (const course of offered) {
     const key = course.subject ?? 'other';
     bySubject.set(key, [...(bySubject.get(key) ?? []), course]);
   }
@@ -80,7 +84,6 @@ export default async function CoursesPage() {
               const currentUnit = current
                 ? list.find((u) => u.id === active!.current_unit_id)
                 : undefined;
-              const ready = READY_SUBJECTS.has(course.subject ?? '');
               const meta = [gradeLabel(course.grade), `${list.length} units`]
                 .filter(Boolean)
                 .join(' · ');
@@ -125,11 +128,7 @@ export default async function CoursesPage() {
                     </details>
                   )}
 
-                  {!ready ? (
-                    <p className="label-mono text-white/45">
-                      Coming soon: your teacher is learning to teach this subject.
-                    </p>
-                  ) : current ? (
+                  {current ? (
                     <Button asChild className="rounded-full px-5">
                       <Link href="/">Continue</Link>
                     </Button>
