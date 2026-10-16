@@ -96,9 +96,12 @@ WARM_UP_TURNS_FIRST_MEETING = 10
 WARM_UP_TURNS_RETURNING = 6
 
 
+def warm_up_turns(first_meeting: bool) -> int:
+    return WARM_UP_TURNS_FIRST_MEETING if first_meeting else WARM_UP_TURNS_RETURNING
+
+
 def warming_up(turns: list[Turn], first_meeting: bool) -> bool:
-    limit = WARM_UP_TURNS_FIRST_MEETING if first_meeting else WARM_UP_TURNS_RETURNING
-    return sum(1 for t in turns if t.role == "user") < limit
+    return sum(1 for t in turns if t.role == "user") < warm_up_turns(first_meeting)
 
 
 def build_state(

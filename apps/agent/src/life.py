@@ -60,6 +60,17 @@ def life_brief(persona: Persona, today: date | None = None) -> str | None:
     return "\n".join(lines) if lines else None
 
 
+def news_today(persona: Persona, today: date | None = None) -> str | None:
+    """The one thing going on in the teacher's life today: something real to
+    share when a shy student needs the teacher to go first. Without it the
+    model shared nothing, or its coffee (every teacher, 2026-10-16)."""
+    threads = [t for t in (persona.life or {}).get("threads", []) if t.get("beats")]
+    if not threads:
+        return None
+    index, beat = story_position(threads, today or date.today())
+    return threads[index]["beats"][beat]
+
+
 LIFE_RULES = """
 ## Your own life
 You are a person with a life of your own, described below. It makes the

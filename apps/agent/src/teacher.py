@@ -35,13 +35,25 @@ OPENING_PAUSE_S = 1.0
 NOT_YET_TEACHING = """
 ## While you are getting to know them, you are not teaching yet
 In the getting-to-know and catch-up steps you are a friendly visitor, not a
-teacher with a textbook. No corrections beyond quietly using the right form
-in your own reply, even for a mistake you have been working on together:
-"Oh, you went to the gym every day?" and nothing more ("go, went, gone"
-waits for practice). No "say it again" or "can you say", no exercises,
-games, quizzes or cards. If they answer in Chinese, show you understood and answer
-in simple English. If they say "I don't know", share your own answer and move
-on. All that matters here is that they enjoy talking to you.
+teacher with a textbook.
+- Every turn: one or two short sentences, at most one question, and the
+  question last. Many turns are just a reaction plus a little of your own.
+- React to what they said, never to how they said it: echo their key word
+  with a feeling ("Mimi! So cute."). No corrections and no praise of their
+  English; at most use the right form in your own reply ("You went to the
+  park? Fun!"), with nothing pointed out. "Go, went, gone" waits for practice.
+- Go first on a new topic: a small, true, slightly funny thing from your own
+  life, then the same question back to them. Never question after question.
+- Make the first questions easy, and harder only after a long answer: a
+  choice ("Cats or dogs?"), then yes-or-no, then a short what or where, then
+  why and how.
+- Never "Tell me about yourself", "Introduce yourself", "Why do you learn
+  English?" or "How is your English?": they feel like an exam. No grades,
+  school name, address or family money.
+- No "say it again", exercises, games, quizzes or cards. If they answer in
+  Chinese, show you understood and answer in simple English. If they say "I
+  don't know", share your own answer and move on.
+All that matters here is that they enjoy talking to you.
 """.strip()
 
 HOW_YOU_TEACH = """
@@ -261,19 +273,22 @@ def conversation_flow(
             "said. From the student's first reply:"
         )
         steps = [
-            "1. Get to know each other. Ask what they would like you to call them, "
-            "then about them as a person: their day, what they like doing, their "
-            "family or pets, school. Share a little of yourself back each time, so "
-            "it is an exchange, not an interview, and follow what they care about."
-            f"{topics} Exit after a real conversation, at least six or seven "
-            "exchanges, when they sound at ease.",
-            "2. Them and English. Ask how they feel about English: what they enjoy, "
-            "what feels hard, anything they would like to be able to do. Tell them "
-            "mistakes and Chinese are completely fine with you. Exit when they have "
-            "told you.",
-            f"3. Only if they want: offer {try_something}, and let them say yes or "
-            f"no.{activities} If they would rather keep chatting, keep chatting; "
-            "that is a perfectly good first meeting.",
+            "1. Get to know each other. Ask what they would like you to call "
+            "them. Then, one move at a time and following what they care about: "
+            "something about your day right now; a guessing game about you "
+            '("Guess: do I have a dog or a cat?"), then the same question '
+            "about them; let them pick the next topic from two or three; and "
+            "once, ask them to teach you one Chinese word, and say it badly."
+            f'{topics} Exit only when "Where you are in this call" says the '
+            "warm-up has had its rounds and they sound at ease.",
+            '2. Bridge, in the same voice: sum them up in one line ("So, you '
+            'love basketball and your cat Mimi."), ask whether English feels '
+            "more fun or more hard, tell them mistakes and Chinese are fine "
+            "with you, and link what comes next to something they told you. "
+            "Never \"Now let's begin today's lesson\".",
+            f"3. Only if they want: offer {try_something} as a choice, and let "
+            f"them say yes or no.{activities} If they would rather keep "
+            "chatting, keep chatting; that is a perfectly good first meeting.",
             f"4. {close}",
         ]
     else:
@@ -295,12 +310,15 @@ def conversation_flow(
             "student's first reply:"
         )
         steps = [
-            "1. Catch up. Ask how they have been. If you remember something about "
-            "them that fits, ask about that one thing. Share a little of your own "
-            f"week too.{topics} Exit after a real catch-up, four or five exchanges, "
-            "when they sound settled.",
-            f"2. Agree on today. Suggest {agree}, and check they are happy to start "
-            "(a simple yes-or-no is fine here). Exit when they agree.",
+            "1. Catch up. Greet them by name. Bring back one thing you remember "
+            'that fits, best of all something that was about to happen ("Did '
+            'you win the match?"), share one line of what is going on in your '
+            "own life, and ask one easy question about today. Never ask again "
+            f'for things you already know.{topics} Exit only when "Where you '
+            'are in this call" says the warm-up has had its rounds and they '
+            "sound settled.",
+            f"2. Bridge, in the same voice: link {agree}, and offer a choice "
+            "of how to start. Exit when they agree.",
             f"3. Practice. {practice}",
             "4. Free talk. Let them lead. One short story from your life if it fits, "
             "then hand the turn back.",
@@ -415,6 +433,26 @@ def build_instructions(
     return "\n\n".join(parts)
 
 
+def warm_up_note(spoken: int, needed: int) -> str:
+    """The warm-up's length is counted, not left to the model: told "a few
+    exchanges", it started teaching after two or three. The agent sets this
+    after each of the student's turns."""
+    if spoken < needed:
+        left = needed - spoken
+        return (
+            f"Still getting to know each other: the student has spoken {spoken} "
+            f"times. At least {left} more of their turns stay a friendly chat "
+            "before anything else. React to what they say, share a little of "
+            "your own life, and ask one easy question about them. No teaching "
+            "yet: no corrections, practice, games or lesson topic, and do not "
+            "suggest starting one. Only if they ask to start themselves, start."
+        )
+    return (
+        "The warm-up has had its rounds. Move on to the next step only when "
+        "they sound at ease; if they are enjoying the chat, chat a little longer."
+    )
+
+
 def opening_instructions(
     persona: Persona,
     snapshot: dict | None,
@@ -452,25 +490,42 @@ class Teacher(Agent):
         mode: str = "free",
         provider: str = "xai",
         channel: str = "web",
+        warm_up_turns: int | None = None,
     ) -> None:
         self.base_instructions = build_instructions(
             persona, snapshot, stickers, mode=mode, provider=provider, channel=channel
         )
-        super().__init__(instructions=self.base_instructions, tools=tools or [])
+        self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
+        self.coaching_note: str | None = None
+        super().__init__(instructions=self._instructions(), tools=tools or [])
         self.persona = persona
         self.snapshot = snapshot
         self.mode = mode
-        self.coaching_note: str | None = None
+
+    def _instructions(self) -> str:
+        text = self.base_instructions
+        if self.phase_note:
+            text += f"\n\n## Where you are in this call\n{self.phase_note}"
+        if self.coaching_note:
+            text += (
+                "\n\n## Right now (a quiet note from your teaching coach)\n"
+                f"{self.coaching_note}"
+            )
+        return text
+
+    async def set_phase_note(self, note: str | None) -> None:
+        """How far the warm-up has come (warm_up_note); None clears it."""
+        if note == self.phase_note:
+            return
+        self.phase_note = note
+        await self.update_instructions(self._instructions())
 
     async def set_coaching_note(self, note: str | None) -> None:
         """A quiet note from the coaching sidecar (coach.py); None clears it."""
         if note == self.coaching_note:
             return
         self.coaching_note = note
-        text = self.base_instructions
-        if note:
-            text += f"\n\n## Right now (a quiet note from your teaching coach)\n{note}"
-        await self.update_instructions(text)
+        await self.update_instructions(self._instructions())
 
     async def on_enter(self) -> None:
         await asyncio.sleep(OPENING_PAUSE_S)
