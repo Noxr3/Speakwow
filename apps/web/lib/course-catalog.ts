@@ -1,4 +1,6 @@
 export const COURSES_PER_PAGE = 6;
+/** Speakwow focuses on language learning for now: other subjects stay out of the catalog. */
+export const OFFERED_SUBJECTS = ['english'];
 export type CatalogParams = { q?: string | string[]; page?: string | string[] };
 
 /** URL state is shareable and survives reload/back; searches always start at page 1. */
@@ -15,11 +17,12 @@ export function catalogPattern(q: string) {
   return `%${q.toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
 }
 
-export function catalogHref(q: string, page: number) {
+/** basePath: the page the catalog sits on (/profile, or /courses for everyone). */
+export function catalogHref(q: string, page: number, basePath = '/profile') {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (page > 1) params.set('page', String(page));
-  return `/profile${params.size ? `?${params}` : ''}#courses`;
+  return `${basePath}${params.size ? `?${params}` : ''}#courses`;
 }
 
 export function catalogPages(page: number, pages: number): (number | 'gap')[] {

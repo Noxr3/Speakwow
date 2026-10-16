@@ -18,7 +18,13 @@ interface CourseCatalogProps {
   query: string;
   page: number;
   activeCourseId?: string;
-  enroll: (data: FormData) => Promise<void>;
+  /** signed in: starts the course; absent for a visitor, who gets signInHref */
+  enroll?: (data: FormData) => Promise<void>;
+  /** the page the catalog sits on: /profile, or /courses (open to visitors) */
+  basePath?: string;
+  /** where "Currently learning" leads */
+  activeHref?: string;
+  signInHref?: string;
 }
 
 const pageLink =
@@ -31,6 +37,9 @@ export function CourseCatalog({
   page,
   activeCourseId,
   enroll,
+  basePath = '/profile',
+  activeHref = '#current-course',
+  signInHref = '/login',
 }: CourseCatalogProps) {
   const pages = Math.max(1, Math.ceil(total / COURSES_PER_PAGE));
   return (
@@ -45,7 +54,7 @@ export function CourseCatalog({
         </p>
       </div>
       <form
-        action="/profile#courses"
+        action={`${basePath}#courses`}
         method="get"
         role="search"
         className="flex flex-col gap-2 sm:flex-row"
@@ -85,7 +94,10 @@ export function CourseCatalog({
           {query && <> for “{query}”</>}
         </p>
         {query && (
-          <Link href={catalogHref('', 1)} className="text-primary underline underline-offset-4">
+          <Link
+            href={catalogHref('', 1, basePath)}
+            className="text-primary underline underline-offset-4"
+          >
             Clear search
           </Link>
         )}
@@ -127,11 +139,21 @@ export function CourseCatalog({
                   </p>
                   {active ? (
                     <Link
-                      href="#current-course"
+                      href={activeHref}
                       className="text-primary flex h-10 items-center justify-between rounded-full border border-cyan-300/25 px-4 text-xs"
                     >
                       Currently learning <ArrowRight size={14} aria-hidden="true" />
                     </Link>
+                  ) : units && !enroll ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full justify-between rounded-full text-xs"
+                    >
+                      <Link href={signInHref}>
+                        Sign in to start <ArrowRight size={14} aria-hidden="true" />
+                      </Link>
+                    </Button>
                   ) : units ? (
                     <form action={enroll}>
                       <input type="hidden" name="course_id" value={course.id} />
@@ -172,7 +194,7 @@ export function CourseCatalog({
         >
           {page > 1 ? (
             <Link
-              href={catalogHref(query, page - 1)}
+              href={catalogHref(query, page - 1, basePath)}
               className={pageLink}
               aria-label="Previous page"
             >
@@ -195,7 +217,7 @@ export function CourseCatalog({
             ) : (
               <Link
                 key={item}
-                href={catalogHref(query, item)}
+                href={catalogHref(query, item, basePath)}
                 aria-label={`Page ${item}`}
                 aria-current={item === page ? 'page' : undefined}
                 className={`${pageLink} ${item === page ? 'bg-cyan-300 text-black hover:bg-cyan-200' : 'text-white/65'}`}
@@ -205,7 +227,11 @@ export function CourseCatalog({
             )
           )}
           {page < pages ? (
-            <Link href={catalogHref(query, page + 1)} className={pageLink} aria-label="Next page">
+            <Link
+              href={catalogHref(query, page + 1, basePath)}
+              className={pageLink}
+              aria-label="Next page"
+            >
               <ChevronRight size={16} />
             </Link>
           ) : (

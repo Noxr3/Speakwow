@@ -11,8 +11,12 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signUpWithEmail: (
+    email: string,
+    password: string,
+    next?: string
+  ) => Promise<{ error: Error | null }>;
+  signInWithGoogle: (next?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -54,21 +58,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  /** Where the email link or Google sends them back to: /auth/callback,
+   * which then goes on to `next` (same-site paths only, checked there). */
+  const callback = (next?: string) =>
+    `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+
+  const signUpWithEmail = async (email: string, password: string, next?: string) => {
     if (!supabase) return { error: NOT_CONFIGURED };
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: callback(next) },
     });
     return { error };
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (next?: string) => {
     if (!supabase) return { error: NOT_CONFIGURED };
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callback(next) },
     });
     return { error };
   };

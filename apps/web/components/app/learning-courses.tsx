@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   COURSES_PER_PAGE,
   type CatalogParams,
+  OFFERED_SUBJECTS,
   catalogHref,
   catalogParams,
   catalogPattern,
@@ -37,6 +38,7 @@ export async function LearningCourses({
     .select('id, title, description, subject, publisher, units:course_units(count)', {
       count: 'exact',
     });
+  query = query.in('subject', OFFERED_SUBJECTS);
   if (q) query = query.ilike('search_text', catalogPattern(q));
   const [catalog, enrollment] = await Promise.all([
     query.order('title').order('id').range(from, to),
