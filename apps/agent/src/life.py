@@ -2,10 +2,12 @@
 
 A real teacher is a person: they had a weekend, they are learning something,
 something went wrong in their kitchen. The persona card's `life` holds who
-they are and a few ongoing storylines; each storyline moves one beat every
-few days, decided by the calendar alone. So every student hears the same
-life, it moves forward between lessons, and the teacher never contradicts
-themselves from one session to the next.
+they are and a few storylines. One storyline plays at a time, a beat every
+few days, decided by the calendar alone; when it ends the next one starts,
+and the set only comes round again after every beat of every storyline. So
+every student hears the same life, it moves forward between lessons, the
+teacher never contradicts themselves, and a story does not repeat after a
+week or two (packages/shared/index.ts shows the same storyline on the card).
 """
 
 from __future__ import annotations
@@ -17,14 +19,15 @@ from personas import Persona
 DAYS_PER_BEAT = 3
 
 
-def current_beat(
-    beats: list[str], today: date, offset: int = 0
-) -> tuple[str, str | None]:
-    """(what is happening now, what happened just before) for one storyline."""
-    step = today.toordinal() // DAYS_PER_BEAT + offset
-    index = step % len(beats)
-    previous = beats[index - 1] if len(beats) > 1 else None
-    return beats[index], previous
+def story_position(threads: list[dict], today: date) -> tuple[int, int]:
+    """(storyline, beat) playing today."""
+    total = sum(len(t["beats"]) for t in threads)
+    step = (today.toordinal() // DAYS_PER_BEAT) % total
+    for index, thread in enumerate(threads):
+        if step < len(thread["beats"]):
+            return index, step
+        step -= len(thread["beats"])
+    raise AssertionError("unreachable: step < total")
 
 
 def life_brief(persona: Persona, today: date | None = None) -> str | None:
@@ -45,13 +48,15 @@ def life_brief(persona: Persona, today: date | None = None) -> str | None:
             lines.append(f"{label}: " + "; ".join(items))
     threads = [t for t in life.get("threads", []) if t.get("beats")]
     if threads:
-        lines.append("What is going on in your life right now:")
-        for offset, thread in enumerate(threads):
-            now, before = current_beat(thread["beats"], today, offset)
-            line = f"- {thread['title']}: {now}"
-            if before:
-                line += f" (Before that: {before})"
-            lines.append(line)
+        index, beat = story_position(threads, today)
+        thread = threads[index]
+        lines.append(f"What is going on in your life right now ({thread['title']}):")
+        lines.append(f"- {thread['beats'][beat]}")
+        if beat > 0:
+            lines.append(f"- Before that: {thread['beats'][beat - 1]}")
+        elif len(threads) > 1:
+            earlier = threads[index - 1]
+            lines.append(f"- A while ago ({earlier['title']}): {earlier['beats'][-1]}")
     return "\n".join(lines) if lines else None
 
 
@@ -61,9 +66,10 @@ You are a person with a life of your own, described below. It makes the
 conversation two-way: share a short story from it when it fits, to show
 the student real English and to give them something to ask you about. Feel
 things: be honestly excited, tired, proud or annoyed about your own life,
-but keep the spotlight on the student. One story at a time, two or three
-sentences, then hand the conversation back. Stay consistent with these
-details and do not invent big new life events.
+but keep the spotlight on the student. At most one story in a call, two or
+three sentences, linked to what they said or today's topic, then hand the
+conversation back. Your life never needs the student to look after you.
+Stay consistent with these details and do not invent big new life events.
 """.strip()
 
 

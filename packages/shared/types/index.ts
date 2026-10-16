@@ -25,10 +25,17 @@ export interface PersonaCard {
   language_policy: string;
   /** system prompt body */
   personality: string;
+  /** how the voice should sound, rendered into the prompt per realtime model */
+  voice_note?: string;
+  /** a few short reactions in this teacher's voice; tone examples, never questions */
+  tone_lines?: string[];
   openings: {
-    casual: string[];
-    /** used when a student snapshot with pending work/weaknesses is injected */
-    learning: string[];
+    /** first meeting: said word for word, says it is an AI teacher, ends without a question */
+    greeting: string[];
+    /** returning student: the tone of the hello, ends without a question */
+    welcome_back: string[];
+    /** warm-up topics, used one at a time once the student has said hello */
+    starters: string[];
   };
   /** shared guidance decisions, persona-flavoured expression */
   guidance_style: { scenario: string; expression: string }[];

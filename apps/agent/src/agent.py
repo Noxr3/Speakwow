@@ -36,11 +36,20 @@ from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
 from coach import Coach, build_state  # noqa: E402
 from lesson import current_unit, unit_goals  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
+from pacing import (  # noqa: E402
+    BREAK_AFTER_S,
+    BREAK_NOTE,
+    BREAK_TIME,
+    QUIET,
+    SilenceLadder,
+    is_stand_in,
+    student_share,
+)
 from personas import Persona, load_personas, resolve_persona  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
-from teacher import Teacher  # noqa: E402
+from teacher import Teacher, is_beginner  # noqa: E402
 from widgets import make_widget_tool  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
@@ -118,7 +127,7 @@ def transcript(session: AgentSession) -> list[Turn]:
     for item in session.history.items:
         role = getattr(item, "role", None)
         text = getattr(item, "text_content", None)
-        if role in ("user", "assistant") and text:
+        if role in ("user", "assistant") and text and not is_stand_in(text):
             turns.append(Turn(role=role, text=text))
     return turns
 
@@ -150,7 +159,12 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
     session = AgentSession(
-        llm=build_realtime_model(persona, provider, user_key.key if user_key else None),
+        llm=build_realtime_model(
+            persona,
+            provider,
+            user_key.key if user_key else None,
+            beginner=is_beginner(snapshot),
+        ),
         min_interruption_duration=0.3,
     )
 
@@ -195,15 +209,42 @@ async def entrypoint(ctx: JobContext) -> None:
         STICKERS,
         tools=[make_sticker_tool(STICKERS), make_widget_tool()],
         mode=mode,
+        provider=provider,
     )
     if coach := Coach.from_env():
         attach_coach(ctx, session, teacher, coach, unit)
+    attach_pacing(ctx, session)
 
     await session.start(
         agent=teacher,
         room=ctx.room,
         room_options=room_io.RoomOptions(audio_input=_audio_options()),
     )
+
+
+def attach_pacing(ctx: JobContext, session: AgentSession) -> None:
+    """Patience when the student is quiet, a break after half an hour, and
+    the student's share of the talking in the log (pacing.py)."""
+
+    async def nudge(note: str) -> None:
+        session.generate_reply(user_input=QUIET, instructions=note)
+
+    ladder = SilenceLadder(nudge)
+    session.on("agent_state_changed", lambda ev: ladder.on_agent_state(ev.new_state))
+    session.on("user_state_changed", lambda ev: ladder.on_user_state(ev.new_state))
+
+    async def suggest_break() -> None:
+        await asyncio.sleep(BREAK_AFTER_S)
+        session.generate_reply(user_input=BREAK_TIME, instructions=BREAK_NOTE)
+
+    break_timer = asyncio.create_task(suggest_break())
+
+    async def finish() -> None:
+        ladder.close()
+        break_timer.cancel()
+        logger.info("call pace: student_share=%s", student_share(transcript(session)))
+
+    ctx.add_shutdown_callback(finish)
 
 
 def attach_coach(
@@ -226,7 +267,11 @@ def attach_coach(
 
     @session.on("conversation_item_added")
     def _on_item(event) -> None:
-        if getattr(event.item, "role", None) != "user" or running:
+        if (
+            getattr(event.item, "role", None) != "user"
+            or running
+            or is_stand_in(getattr(event.item, "text_content", None))
+        ):
             return
         task = asyncio.create_task(check())
         running.add(task)

@@ -29,7 +29,17 @@ def test_persona_cards_are_complete() -> None:
         missing = [f for f in REQUIRED if f not in card]
         assert not missing, f"{path.name} missing {missing}"
         assert card["id"] == path.stem
-        assert card["openings"].get("casual"), f"{path.name} has no casual openings"
+        openings = card["openings"]
+        assert openings.get("greeting") and openings.get("welcome_back"), path.name
+        # The hello ends without a question, so the student gets to say hello
+        # back; tone lines are copied closely, so they carry no question either.
+        for line in (
+            openings["greeting"] + openings["welcome_back"] + card["tone_lines"]
+        ):
+            assert "?" not in line, f"{path.name}: {line}"
+        for line in openings["greeting"]:
+            assert "AI English teacher" in line, f"{path.name}: {line}"
+        assert card.get("voice_note"), f"{path.name} has no voice_note"
         assert set(card["voices"]) <= {"xai", "openai"}
         for thread in card.get("life", {}).get("threads", []):
             assert thread["title"] and thread["beats"], (

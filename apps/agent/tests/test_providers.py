@@ -7,15 +7,17 @@ from reflect import GATEWAY_MODEL, Reflector
 FRANK = load_personas()["frank"]
 
 
-def test_xai_uses_the_newest_voice_model_and_patient_turn_taking(monkeypatch) -> None:
+def test_xai_uses_the_pinned_voice_model_and_patient_turn_taking(monkeypatch) -> None:
     monkeypatch.delenv("XAI_REALTIME_MODEL", raising=False)
     monkeypatch.delenv("TURN_SILENCE_MS", raising=False)
     model = build_realtime_model(FRANK, "xai", api_key="k")
-    assert model.model == "grok-voice-latest"
+    assert model.model == "grok-voice-3.0"
     url = process_base_url(model._opts.base_url, model.model)
-    assert url == "wss://api.x.ai/v1/realtime?model=grok-voice-latest"
+    assert url == "wss://api.x.ai/v1/realtime?model=grok-voice-3.0"
     assert model._opts.voice == "Rex"
-    assert model._opts.turn_detection.silence_duration_ms == 700
+    assert model._opts.turn_detection.silence_duration_ms == 1100
+    fluent = build_realtime_model(FRANK, "xai", api_key="k", beginner=False)
+    assert fluent._opts.turn_detection.silence_duration_ms == 750
 
 
 def test_openai_uses_semantic_turn_detection(monkeypatch) -> None:
@@ -35,7 +37,8 @@ def test_env_overrides_are_bounded(monkeypatch) -> None:
     monkeypatch.setenv("TURN_SILENCE_MS", "50")
     assert turn_silence_ms() == 200
     monkeypatch.setenv("TURN_SILENCE_MS", "abc")
-    assert turn_silence_ms() == 700
+    assert turn_silence_ms() == 1100
+    assert turn_silence_ms(beginner=False) == 750
 
 
 def test_reflection_prefers_an_explicit_key_then_the_gateway_flash_model(
