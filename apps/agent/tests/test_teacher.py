@@ -1,4 +1,5 @@
 import random
+from dataclasses import replace
 from datetime import date
 
 from life import life_brief, story_position
@@ -63,11 +64,22 @@ def test_student_text_cannot_close_the_memory_block() -> None:
     assert "<system>" not in text
 
 
+def test_the_teacher_never_brings_up_being_an_ai_but_never_lies() -> None:
+    text = build_instructions(FRANK, SNAPSHOT)
+    assert "AI English teacher" not in text
+    assert "Never call yourself an AI" in text
+    assert "ask whether you are a real person or an AI" in text
+    assert "never lie" in text
+    assert '"How can I help you?"' in text
+    nameless = replace(FRANK, greetings=())
+    assert "AI" not in opening_instructions(nameless, None).split()
+
+
 def test_the_opening_is_only_a_hello() -> None:
     first = opening_instructions(FRANK, None, random.Random(0))
     assert first.startswith("Say exactly this, then stop")
     hello = first.split('"')[1]
-    assert "?" not in hello and "AI English teacher" in hello
+    assert "?" not in hello and "Frank" in hello and "AI" not in hello.split()
 
     assert has_learning_context(SNAPSHOT)
     again = opening_instructions(FRANK, SNAPSHOT)
@@ -84,7 +96,13 @@ def test_returning_hello_cannot_smuggle_instructions_in_a_name() -> None:
 def test_a_first_meeting_is_getting_to_know_each_other_not_a_lesson() -> None:
     first = build_instructions(FRANK, None, today=date(2026, 10, 15))
     assert "This is the first time you two have met" in first
-    assert "1. Get to know each other" in first and "2. Them and English" in first
+    assert "1. Get to know each other" in first and "2. Bridge" in first
+    # the rapport moves: guess-the-teacher, the student picks, role reversal
+    assert "Guess: do I have a dog or a cat?" in first
+    assert "teach you one Chinese word" in first
+    assert 'Never "Tell me about yourself"' in first
+    assert "Never question after question" in first
+    assert "Now let's begin today's lesson" in first  # named only as banned
     assert "3. Only if they want" in first and "4. Close" in first
     assert "you are not teaching yet" in first
     assert "getting to know each other is the whole point" in first
@@ -96,8 +114,9 @@ def test_a_first_meeting_is_getting_to_know_each_other_not_a_lesson() -> None:
 def test_a_returning_student_gets_a_catch_up_before_any_teaching() -> None:
     again = build_instructions(FRANK, SNAPSHOT, today=date(2026, 10, 15))
     assert "You have met before" in again
-    assert again.index("1. Catch up") < again.index("2. Agree on today")
-    assert again.index("2. Agree on today") < again.index("3. Practice")
+    assert again.index("1. Catch up") < again.index("2. Bridge")
+    assert again.index("2. Bridge") < again.index("3. Practice")
+    assert "Never ask again" in again
     assert "whole point" not in again
 
 
@@ -119,7 +138,7 @@ def test_a_lesson_is_agreed_after_the_catch_up() -> None:
         },
     }
     lesson = build_instructions(FRANK, course, mode="course")
-    assert "Suggest today's lesson topic" in lesson and "## Today's lesson" in lesson
+    assert "link today's lesson topic" in lesson and "## Today's lesson" in lesson
     # Course mode without a unit is free talk.
     assert "today's lesson topic" not in build_instructions(
         FRANK, SNAPSHOT, mode="course"
@@ -156,3 +175,19 @@ def test_one_storyline_at_a_time_and_none_repeats_soon() -> None:
     assert len(set(told)) == 5
     brief = life_brief(FRANK, day)
     assert brief and brief.count("What is going on in your life right now") == 1
+
+
+def test_the_warm_up_is_counted_not_left_to_the_model() -> None:
+    from teacher import Teacher, warm_up_note
+
+    early = warm_up_note(2, 10)
+    assert "spoken 2 times" in early and "At least 8 more" in early
+    assert "No teaching yet" in early
+    assert "had its rounds" in warm_up_note(10, 10)
+    flow = build_instructions(FRANK, None)
+    assert "Exit only when" in flow and "six or seven" not in flow
+
+    teacher = Teacher(FRANK, None, warm_up_turns=10)
+    assert "## Where you are in this call" in teacher.instructions
+    assert "spoken 0 times" in teacher.instructions
+    assert "## Where you are" not in Teacher(FRANK, None).instructions

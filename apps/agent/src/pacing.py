@@ -12,9 +12,12 @@ there?".
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 
 from reflect import Turn
+
+logger = logging.getLogger("speakwow.pacing")
 
 # Grok Voice answers a request to speak only when the newest item in the
 # conversation is the student's: after the teacher's own turn it ignores a
@@ -24,14 +27,46 @@ from reflect import Turn
 QUIET = "(the student is quiet)"
 BREAK_TIME = "(half an hour has passed)"
 STAND_INS = frozenset((QUIET, BREAK_TIME))
+# A tapped sticker reaches the model as this line (reactions.py).
+REACTED = "(the student reacts with {emoji})"
+_REACTED_START, _REACTED_END = REACTED.split("{emoji}")
 
 
 def is_stand_in(text: str | None) -> bool:
-    return (text or "").strip() in STAND_INS
+    line = (text or "").strip()
+    return line in STAND_INS or (
+        line.startswith(_REACTED_START) and line.endswith(_REACTED_END)
+    )
 
 
 HELP_AFTER_S = 7.0
 REASSURE_AFTER_S = 9.0
+
+
+def warm_up_silence_steps(news: str | None = None) -> tuple[str, ...]:
+    """While they are still getting to know each other, a quiet student is
+    usually shy, not stuck on English: the teacher stays a friendly visitor
+    and goes first. No sentence starters or "try saying"; those belong to
+    practice. `news` is the teacher's own news today (life.news_today)."""
+    share = (
+        f"tell them this small thing from your life today, in two short, simple "
+        f"sentences of your own: {news}"
+        if news
+        else "tell them one small, true thing from your life today"
+    )
+    return (
+        "The student has not answered your last turn. You are still getting "
+        "to know each other, so this is not a lesson: no sentence starters, "
+        'no "try saying", nothing to repeat. Go first instead: '
+        f"{share} Then give them an easy way in, like a yes-or-no question "
+        "about them, or tell them Chinese is fine too.",
+        "The student is still quiet. One short, warm sentence with no "
+        "question: there is no rush, and they can just listen for a bit. "
+        "Then wait.",
+    )
+
+
+WARM_UP_SILENCE_STEPS = warm_up_silence_steps()
 
 SILENCE_STEPS = (
     "The student has been quiet for a while after your last turn; they may be "
@@ -56,15 +91,18 @@ BREAK_NOTE = (
 
 class SilenceLadder:
     """Waits while the student is quiet after the teacher's turn, then asks
-    for the next step of SILENCE_STEPS. Speaking starts the ladder over."""
+    for the next step. `steps` is read when a step fires, so the ladder
+    follows the call from warm-up into practice. Speaking starts it over."""
 
     def __init__(
         self,
         nudge: Callable[[str], Awaitable[None]],
         delays: tuple[float, ...] = (HELP_AFTER_S, REASSURE_AFTER_S),
+        steps: Callable[[], tuple[str, ...]] = lambda: SILENCE_STEPS,
     ) -> None:
         self.nudge = nudge
         self.delays = delays
+        self.steps = steps
         self.step = 0
         self.agent_state = "initializing"
         self.user_state = "listening"
@@ -101,7 +139,12 @@ class SilenceLadder:
         await asyncio.sleep(self.delays[step])
         self.step = step + 1
         self._timer = None
-        await self.nudge(SILENCE_STEPS[min(step, len(SILENCE_STEPS) - 1)])
+        steps = self.steps()
+        try:
+            await self.nudge(steps[min(step, len(steps) - 1)])
+        except RuntimeError:
+            # the call ended while the timer ran ("AgentSession isn't running")
+            logger.debug("silence nudge skipped: session closed")
 
 
 def student_share(turns: list[Turn]) -> float | None:

@@ -1,6 +1,7 @@
 """packages/shared is the one source of persona and sticker data."""
 
 import json
+import re
 from pathlib import Path
 
 from personas import load_personas
@@ -37,8 +38,14 @@ def test_persona_cards_are_complete() -> None:
             openings["greeting"] + openings["welcome_back"] + card["tone_lines"]
         ):
             assert "?" not in line, f"{path.name}: {line}"
+        # A hello says who the teacher is, never what: the page says it is an
+        # AI, and the teacher says so only when the student asks.
         for line in openings["greeting"]:
-            assert "AI English teacher" in line, f"{path.name}: {line}"
+            assert card["display_name"] in line, f"{path.name}: {line}"
+        for line in (
+            openings["greeting"] + openings["welcome_back"] + card["tone_lines"]
+        ):
+            assert not re.search(r"\bAI\b", line), f"{path.name}: {line}"
         assert card.get("voice_note"), f"{path.name} has no voice_note"
         assert set(card["voices"]) <= {"xai", "openai"}
         for thread in card.get("life", {}).get("threads", []):

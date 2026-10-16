@@ -133,6 +133,10 @@ export const WelcomeView = ({
             ))}
           </div>
         )}
+
+        {/* The teacher talks as themselves and never brings up being an AI,
+            so the page says it before every call. */}
+        <p className="font-mono text-xs text-white/40">{persona.display_name} is an AI teacher.</p>
       </section>
 
       <div className="pointer-events-none fixed inset-0 -z-10">

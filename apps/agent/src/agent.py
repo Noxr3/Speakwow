@@ -10,6 +10,7 @@ the lesson back to memory when the call ends.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -33,24 +34,33 @@ from livekit.agents import (  # noqa: E402
 from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
-from coach import Coach, build_state, warming_up  # noqa: E402
+from coach import Coach, build_state, warm_up_turns, warming_up  # noqa: E402
 from lesson import current_unit, unit_goals  # noqa: E402
+from life import news_today  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
 from pacing import (  # noqa: E402
     BREAK_AFTER_S,
     BREAK_NOTE,
     BREAK_TIME,
     QUIET,
+    SILENCE_STEPS,
     SilenceLadder,
     is_stand_in,
     student_share,
+    warm_up_silence_steps,
 )
 from personas import Persona, load_personas, resolve_persona  # noqa: E402
 from phone import normalize_phone  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
+from reactions import ReactionInbox  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
-from teacher import Teacher, has_learning_context, is_beginner  # noqa: E402
+from teacher import (  # noqa: E402
+    Teacher,
+    has_learning_context,
+    is_beginner,
+    warm_up_note,
+)
 from widgets import make_widget_tool  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
@@ -248,6 +258,7 @@ async def entrypoint(ctx: JobContext) -> None:
 
         ctx.add_shutdown_callback(remember_lesson)
 
+    first_meeting = not has_learning_context(snapshot)
     teacher = Teacher(
         persona,
         snapshot,
@@ -259,28 +270,45 @@ async def entrypoint(ctx: JobContext) -> None:
         mode=mode,
         provider=provider,
         channel=job.channel,
+        warm_up_turns=warm_up_turns(first_meeting),
     )
+    attach_phase(session, teacher, first_meeting)
     if coach := Coach.from_env():
-        attach_coach(
-            ctx, session, teacher, coach, unit, not has_learning_context(snapshot)
-        )
-    attach_pacing(ctx, session)
+        attach_coach(ctx, session, teacher, coach, unit, first_meeting)
+    attach_pacing(ctx, session, first_meeting, persona)
+    reactions = attach_reactions(ctx, session)
 
     await session.start(
         agent=teacher,
         room=ctx.room,
-        room_options=room_io.RoomOptions(audio_input=_audio_options()),
+        room_options=room_io.RoomOptions(
+            audio_input=_audio_options(),
+            text_input=room_io.TextInputOptions(
+                text_input_cb=lambda _session, ev: reactions.on_text(ev.text)
+            ),
+        ),
     )
 
 
-def attach_pacing(ctx: JobContext, session: AgentSession) -> None:
+def attach_pacing(
+    ctx: JobContext, session: AgentSession, first_meeting: bool, persona: Persona
+) -> None:
     """Patience when the student is quiet, a break after half an hour, and
-    the student's share of the talking in the log (pacing.py)."""
+    the student's share of the talking in the log (pacing.py). While they are
+    still getting to know each other, a quiet student gets the warm-up
+    nudges, never a sentence starter."""
 
     async def nudge(note: str) -> None:
         session.generate_reply(user_input=QUIET, instructions=note)
 
-    ladder = SilenceLadder(nudge)
+    warm_up_steps = warm_up_silence_steps(news_today(persona))
+
+    def steps() -> tuple[str, ...]:
+        if warming_up(transcript(session), first_meeting):
+            return warm_up_steps
+        return SILENCE_STEPS
+
+    ladder = SilenceLadder(nudge, steps=steps)
     session.on("agent_state_changed", lambda ev: ladder.on_agent_state(ev.new_state))
     session.on("user_state_changed", lambda ev: ladder.on_user_state(ev.new_state))
 
@@ -296,6 +324,53 @@ def attach_pacing(ctx: JobContext, session: AgentSession) -> None:
         logger.info("call pace: student_share=%s", student_share(transcript(session)))
 
     ctx.add_shutdown_callback(finish)
+
+
+def attach_phase(session: AgentSession, teacher: Teacher, first_meeting: bool) -> None:
+    """After each of the student's turns, tell the teacher how far the
+    warm-up has come, so the getting-to-know part lasts its full count."""
+    needed = warm_up_turns(first_meeting)
+    pending: set[asyncio.Task] = set()
+
+    @session.on("conversation_item_added")
+    def _on_item(event) -> None:
+        if getattr(event.item, "role", None) != "user" or is_stand_in(
+            getattr(event.item, "text_content", None)
+        ):
+            return
+        spoken = sum(1 for t in transcript(session) if t.role == "user")
+        task = asyncio.create_task(teacher.set_phase_note(warm_up_note(spoken, needed)))
+        pending.add(task)
+        task.add_done_callback(pending.discard)
+
+
+def attach_reactions(ctx: JobContext, session: AgentSession) -> ReactionInbox:
+    """A tapped sticker is a face, not a message: it never interrupts, and the
+    teacher answers it in a few words only while waiting (reactions.py).
+    Typed text is still a turn of its own."""
+
+    def typed(text: str) -> None:
+        session.interrupt()
+        session.generate_reply(user_input=text)
+
+    def reply(line: str, note: str) -> None:
+        # the call may have ended while the taps were settling
+        with contextlib.suppress(RuntimeError):
+            session.generate_reply(user_input=line, instructions=note)
+
+    inbox = ReactionInbox(
+        STICKERS,
+        reply,
+        typed,
+        busy=lambda: session.agent_state in ("speaking", "thinking")
+        or session.user_state == "speaking",
+    )
+
+    async def finish() -> None:
+        inbox.close()
+
+    ctx.add_shutdown_callback(finish)
+    return inbox
 
 
 def attach_coach(

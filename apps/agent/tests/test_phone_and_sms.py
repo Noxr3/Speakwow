@@ -156,6 +156,8 @@ def test_the_text_teacher_is_the_same_teacher_without_a_screen() -> None:
     assert "You are Frank" in text and "## How you text" in text
     assert "plays basketball" in text and "## Red lines" in text
     assert "show_widget" not in text and "send_sticker" not in text
+    # same identity rules by text: never volunteer being an AI, never lie
+    assert "AI English teacher" not in text and "never lie" in text
 
 
 class FakeMemory:
