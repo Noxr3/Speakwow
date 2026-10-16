@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/ssr';
 import type { PersonaSummary } from '@speakwow/shared';
 import GlassSurface from '@/components/GlassSurface';
@@ -133,6 +134,20 @@ export const WelcomeView = ({
             ))}
           </div>
         )}
+
+        <Link
+          href="/courses"
+          className="flex max-w-[85vw] items-center gap-1.5 font-mono text-xs text-white/60 underline-offset-4 transition-colors hover:text-white hover:underline"
+        >
+          {course ? (
+            <>
+              <span className="min-w-0 truncate">{course.title}</span>
+              <span className="shrink-0">· change course</span>
+            </>
+          ) : (
+            'Choose a course'
+          )}
+        </Link>
 
         {/* The teacher talks as themselves and never brings up being an AI,
             so the page says it before every call. */}

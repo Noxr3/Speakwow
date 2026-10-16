@@ -7,6 +7,7 @@ import { PageBackdrop } from '@/components/app/page-shell';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
+import { safeNext } from '@/lib/courses';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -25,6 +26,9 @@ export default function LoginPage() {
     if (fromCallback) setError(fromCallback);
   }, []);
 
+  // Back to where they came from, e.g. /courses ("Sign in to start").
+  const nextPath = () => safeNext(new URLSearchParams(window.location.search).get('next'));
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -33,7 +37,7 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await signUpWithEmail(email, password);
+        const { error } = await signUpWithEmail(email, password, nextPath());
         if (error) {
           setError(error.message);
         } else {
@@ -44,7 +48,7 @@ export default function LoginPage() {
         if (error) {
           setError(error.message);
         } else {
-          router.push('/');
+          router.push(nextPath());
           router.refresh();
         }
       }
@@ -55,7 +59,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setError(null);
-    const { error } = await signInWithGoogle();
+    const { error } = await signInWithGoogle(nextPath());
     if (error) {
       setError(error.message);
     }
