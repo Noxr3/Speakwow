@@ -58,6 +58,13 @@ export function App({ appConfig, personas, course }: AppProps) {
   const session = useSession(tokenSource);
   const persona = personas.find((p) => p.id === personaId) ?? personas[0];
 
+  // useSession never hangs up by itself: leaving this page mid-call (the
+  // header's Settings or Sign in) kept the call and the microphone running,
+  // with no screen left to end it from.
+  const endCall = useRef(session.end);
+  endCall.current = session.end;
+  useEffect(() => () => void endCall.current(), []);
+
   return (
     <AgentSessionProvider session={session}>
       <AppSetup />
