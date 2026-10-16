@@ -140,6 +140,38 @@ async def test_the_ladder_reads_its_steps_when_a_step_fires() -> None:
     ladder.close()
 
 
+async def test_no_nudge_while_they_work_on_a_card() -> None:
+    said: list[str] = []
+    card_open = {"value": True}
+
+    async def nudge(note: str) -> None:
+        said.append(note)
+
+    ladder = SilenceLadder(
+        nudge, delays=(0.02, 0.02), held=lambda: card_open["value"], hold_max=1.0
+    )
+    ladder.on_agent_state("listening")
+    await asyncio.sleep(0.1)
+    assert said == [], "the student is busy on the card"
+    card_open["value"] = False
+    await asyncio.sleep(0.15)
+    assert said == [SILENCE_STEPS[0]]
+    ladder.close()
+
+
+async def test_a_card_left_open_too_long_gets_help() -> None:
+    said: list[str] = []
+
+    async def nudge(note: str) -> None:
+        said.append(note)
+
+    ladder = SilenceLadder(nudge, delays=(0.02,), held=lambda: True, hold_max=0.1)
+    ladder.on_agent_state("listening")
+    await asyncio.sleep(0.2)
+    assert said == [SILENCE_STEPS[0]]
+    ladder.close()
+
+
 async def test_a_nudge_after_the_call_ended_is_dropped_quietly() -> None:
     async def nudge(note: str) -> None:
         raise RuntimeError("AgentSession isn't running")
