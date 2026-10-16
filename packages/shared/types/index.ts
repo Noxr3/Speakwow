@@ -34,9 +34,11 @@ export interface PersonaCard {
     greeting: string[];
     /** returning student: the tone of the hello, ends without a question */
     welcome_back: string[];
-    /** warm-up topics, used one at a time once the student has said hello */
+    /** chat topics for getting to know the student, used one at a time; never drills */
     starters: string[];
   };
+  /** this teacher's practice games and drills, offered only once the student is ready */
+  activities?: string[];
   /** shared guidance decisions, persona-flavoured expression */
   guidance_style: { scenario: string; expression: string }[];
   /** pointer only — the red lines themselves are injected by the shared teacher layer */

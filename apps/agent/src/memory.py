@@ -13,7 +13,8 @@ from __future__ import annotations
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timedelta, timezone
+from urllib.parse import quote
 
 import httpx
 
@@ -79,6 +80,110 @@ class SupabaseMemory:
         data = res.json() if res is not None else None
         return data if isinstance(data, dict) else None
 
+    async def student_for_phone(self, phone: str) -> dict | None:
+        """{"student_id", "sms_opted_out"} for a linked number, else None."""
+        res = await self._request(
+            "GET",
+            "/student_phones",
+            params={"phone": f"eq.{phone}", "select": "student_id,sms_opted_out"},
+        )
+        rows = res.json() if res is not None else None
+        return rows[0] if isinstance(rows, list) and rows else None
+
+    async def last_persona(self, student_id: str) -> str | None:
+        """The teacher this student talked to last, on any channel."""
+        res = await self._request(
+            "GET",
+            "/sessions",
+            params={
+                "student_id": f"eq.{student_id}",
+                "select": "persona_id",
+                "order": "started_at.desc.nullslast",
+                "limit": "1",
+            },
+        )
+        rows = res.json() if res is not None else None
+        return rows[0].get("persona_id") if isinstance(rows, list) and rows else None
+
+    async def recent_texts(
+        self, student_id: str, limit: int = 12, days: int = 7
+    ) -> list[dict]:
+        """The latest text messages with this student, oldest first, so a
+        call knows what was said by text and a text knows the last call."""
+        since = (datetime.now(UTC) - timedelta(days=days)).isoformat()
+        res = await self._request(
+            "GET",
+            "/messages",
+            params={
+                "select": "role,content,created_at,sessions!inner(student_id,channel)",
+                "sessions.student_id": f"eq.{student_id}",
+                "sessions.channel": "eq.sms",
+                "created_at": f"gte.{since}",
+                "order": "created_at.desc",
+                "limit": str(limit),
+            },
+        )
+        rows = res.json() if res is not None else None
+        if not isinstance(rows, list):
+            return []
+        return [
+            {"role": r["role"], "content": r["content"], "at": r["created_at"]}
+            for r in reversed(rows)
+            if r.get("role") in ("user", "assistant") and r.get("content")
+        ]
+
+    async def set_sms_opt_out(self, phone: str, opted_out: bool) -> None:
+        await self._request(
+            "PATCH",
+            f"/student_phones?phone=eq.{quote(phone)}",
+            json={"sms_opted_out": opted_out},
+        )
+
+    async def text_session(self, student_id: str, persona_id: str) -> str | None:
+        """Today's text conversation with this student (UTC day), started on
+        the first text of the day, so texts sit in the same history as calls."""
+        today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        res = await self._request(
+            "GET",
+            "/sessions",
+            params={
+                "student_id": f"eq.{student_id}",
+                "channel": "eq.sms",
+                "started_at": f"gte.{today.isoformat()}",
+                "select": "id",
+                "order": "started_at.desc",
+                "limit": "1",
+            },
+        )
+        rows = res.json() if res is not None else None
+        if isinstance(rows, list) and rows:
+            return rows[0]["id"]
+        return await self.start_session(student_id, persona_id, None, channel="sms")
+
+    async def count_texts_from(self, session_id: str, limit: int) -> int:
+        """How many texts the student sent in this session, counted up to limit."""
+        res = await self._request(
+            "GET",
+            "/messages",
+            params={
+                "session_id": f"eq.{session_id}",
+                "role": "eq.user",
+                "select": "id",
+                "limit": str(limit),
+            },
+        )
+        rows = res.json() if res is not None else None
+        return len(rows) if isinstance(rows, list) else 0
+
+    async def add_messages(self, session_id: str, turns: list[Turn]) -> None:
+        rows = [
+            {"session_id": session_id, "role": t.role, "content": t.text}
+            for t in turns
+            if t.text.strip()
+        ]
+        if rows:
+            await self._request("POST", "/messages", json=rows)
+
     async def start_session(
         self,
         student_id: str,
@@ -86,6 +191,7 @@ class SupabaseMemory:
         room_name: str | None,
         mode: str = "free",
         unit_id: str | None = None,
+        channel: str = "web",
     ) -> str | None:
         res = await self._request(
             "POST",
@@ -98,6 +204,7 @@ class SupabaseMemory:
                 "started_at": _now(),
                 "mode": mode,
                 "unit_id": unit_id,
+                "channel": channel,
             },
         )
         rows = res.json() if res is not None else None

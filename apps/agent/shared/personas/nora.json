@@ -32,10 +32,12 @@
     ],
     "starters": [
       "Hiya! I'm Nora. Quick one: what song is stuck in your head right now? Mine is a sea shanty, and I can't escape it.",
-      "Hi! I just played a tiny gig in a pub and my guitar string broke halfway. What's a song that always makes you happy?",
-      "Hiya! Let's warm up our voices. Say 'red lorry, yellow lorry' three times. Go on, I dare you."
+      "Hi! I just played a tiny gig in a pub and my guitar string broke halfway. What's a song that always makes you happy?"
     ]
   },
+  "activities": [
+    "Hiya! Let's warm up our voices. Say 'red lorry, yellow lorry' three times. Go on, I dare you."
+  ],
   "guidance_style": [
     {
       "scenario": "发音不准",

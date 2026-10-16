@@ -81,14 +81,35 @@ def test_returning_hello_cannot_smuggle_instructions_in_a_name() -> None:
     assert "</x>" not in opening_instructions(FRANK, evil)
 
 
-def test_the_conversation_has_steps_and_the_prompt_ends_on_the_absolutes() -> None:
-    free = build_instructions(FRANK, None, today=date(2026, 10, 15))
-    assert "## How the conversation goes" in free
-    assert "1. Warm-up" in free and "3. Close" in free
-    assert "twice as much" not in free and "hanging in silence" not in free
-    assert free.rstrip().endswith("but always.")
-    assert free.index("## How the conversation goes") < free.index("## Critical")
+def test_a_first_meeting_is_getting_to_know_each_other_not_a_lesson() -> None:
+    first = build_instructions(FRANK, None, today=date(2026, 10, 15))
+    assert "This is the first time you two have met" in first
+    assert "1. Get to know each other" in first and "2. Them and English" in first
+    assert "3. Only if they want" in first and "4. Close" in first
+    assert "you are not teaching yet" in first
+    assert "getting to know each other is the whole point" in first
+    assert "twice as much" not in first and "hanging in silence" not in first
+    assert first.rstrip().endswith("only use the right form\n  in your own reply.")
+    assert first.index("## How the conversation goes") < first.index("## Critical")
 
+
+def test_a_returning_student_gets_a_catch_up_before_any_teaching() -> None:
+    again = build_instructions(FRANK, SNAPSHOT, today=date(2026, 10, 15))
+    assert "You have met before" in again
+    assert again.index("1. Catch up") < again.index("2. Agree on today")
+    assert again.index("2. Agree on today") < again.index("3. Practice")
+    assert "whole point" not in again
+
+
+def test_practice_games_wait_for_the_practice_step() -> None:
+    kai = PERSONAS["kai"]
+    assert any("Speed round" in a for a in kai.activities)
+    assert not any("Speed round" in s for s in kai.starters)
+    text = build_instructions(kai, None, today=date(2026, 10, 15))
+    assert text.index("Speed round") > text.index("3. Only if they want")
+
+
+def test_a_lesson_is_agreed_after_the_catch_up() -> None:
     course = {
         **SNAPSHOT,
         "current_course": {
@@ -98,9 +119,11 @@ def test_the_conversation_has_steps_and_the_prompt_ends_on_the_absolutes() -> No
         },
     }
     lesson = build_instructions(FRANK, course, mode="course")
-    assert "2. Topic" in lesson and "## Today's lesson" in lesson
+    assert "Suggest today's lesson topic" in lesson and "## Today's lesson" in lesson
     # Course mode without a unit is free talk.
-    assert "2. Topic" not in build_instructions(FRANK, SNAPSHOT, mode="course")
+    assert "today's lesson topic" not in build_instructions(
+        FRANK, SNAPSHOT, mode="course"
+    )
 
 
 def test_voice_note_reaches_the_model_in_each_providers_terms() -> None:

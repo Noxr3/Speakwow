@@ -33,7 +33,7 @@ from livekit.agents import (  # noqa: E402
 from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
-from coach import Coach, build_state  # noqa: E402
+from coach import Coach, build_state, warming_up  # noqa: E402
 from lesson import current_unit, unit_goals  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
 from pacing import (  # noqa: E402
@@ -46,10 +46,11 @@ from pacing import (  # noqa: E402
     student_share,
 )
 from personas import Persona, load_personas, resolve_persona  # noqa: E402
+from phone import normalize_phone  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
-from teacher import Teacher, is_beginner  # noqa: E402
+from teacher import Teacher, has_learning_context, is_beginner  # noqa: E402
 from widgets import make_widget_tool  # noqa: E402
 
 logger = logging.getLogger("speakwow-agent")
@@ -99,6 +100,10 @@ class JobRequest:
     student_id: str | None
     user_key: UserKey | None
     mode: str  # "free" | "course"
+    # "phone": a call through LiveKit SIP. The phone number's dispatch rule
+    # sets it in the job metadata; the caller is found by their number.
+    channel: str = "web"
+    persona_given: bool = False
 
 
 def parse_job_metadata(raw: str | None) -> JobRequest:
@@ -119,7 +124,23 @@ def parse_job_metadata(raw: str | None) -> JobRequest:
         if user_key and user_key.provider not in PROVIDERS:
             user_key = None
     mode = "course" if meta.get("mode") == "course" and student_id else "free"
-    return JobRequest(persona, student_id, user_key, mode)
+    channel = "phone" if meta.get("channel") == "phone" else "web"
+    persona_given = bool(meta.get("persona") or meta.get("agent"))
+    return JobRequest(persona, student_id, user_key, mode, channel, persona_given)
+
+
+async def caller_number(ctx: JobContext) -> str | None:
+    """The number calling in. LiveKit SIP puts it on the caller's participant;
+    the student is whoever linked that number on the website."""
+    await ctx.connect()
+    try:
+        participant = await asyncio.wait_for(
+            ctx.wait_for_participant(kind=rtc.ParticipantKind.PARTICIPANT_KIND_SIP),
+            timeout=15,
+        )
+    except TimeoutError:
+        return None
+    return normalize_phone(participant.attributes.get("sip.phoneNumber"))
 
 
 def transcript(session: AgentSession) -> list[Turn]:
@@ -137,19 +158,43 @@ async def entrypoint(ctx: JobContext) -> None:
     job = parse_job_metadata(ctx.job.metadata)
     persona, student_id, user_key = job.persona, job.student_id, job.user_key
     provider = user_key.provider if user_key else default_provider()
-    memory = SupabaseMemory.from_env() if student_id else None
+    caller = await caller_number(ctx) if job.channel == "phone" else None
+    memory = SupabaseMemory.from_env() if (student_id or caller) else None
+    if memory and caller and not student_id:
+        link = await memory.student_for_phone(caller)
+        student_id = link["student_id"] if link else None
+    if memory and not student_id:
+        # an unlinked number is a guest: no memory to read or write
+        await memory.aclose()
+        memory = None
+    # nobody picks a teacher on the phone: the one they talked to last
+    phone_pick = memory and student_id and job.channel == "phone"
+    if (
+        phone_pick
+        and not job.persona_given
+        and (last := await memory.last_persona(student_id))
+    ):
+        persona = resolve_persona(PERSONAS, last)
 
     snapshot = session_id = None
     if memory and student_id:
         snapshot = await memory.load_snapshot(student_id)
+        if snapshot is not None and (texts := await memory.recent_texts(student_id)):
+            snapshot["recent_texts"] = texts
     unit = current_unit(snapshot) if job.mode == "course" else None
     mode = "course" if unit else "free"
     if memory and student_id:
         session_id = await memory.start_session(
-            student_id, persona.id, ctx.room.name, mode, unit["id"] if unit else None
+            student_id,
+            persona.id,
+            ctx.room.name,
+            mode,
+            unit["id"] if unit else None,
+            channel=job.channel,
         )
     logger.info(
-        "starting session: persona=%s provider=%s byok=%s student=%s remembered=%s mode=%s",
+        "starting session: channel=%s persona=%s provider=%s byok=%s student=%s remembered=%s mode=%s",
+        job.channel,
         persona.id,
         provider,
         bool(user_key),
@@ -207,12 +252,18 @@ async def entrypoint(ctx: JobContext) -> None:
         persona,
         snapshot,
         STICKERS,
-        tools=[make_sticker_tool(STICKERS), make_widget_tool()],
+        # a phone has no screen: no stickers, no cards
+        tools=[]
+        if job.channel == "phone"
+        else [make_sticker_tool(STICKERS), make_widget_tool()],
         mode=mode,
         provider=provider,
+        channel=job.channel,
     )
     if coach := Coach.from_env():
-        attach_coach(ctx, session, teacher, coach, unit)
+        attach_coach(
+            ctx, session, teacher, coach, unit, not has_learning_context(snapshot)
+        )
     attach_pacing(ctx, session)
 
     await session.start(
@@ -253,15 +304,20 @@ def attach_coach(
     teacher: Teacher,
     coach: Coach,
     unit: dict | None,
+    first_meeting: bool,
 ) -> None:
     """After each student turn, ask the sidecar in the background (coach.py).
-    One check at a time; a turn that lands while one runs is skipped."""
+    One check at a time; a turn that lands while one runs is skipped. While
+    they are still getting to know each other, no cards or corrections."""
     goal = "; ".join(g.get("text", "") for g in unit_goals(unit)) if unit else None
     running: set[asyncio.Task] = set()
 
     async def check() -> None:
-        state = build_state(transcript(session), teacher.persona.display_name, goal)
+        turns = transcript(session)
+        state = build_state(turns, teacher.persona.display_name, goal)
         advice = await coach.advise(state)
+        if advice is not None and warming_up(turns, first_meeting):
+            advice = advice.for_warm_up()
         if advice is not None:
             await teacher.set_coaching_note(advice.text())
 
