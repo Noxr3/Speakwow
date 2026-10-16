@@ -16,14 +16,12 @@ from teacher import (
 PERSONAS = load_personas()
 FRANK = PERSONAS["frank"]
 SNAPSHOT = {
-    "profile": {
-        "display_name": "Mei",
-        "level": "B1",
-        "preferred_topics": ["food", "travel"],
-    },
-    "facts": [
-        {"fact": "has an IELTS exam in December"},
-        {"fact": "has a cat called Mochi"},
+    "memories": [
+        {"key": "preferred-name", "content": "The student goes by Mei."},
+        {"key": "english-level", "content": "The student's level is CEFR B1."},
+        {"key": "interests", "content": "Enjoys food and travel."},
+        {"key": "exam", "content": "Has an IELTS exam in December."},
+        {"key": "pet", "content": "Has a cat called Mochi."},
     ],
     "last_session_summary": "Talked about a trip to Chengdu; nervous but chatty.",
     "top_weaknesses": [
@@ -83,7 +81,7 @@ def test_the_opening_is_only_a_hello() -> None:
 
     assert has_learning_context(SNAPSHOT)
     again = opening_instructions(FRANK, SNAPSHOT)
-    assert "Mei" in again and "no question" in again
+    assert "preferred name from memory" in again and "no question" in again
     assert "nothing you remember yet" in again
     assert not has_learning_context({"profile": {"display_name": "New"}})
 
@@ -156,11 +154,13 @@ def test_voice_note_reaches_the_model_in_each_providers_terms() -> None:
 def test_beginners_get_simpler_words_and_more_time() -> None:
     assert is_beginner(None)
     assert is_beginner({"profile": {"grade": "7"}})
-    assert is_beginner({"profile": {"level": "A2"}})
-    assert not is_beginner({"profile": {"level": "B1"}})
+    assert is_beginner({"memories": [{"key": "english-level", "content": "CEFR A2"}]})
+    assert not is_beginner(
+        {"memories": [{"key": "english-level", "content": "CEFR B1"}]}
+    )
     assert "Short, common words" in build_instructions(FRANK, None)
     assert "Short, common words" not in build_instructions(FRANK, SNAPSHOT)
-    assert "grade 7" in build_instructions(FRANK, {"profile": {"grade": "7"}})
+    assert "grade 7" not in build_instructions(FRANK, {"profile": {"grade": "7"}})
 
 
 def test_one_storyline_at_a_time_and_none_repeats_soon() -> None:

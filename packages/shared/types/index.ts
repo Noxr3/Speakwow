@@ -93,15 +93,20 @@ export type ExerciseType =
 
 export type WeaknessSource = 'live_session' | 'exercise';
 
+/** Account identity and course/billing state; learner understanding lives in memory. */
 export interface Profile {
   id: string;
-  display_name: string | null;
-  level: string | null;
-  grade: string | null;
-  learning_goal: string | null;
   points: number;
-  preferred_topics: string[];
   selected_textbook_id: string | null;
+}
+
+export interface UserMemory {
+  id: string;
+  key: string;
+  content: string;
+  source_session_id: string | null;
+  updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface Session {
@@ -138,7 +143,7 @@ export interface Weakness {
 
 /** StudentSnapshot v0 — injected into the teacher persona at session start */
 export interface StudentSnapshot {
-  student: { display_name: string; level: string | null; preferred_topics: string[] };
+  memories: UserMemory[];
   current_course: { title: string; current_unit: string; progress: number } | null;
   pending_assignments: { title: string; type: string; due: string }[];
   top_weaknesses: { item: string; source: WeaknessSource; last_seen: string }[];

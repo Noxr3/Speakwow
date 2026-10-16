@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { GlassPanel, PageShell } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
+import { memorySummary } from '@/lib/memory-summary';
 import { getSessionUser } from '@/lib/supabase/server';
-import { enroll, forgetFact, forgetWeakness, setCurrentUnit, updateProfile } from './actions';
+import { enroll, forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
 
 export const metadata = { title: 'Learning record · Speakwow' };
 
@@ -20,23 +21,19 @@ export default async function ProfilePage() {
   const { supabase, user } = await getSessionUser();
   if (!supabase || !user) redirect('/login');
 
-  const [profile, enrollments, courses, facts, weaknesses, sessions] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('display_name, level, grade, learning_goal')
-      .eq('id', user.id)
-      .single(),
+  const [enrollments, courses, memories, weaknesses, sessions] = await Promise.all([
     supabase
       .from('enrollments')
       .select('course_id, current_unit_id, status, updated_at')
       .eq('student_id', user.id)
       .order('updated_at', { ascending: false }),
-    supabase.from('courses').select('id, title, grade, region').order('slug'),
+    supabase.from('courses').select('id, title').order('slug'),
     supabase
-      .from('student_facts')
-      .select('id, fact, created_at')
-      .order('created_at', { ascending: false })
-      .limit(30),
+      .from('user_memories')
+      .select('id, content, updated_at')
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false }),
     supabase
       .from('weaknesses')
       .select('id, item, created_at')
@@ -73,39 +70,74 @@ export default async function ProfilePage() {
       ).data ?? [])
     : [];
   const byUnit = new Map(progress.map((p) => [p.unit_id, p]));
-  const p = profile.data;
+  if (memories.error) throw new Error('Could not load your memories. Please try again.');
+  const summary = memorySummary(memories.data ?? []);
 
   return (
-    <PageShell title="Learning record" subtitle={p?.level ? `Level ${p.level}` : undefined}>
+    <PageShell title="Learning record">
       <GlassPanel title="About you">
-        <form action={updateProfile} className="grid gap-3">
-          <label className="grid gap-1 text-sm">
-            <span className="text-muted-foreground">What should your teacher call you?</span>
-            <input name="display_name" defaultValue={p?.display_name ?? ''} className={field} />
-          </label>
-          <label className="grid gap-1 text-sm">
-            <span className="text-muted-foreground">Grade</span>
-            <select name="grade" defaultValue={p?.grade ?? ''} className={field}>
-              <option value="">—</option>
-              <option value="7">Grade 7 · 初一</option>
-              <option value="8">Grade 8 · 初二</option>
-              <option value="9">Grade 9 · 初三</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm">
-            <span className="text-muted-foreground">Your goal</span>
-            <input
-              name="learning_goal"
-              defaultValue={p?.learning_goal ?? ''}
-              placeholder="e.g. speak confidently in class, do well in the 中考 speaking test"
-              className={field}
-            />
-          </label>
-          <Button type="submit" className="justify-self-start rounded-full px-5">
-            Save
-          </Button>
-        </form>
+        <p className="text-foreground text-sm leading-relaxed break-words">
+          {summary ||
+            'Your teacher is still getting to know you. As you talk, a picture of your interests, preferences, and experiences will take shape here.'}
+        </p>
+        <details className="border-t border-white/10 pt-4">
+          <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs">
+            Manage memory
+          </summary>
+          <div className="mt-4 space-y-5">
+            {memories.data?.length ? (
+              <ul className="space-y-4">
+                {memories.data.map((memory) => (
+                  <li key={memory.id} className="space-y-2">
+                    <form action={saveMemory} className="grid gap-2">
+                      <input type="hidden" name="id" value={memory.id} />
+                      <input type="hidden" name="updated_at" value={memory.updated_at} />
+                      <textarea
+                        name="content"
+                        aria-label="Remembered information"
+                        defaultValue={memory.content}
+                        maxLength={800}
+                        required
+                        rows={2}
+                        className={field}
+                      />
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        className="justify-self-start"
+                      >
+                        Save changes
+                      </Button>
+                    </form>
+                    <form action={forgetMemory}>
+                      <input type="hidden" name="id" value={memory.id} />
+                      <input type="hidden" name="updated_at" value={memory.updated_at} />
+                      <button type="submit" className="text-muted-foreground text-xs underline">
+                        Forget
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Nothing yet. Tell your teacher a little about yourself when you next talk.
+              </p>
+            )}
+            <form action={saveMemory} className="grid gap-3">
+              <label className="grid gap-1 text-sm">
+                <span className="text-muted-foreground">
+                  Something you would like your teacher to remember
+                </span>
+                <textarea name="content" maxLength={800} required rows={2} className={field} />
+              </label>
+              <Button type="submit" className="justify-self-start rounded-full px-5">
+                Remember
+              </Button>
+            </form>
+          </div>
+        </details>
       </GlassPanel>
 
       <GlassPanel title="Course">
@@ -157,8 +189,7 @@ export default async function ProfilePage() {
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">
-            Pick your textbook and your teacher will teach it unit by unit, then remember how each
-            goal went.
+            Pick your textbook and your teacher will teach it unit by unit, remember your progress.
           </p>
         )}
         {courses.data?.length ? (
@@ -182,26 +213,12 @@ export default async function ProfilePage() {
         )}
       </GlassPanel>
 
-      <GlassPanel title="What your teacher remembers">
-        {facts.data?.length || weaknesses.data?.length ? (
+      {weaknesses.data?.length ? (
+        <GlassPanel title="What you are practising">
           <ul className="space-y-1.5">
-            {facts.data?.map((f) => (
-              <li key={f.id} className="flex items-center gap-3 text-sm">
-                <span className="text-foreground flex-1">{f.fact}</span>
-                <form action={forgetFact}>
-                  <input type="hidden" name="id" value={f.id} />
-                  <button type="submit" className="text-muted-foreground text-xs underline">
-                    Forget
-                  </button>
-                </form>
-              </li>
-            ))}
-            {weaknesses.data?.map((w) => (
+            {weaknesses.data.map((w) => (
               <li key={w.id} className="flex items-center gap-3 text-sm">
-                <span className="flex-1">
-                  <span className="text-muted-foreground">Working on: </span>
-                  {w.item}
-                </span>
+                <span className="flex-1">{w.item}</span>
                 <form action={forgetWeakness}>
                   <input type="hidden" name="id" value={w.id} />
                   <button type="submit" className="text-muted-foreground text-xs underline">
@@ -211,13 +228,8 @@ export default async function ProfilePage() {
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            Nothing yet. After each call your teacher keeps a few notes — your goals, what you told
-            them, what to practise — and you can erase any of them here.
-          </p>
-        )}
-      </GlassPanel>
+        </GlassPanel>
+      ) : null}
 
       <GlassPanel title="Recent lessons">
         {sessions.data?.length ? (

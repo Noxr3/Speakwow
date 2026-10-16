@@ -28,11 +28,13 @@ def test_is_uuid() -> None:
 async def test_snapshot_and_session_start() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/rpc/get_student_snapshot"):
-            return httpx.Response(200, json={"profile": {"display_name": "Mei"}})
+            return httpx.Response(
+                200, json={"memories": [{"key": "name", "content": "Mei"}]}
+            )
         return httpx.Response(201, json=[{"id": SESSION}])
 
     memory, calls = _memory(handler)
-    assert (await memory.load_snapshot(STUDENT))["profile"]["display_name"] == "Mei"
+    assert (await memory.load_snapshot(STUDENT))["memories"][0]["content"] == "Mei"
     assert await memory.start_session(STUDENT, "frank", "room-1") == SESSION
     assert calls[0].headers["apikey"] == "service-key"
     assert json.loads(calls[0].content) == {"p_student": STUDENT}
@@ -50,16 +52,25 @@ async def test_finish_writes_transcript_summary_weaknesses_facts_and_level() -> 
             Turn("user", " "),
         ],
         reflection=Reflection(
-            "Talked about home.", ["past tense"], ["has a sister"], "A2"
+            "Talked about home.",
+            ["past tense"],
+            [{"action": "create", "key": "family", "content": "has a sister"}],
+            "A2",
         ),
-        known_level=None,
+        memory_snapshot=[],
     )
     by_path = {(c.method, c.url.path): json.loads(c.content) for c in calls}
     assert len(by_path[("POST", "/rest/v1/messages")]) == 2
     assert by_path[("PATCH", "/rest/v1/sessions")]["summary"] == "Talked about home."
     assert by_path[("POST", "/rest/v1/weaknesses")][0]["source"] == "live_session"
-    assert by_path[("POST", "/rest/v1/student_facts")][0]["fact"] == "has a sister"
-    assert by_path[("PATCH", "/rest/v1/profiles")] == {"level": "A2"}
+    writes = [
+        json.loads(c.content)
+        for c in calls
+        if c.url.path.endswith("/rpc/apply_user_memory")
+    ]
+    assert writes[0]["p_content"] == "has a sister"
+    assert "CEFR A2" in writes[1]["p_content"]
+    assert not any(c.url.path.endswith(("/profiles", "/student_facts")) for c in calls)
 
 
 async def test_a_known_level_is_never_overwritten_and_failures_do_not_raise() -> None:
@@ -69,7 +80,7 @@ async def test_a_known_level_is_never_overwritten_and_failures_do_not_raise() ->
         session_id=SESSION,
         turns=[Turn("user", "hi")],
         reflection=Reflection("x", [], [], "C1"),
-        known_level="B2",
+        memory_snapshot=[{"key": "english-level", "content": "CEFR B2"}],
     )
     assert not any(c.url.path == "/rest/v1/profiles" for c in calls)
     assert await memory.load_snapshot(STUDENT) is None

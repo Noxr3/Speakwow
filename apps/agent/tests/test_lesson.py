@@ -88,7 +88,7 @@ async def test_a_mastered_unit_moves_the_student_to_the_next_one() -> None:
         session_id="22222222-2222-4222-8222-222222222222",
         turns=[Turn("user", "I am Ada.")],
         reflection=Reflection("intro", goal_scores={"u1-g1": 1.0, "u1-g2": 0.9}),
-        known_level="A2",
+        memory_snapshot=[],
         lesson={"course_id": SNAPSHOT["current_course"]["id"], "unit": unit},
     )
     upsert = next(c for c in calls if c.url.path.endswith("/unit_progress"))

@@ -14,11 +14,13 @@ TURNS = [
 
 
 def test_parse_tolerates_fences_and_filters_junk() -> None:
-    raw = '```json\n{"summary": " Beach chat. ", "weaknesses": ["past tense", 3, ""], "facts": ["has a sister"], "level": "b1"}\n```'
+    raw = '```json\n{"summary": " Beach chat. ", "weaknesses": ["past tense", 3, ""], "memories": [{"action":"create","key":"family","content":"has a sister"}], "level": "b1"}\n```'
     r = parse_reflection(raw)
     assert r.summary == "Beach chat."
     assert r.weaknesses == ["past tense"]
-    assert r.facts == ["has a sister"]
+    assert r.memories == [
+        {"action": "create", "key": "family", "content": "has a sister"}
+    ]
     assert r.level == "B1"
     assert parse_reflection("no json here") is None
     assert parse_reflection('{"summary": ""}') is None
