@@ -7,9 +7,13 @@ Voice 3.0 leads the Artificial Analysis speech-to-speech index (time to
 first audio 0.81 s), so xAI is the default.
 
     REALTIME_PROVIDER      xai (default) | openai
-    XAI_REALTIME_MODEL     default grok-voice-latest (xAI's alias for its newest voice model)
+    XAI_REALTIME_MODEL     default grok-voice-3.0 (pinned: grok-voice-latest moves
+                           to each new generation, and a teacher should not change
+                           voice or manner overnight)
     OPENAI_REALTIME_MODEL  default gpt-realtime-2.1
-    TURN_SILENCE_MS        xAI end-of-turn silence, default 700
+    TURN_SILENCE_MS        xAI end-of-turn silence for everyone; unset, it is
+                           1100 ms for beginners and school students, 750 ms for
+                           B1+ adults
     XAI_API_KEY / OPENAI_API_KEY   the operator's keys, used when the student
                                    did not bring their own
 
@@ -33,10 +37,14 @@ PROVIDERS = ("xai", "openai")
 DEFAULT_VOICES = {"xai": "Ara", "openai": "marin"}
 XAI_REALTIME_URL = "wss://api.x.ai/v1/realtime"
 
-# Learners pause mid-sentence to find a word. The plugin's default (200 ms of
-# silence ends the turn) has the teacher talking over them; 700 ms lets them
-# think and still feels quick.
-DEFAULT_TURN_SILENCE_MS = 700
+XAI_MODEL = "grok-voice-3.0"
+
+# Learners pause mid-sentence to find a word, beginners for 600-900 ms and
+# more. The plugin's default (200 ms of silence ends the turn) has the teacher
+# talking over them; 1100 ms gives a beginner room to think, and an adult who
+# speaks fluently gets a quicker 750 ms.
+BEGINNER_TURN_SILENCE_MS = 1100
+FLUENT_TURN_SILENCE_MS = 750
 
 
 def default_provider() -> str:
@@ -48,16 +56,20 @@ def voice_for(persona: Persona, provider: str) -> str:
     return persona.voices.get(provider) or DEFAULT_VOICES[provider]
 
 
-def turn_silence_ms() -> int:
+def turn_silence_ms(beginner: bool = True) -> int:
+    default = BEGINNER_TURN_SILENCE_MS if beginner else FLUENT_TURN_SILENCE_MS
     try:
-        return max(
-            200, min(2000, int(os.getenv("TURN_SILENCE_MS") or DEFAULT_TURN_SILENCE_MS))
-        )
+        return max(200, min(2000, int(os.getenv("TURN_SILENCE_MS") or default)))
     except ValueError:
-        return DEFAULT_TURN_SILENCE_MS
+        return default
 
 
-def build_realtime_model(persona: Persona, provider: str, api_key: str | None = None):
+def build_realtime_model(
+    persona: Persona,
+    provider: str,
+    api_key: str | None = None,
+    beginner: bool = True,
+):
     voice = voice_for(persona, provider)
     if provider == "openai":
         return openai.realtime.RealtimeModel(
@@ -73,7 +85,7 @@ def build_realtime_model(persona: Persona, provider: str, api_key: str | None = 
                 interrupt_response=True,
             ),
         )
-    model_id = os.getenv("XAI_REALTIME_MODEL") or "grok-voice-latest"
+    model_id = os.getenv("XAI_REALTIME_MODEL") or XAI_MODEL
     model = xai.realtime.RealtimeModel(
         voice=voice,
         api_key=api_key,
@@ -82,7 +94,7 @@ def build_realtime_model(persona: Persona, provider: str, api_key: str | None = 
             type="server_vad",
             threshold=0.5,
             prefix_padding_ms=300,
-            silence_duration_ms=turn_silence_ms(),
+            silence_duration_ms=turn_silence_ms(beginner),
             create_response=True,
             interrupt_response=True,
         ),

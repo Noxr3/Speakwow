@@ -66,7 +66,7 @@ QUESTIONS = {
 }
 
 NOTES = {
-    "stuck": "They seem stuck: slow down, offer two choices or start the sentence for them.",
+    "stuck": "They seem stuck: slow down, say it more simply or start the sentence for them; they may say it in Chinese first.",
     "disengaged": "They seem bored or tired: switch to something they care about, light and short.",
     "repeated_error": "A mistake keeps coming back: point it out once, kindly, model it, let them retry.",
 }

@@ -53,11 +53,24 @@ export function dayOrdinal(date: Date): number {
   return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000) + 719_163;
 }
 
-/** One storyline headline per day, rotating, so the card shows a life that moves. */
+/** Days each beat of a storyline lasts; apps/agent/src/life.py uses the same. */
+export const DAYS_PER_BEAT = 3;
+
+/**
+ * The storyline playing today: one at a time, a beat every few days, the next
+ * one starting when it ends. Mirrors story_position() in apps/agent/src/life.py,
+ * so the card shows what the teacher talks about.
+ */
 export function lifeHeadline(card: PersonaCard, date: Date = new Date()): string | null {
-  const threads = (card.life?.threads ?? []).filter((t) => t.headline);
-  if (!threads.length) return null;
-  return threads[dayOrdinal(date) % threads.length].headline ?? null;
+  const threads = (card.life?.threads ?? []).filter((t) => t.beats?.length);
+  const total = threads.reduce((sum, t) => sum + t.beats.length, 0);
+  if (!total) return null;
+  let step = Math.floor(dayOrdinal(date) / DAYS_PER_BEAT) % total;
+  for (const thread of threads) {
+    if (step < thread.beats.length) return thread.headline ?? null;
+    step -= thread.beats.length;
+  }
+  return null;
 }
 
 export function personaSummaries(date: Date = new Date()): PersonaSummary[] {

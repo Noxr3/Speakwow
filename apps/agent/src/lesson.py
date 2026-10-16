@@ -81,24 +81,13 @@ def lesson_section(snapshot: dict | None) -> str | None:
     )
     return f"""## Today's lesson
 This is a lesson from the student's school textbook course. Teach it the way
-you always talk: through real conversation, not drills or lectures.
-- Warm up with a minute of chat, then bring in the unit's topic naturally.
-- Work on one or two of the weakest goals. Model the language, let them try,
-  recast, then stretch.
+you always talk: through real conversation, not drills or lectures, and in
+the order of "How the conversation goes" above.
 - Check learning by having them USE the language, never by asking "do you
   understand?".
-- Close with what they did well and one small challenge for next time.
 <lesson_plan>
 {as_data(body)}
 </lesson_plan>"""
-
-
-def lesson_opening() -> str:
-    return (
-        "Greet the student like a teacher glad to see them, then tell them in one "
-        "fun sentence what today's lesson is about, linking it to something you "
-        "know about them if you can. Then ask a first easy question on the topic."
-    )
 
 
 def updated_progress(
