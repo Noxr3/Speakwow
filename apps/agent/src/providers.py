@@ -25,13 +25,14 @@ from __future__ import annotations
 
 import os
 
-from livekit.plugins import openai, xai
+from livekit.plugins import openai
 from openai.types.realtime.realtime_audio_input_turn_detection import (
     SemanticVad,
     ServerVad,
 )
 
 from personas import Persona
+from xai_realtime import RealtimeModel as XaiRealtimeModel
 
 PROVIDERS = ("xai", "openai")
 DEFAULT_VOICES = {"xai": "Ara", "openai": "marin"}
@@ -86,7 +87,7 @@ def build_realtime_model(
             ),
         )
     model_id = os.getenv("XAI_REALTIME_MODEL") or XAI_MODEL
-    model = xai.realtime.RealtimeModel(
+    model = XaiRealtimeModel(
         voice=voice,
         api_key=api_key,
         base_url=f"{XAI_REALTIME_URL}?model={model_id}",
