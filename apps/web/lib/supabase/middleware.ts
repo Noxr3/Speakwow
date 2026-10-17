@@ -50,7 +50,9 @@ export async function updateSession(request: NextRequest) {
   const authPaths = ['/login', '/signup'];
   const isAuthPath = authPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
-  if (user && isAuthPath) {
+  // A guest (anonymous user) is signed in only to keep their practice: they
+  // still need the sign-in page.
+  if (user && !user.is_anonymous && isAuthPath) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

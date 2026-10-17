@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+import { isGuest, stashGuest } from '@/lib/guest';
 import { createClient } from '@/lib/supabase/client';
 
 interface AuthContextType {
@@ -9,6 +10,8 @@ interface AuthContextType {
   enabled: boolean;
   user: User | null;
   session: Session | null;
+  /** an anonymous user: practice is kept, but they have not signed in */
+  guest: boolean;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUpWithEmail: (
@@ -52,8 +55,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  /** Signing in replaces a guest's session: keep its way back first, so
+   * their practice can move into the account (lib/guest.ts). */
+  const keepGuest = async () => {
+    if (!supabase) return;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    stashGuest(session);
+  };
+
   const signInWithEmail = async (email: string, password: string) => {
     if (!supabase) return { error: NOT_CONFIGURED };
+    await keepGuest();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
@@ -65,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string, next?: string) => {
     if (!supabase) return { error: NOT_CONFIGURED };
+    await keepGuest();
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -75,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async (next?: string) => {
     if (!supabase) return { error: NOT_CONFIGURED };
+    await keepGuest();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: callback(next) },
@@ -92,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         enabled: Boolean(supabase),
         user,
         session,
+        guest: isGuest(user),
         loading,
         signInWithEmail,
         signUpWithEmail,

@@ -32,9 +32,11 @@ function json(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 }
 
+/** A real account: a guest (anonymous user) cannot link a phone; texting
+ * codes costs money and a guest's number would outlive the guest. */
 async function signedIn() {
   const { supabase, user } = await getSessionUser();
-  return supabase && user ? { supabase, user } : null;
+  return supabase && user && !user.is_anonymous ? { supabase, user } : null;
 }
 
 export async function GET() {
