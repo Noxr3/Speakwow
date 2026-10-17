@@ -6,7 +6,9 @@ import { useAuth } from '@/components/auth/auth-provider';
 
 /** Top-right links: courses, learning record, settings (BYOK), sign in / out. */
 export function AccountLinks() {
-  const { enabled, user, loading, signOut } = useAuth();
+  const { enabled, user, guest, loading, signOut } = useAuth();
+  // a guest (anonymous user) has a record to look at, but still signs in
+  const member = Boolean(user) && !guest;
   const router = useRouter();
   const link = 'text-white/50 hover:text-white text-xs whitespace-nowrap transition-colors';
 
@@ -25,12 +27,12 @@ export function AccountLinks() {
       <Link href="/settings" className={link}>
         Settings
       </Link>
-      {enabled && !loading && !user && (
+      {enabled && !loading && !member && (
         <Link href="/login" className={link}>
           Sign in
         </Link>
       )}
-      {enabled && user && (
+      {enabled && member && (
         <button
           type="button"
           className={link}

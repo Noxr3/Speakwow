@@ -15,6 +15,9 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
+# A visitor who starts a call becomes an anonymous user, so their practice
+# is kept and can move into their account at sign-in (0010_guest_merge).
+enable_anonymous_sign_ins = true
 
 [auth.external.google]
 enabled = false

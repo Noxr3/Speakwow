@@ -7,6 +7,8 @@ import type { AppConfig } from '@/app-config';
 import type { CourseSpot } from '@/components/app/app';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
+import { ensureGuestSession } from '@/lib/guest';
+import { createClient } from '@/lib/supabase/client';
 import type { CallMode } from '@/lib/token-source';
 
 const MotionWelcomeView = motion.create(WelcomeView);
@@ -51,6 +53,14 @@ export function ViewController({
 }: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
 
+  // A visitor becomes a guest when they start a call, not when the page
+  // loads (the page fetches a token early to connect faster), so the call
+  // is kept and can join their account later (lib/guest.ts).
+  const startCall = async () => {
+    await ensureGuestSession(createClient()).catch(() => undefined);
+    await start();
+  };
+
   return (
     <AnimatePresence mode="wait">
       {/* Welcome view */}
@@ -64,7 +74,7 @@ export function ViewController({
           course={course}
           mode={mode}
           onSelectMode={onSelectMode}
-          onStartCall={start}
+          onStartCall={startCall}
         />
       )}
       {/* Session view */}

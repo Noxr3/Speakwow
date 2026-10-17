@@ -77,9 +77,10 @@ export async function POST(req: Request) {
     }
 
     const mode = body.mode === 'course' && user ? 'course' : 'free';
+    // || not ??: a guest (anonymous user) has an empty email, not none
     const participantName =
-      (user?.user_metadata?.display_name as string | undefined) ??
-      user?.email?.split('@')[0] ??
+      (user?.user_metadata?.display_name as string | undefined) ||
+      user?.email?.split('@')[0] ||
       'Guest';
     const roomName = `speakwow_${randomUUID()}`;
     const metadata = {
