@@ -1,0 +1,27 @@
+{
+  "about": "Grading cases both graders must agree on: apps/agent/src/widgets.py grade() and apps/web/lib/widgets.ts gradeCard(). Tests on both sides read this file.",
+  "cards": {
+    "past": {"kind": "choice", "question": "She ___ to school yesterday.", "options": ["go", "went", "goes"], "answer": [1], "multi": false},
+    "fruit": {"kind": "choice", "question": "Which are fruit?", "options": ["apple", "chair", "banana", "desk"], "answer": [0, 2], "multi": true},
+    "sky": {"kind": "true_false", "statement": "The sky is green.", "answer": false},
+    "like": {"kind": "fill_blank", "sentence": "I like ___ basketball.", "answer": "playing", "accept": ["to play"]},
+    "math": {"kind": "reorder", "words": ["good", "I", "at", "am", "math"], "answer": "I am good at math."}
+  },
+  "cases": [
+    ["past", "went", true],
+    ["past", "Went.", true],
+    ["past", "go", false],
+    ["past", "banana", null],
+    ["fruit", "apple, banana", true],
+    ["fruit", "banana, apple", true],
+    ["fruit", "apple", false],
+    ["sky", "false", true],
+    ["sky", "true", false],
+    ["like", "playing", true],
+    ["like", "  To play ", true],
+    ["like", "play", false],
+    ["math", "I am good at math", true],
+    ["math", "i am good at math!", true],
+    ["math", "I good am at math", false]
+  ]
+}

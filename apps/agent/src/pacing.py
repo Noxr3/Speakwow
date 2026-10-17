@@ -31,18 +31,25 @@ STAND_INS = frozenset((QUIET, BREAK_TIME))
 # A tapped sticker reaches the model as this line (reactions.py).
 REACTED = "(the student reacts with {emoji})"
 _REACTED_START, _REACTED_END = REACTED.split("{emoji}")
+# A finished card reaches the model as a line starting with this (widgets.py).
+CARD_LINE_START = "(card "
 
 
 def is_stand_in(text: str | None) -> bool:
     line = (text or "").strip()
-    return line in STAND_INS or (
-        line.startswith(_REACTED_START) and line.endswith(_REACTED_END)
+    return (
+        line in STAND_INS
+        or (line.startswith(_REACTED_START) and line.endswith(_REACTED_END))
+        or (line.startswith(CARD_LINE_START) and line.endswith(")"))
     )
 
 
 HELP_AFTER_S = 7.0
 REASSURE_AFTER_S = 9.0
 REOPEN_AFTER_S = 8.0
+# A student working on a card on their screen is quiet because they are busy,
+# not stuck: the ladder holds while a card is open, for up to this long.
+HOLD_MAX_S = 60.0
 
 # The ladder: help with an easier hand-off; one "no rush" per call (the only
 # turn allowed to end without a hand-off); then re-open with an easy choice.
@@ -115,10 +122,14 @@ class SilenceLadder:
         nudge: Callable[[str], Awaitable[None]],
         delays: tuple[float, ...] = (HELP_AFTER_S, REASSURE_AFTER_S, REOPEN_AFTER_S),
         steps: Callable[[], tuple[str, ...]] = lambda: SILENCE_STEPS,
+        held: Callable[[], bool] = lambda: False,
+        hold_max: float = HOLD_MAX_S,
     ) -> None:
         self.nudge = nudge
         self.delays = delays
         self.steps = steps
+        self.held = held  # e.g. a card is open on their screen
+        self.hold_max = hold_max
         self.step = 0
         self.reassured = False  # the one "no rush" a call gets
         self.agent_state = "initializing"
@@ -154,6 +165,13 @@ class SilenceLadder:
 
     async def _wait(self, step: int) -> None:
         await asyncio.sleep(self.delays[step])
+        # Busy on a card: wait for it, up to hold_max; a card left open that
+        # long gets the nudge (help with the card) after all.
+        poll = min(0.5, self.hold_max / 10)
+        waited = 0.0
+        while self.held() and waited < self.hold_max:
+            await asyncio.sleep(poll)
+            waited += poll
         self.step = step + 1
         self._timer = None
         steps = self.steps()

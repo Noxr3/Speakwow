@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
@@ -76,7 +77,13 @@ from teacher import (  # noqa: E402
     warm_up_note,
 )
 from user_memory import review_memories  # noqa: E402
-from widgets import make_widget_tool  # noqa: E402
+from widgets import (  # noqa: E402
+    CARD_DONE_NOTE,
+    EVENT_TOPIC,
+    CardLedger,
+    make_mark_tool,
+    make_widget_tool,
+)
 
 logger = logging.getLogger("speakwow-agent")
 
@@ -327,6 +334,7 @@ async def entrypoint(ctx: JobContext) -> None:
         ctx.add_shutdown_callback(remember_lesson)
 
     first_meeting = not has_learning_context(snapshot)
+    cards = CardLedger()
 
     async def save_profile(profile: dict) -> str:
         if (
@@ -354,10 +362,15 @@ async def entrypoint(ctx: JobContext) -> None:
             "remember it next time."
         )
 
+    # a phone has no screen: no stickers, no cards
     tools = (
         []
         if job.channel == "phone"
-        else [make_sticker_tool(STICKERS), make_widget_tool()]
+        else [
+            make_sticker_tool(STICKERS),
+            make_widget_tool(ledger=cards),
+            make_mark_tool(cards),
+        ]
     )
     if intake:
         tools.append(make_profile_tool(intake, save_profile))
@@ -365,7 +378,6 @@ async def entrypoint(ctx: JobContext) -> None:
         persona,
         snapshot,
         STICKERS,
-        # a phone has no screen: no stickers, no cards
         tools=tools,
         mode=mode,
         provider=provider,
@@ -382,10 +394,15 @@ async def entrypoint(ctx: JobContext) -> None:
         attach_phase(session, teacher, first_meeting)
     if coach:
         attach_coach(ctx, session, teacher, coach, unit, first_meeting, job.channel)
-    attach_pacing(ctx, session, teacher, first_meeting)
+    # quiet while a card is open is work, not a stuck student
+    attach_pacing(
+        ctx, session, teacher, first_meeting, lambda: cards.live() is not None
+    )
     if job.channel == "phone":
         attach_call_limit(ctx, session, teacher)
     reactions = attach_reactions(ctx, session, teacher)
+    if job.channel != "phone":
+        attach_cards(ctx, session, teacher, cards)
 
     await session.start(
         agent=teacher,
@@ -418,7 +435,11 @@ def _busy(session: AgentSession) -> bool:
 
 
 def attach_pacing(
-    ctx: JobContext, session: AgentSession, teacher: Teacher, first_meeting: bool
+    ctx: JobContext,
+    session: AgentSession,
+    teacher: Teacher,
+    first_meeting: bool,
+    busy_on_screen: Callable[[], bool] = lambda: False,
 ) -> None:
     """Patience when the student is quiet, a break after half an hour, and
     the student's share of the talking in the log (pacing.py). While they are
@@ -437,7 +458,7 @@ def attach_pacing(
             return warm_up_steps
         return SILENCE_STEPS
 
-    ladder = SilenceLadder(nudge, steps=steps)
+    ladder = SilenceLadder(nudge, steps=steps, held=busy_on_screen)
     session.on("agent_state_changed", lambda ev: ladder.on_agent_state(ev.new_state))
     session.on("user_state_changed", lambda ev: ladder.on_user_state(ev.new_state))
 
@@ -594,6 +615,62 @@ def attach_reactions(
 
     ctx.add_shutdown_callback(finish)
     return inbox
+
+
+def attach_cards(
+    ctx: JobContext, session: AgentSession, teacher: Teacher, cards: CardLedger
+) -> None:
+    """What the student does on a card arrives on its own data topic, never as
+    a chat line, so a tap never cuts the teacher off. Tries and hints are the
+    card's business; only a finished card is told to the teacher, once, in a
+    quiet moment (widgets.py)."""
+    pending: set[asyncio.Task] = set()
+
+    async def tell(line: str) -> None:
+        for _ in range(100):  # up to 30 s for a quiet moment; never interrupt
+            if not _busy(session):
+                break
+            await asyncio.sleep(0.3)
+        else:
+            logger.info("card result not spoken: the call never went quiet")
+            return
+        with contextlib.suppress(RuntimeError):
+            session.generate_reply(
+                user_input=line, instructions=teacher.with_note(CARD_DONE_NOTE)
+            )
+
+    def handle(event: dict) -> None:
+        card_id = str(event.get("card_id") or "")
+        action = event.get("action")
+        state = None
+        if action == "answer":
+            outcome = cards.answer(card_id, str(event.get("given") or ""), "tap")
+            if outcome and outcome.get("final"):
+                state = cards.cards[card_id]
+        elif action == "hint":
+            if live := cards.live(card_id):
+                live.hint_used = True
+        elif action == "reveal":
+            state = cards.finish(card_id, "revealed")
+        elif action == "done":
+            state = cards.finish(card_id, str(event.get("summary") or "finished"))
+        if state is not None:
+            task = asyncio.create_task(tell(cards.line(state)), name="card-result")
+            pending.add(task)
+            task.add_done_callback(pending.discard)
+            task.add_done_callback(_report_failure)
+
+    def on_data(packet) -> None:
+        if getattr(packet, "topic", None) != EVENT_TOPIC:
+            return
+        try:
+            event = json.loads(bytes(packet.data).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return
+        if isinstance(event, dict) and event.get("type") == "card_event":
+            handle(event)
+
+    ctx.room.on("data_received", on_data)
 
 
 def attach_coach(

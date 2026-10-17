@@ -6,7 +6,15 @@ import { useChat, useDataChannel } from '@livekit/components-react';
 import { STICKERS, STICKER_TOPIC, type Sticker, stickerImageUrl } from '@speakwow/shared';
 import { WidgetCard } from '@/components/app/widget-card';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
-import { WIDGET_TOPIC, type Widget, parseWidget } from '@/lib/widgets';
+import {
+  type CardUpdate,
+  EVENT_TOPIC,
+  WIDGET_TOPIC,
+  type Widget,
+  cardEvent,
+  parseCardUpdate,
+  parseWidget,
+} from '@/lib/widgets';
 
 const BY_ID = new Map(STICKERS.map((s) => [s.id, s]));
 /** The tray the student reacts with; the teacher can use the whole set. */
@@ -48,7 +56,11 @@ function StickerImage({ sticker, size }: { sticker: Sticker; size: number }) {
 export function LiveOverlays() {
   const [bursts, setBursts] = useState<Burst[]>([]);
   const [widget, setWidget] = useState<Widget | null>(null);
+  const [cardUpdate, setCardUpdate] = useState<CardUpdate | null>(null);
   const { send } = useChat();
+  // What the student does on a card goes on its own topic, never as a chat
+  // line: a tap must not interrupt the teacher (widgets.py).
+  const { send: sendCardEvent } = useDataChannel(EVENT_TOPIC);
 
   const pop = useCallback((sticker: Sticker, fromStudent: boolean) => {
     const key = Date.now() + Math.random();
@@ -68,7 +80,13 @@ export function LiveOverlays() {
 
   useDataChannel(WIDGET_TOPIC, (msg) => {
     const next = parseWidget(msg.payload);
-    if (next) setWidget(next);
+    if (next) {
+      setWidget(next);
+      setCardUpdate(null);
+      return;
+    }
+    const update = parseCardUpdate(msg.payload);
+    if (update) setCardUpdate(update);
   });
 
   const sendSticker = async (sticker: Sticker) => {
@@ -111,11 +129,16 @@ export function LiveOverlays() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
-            className="fixed inset-x-3 top-16 z-40 mx-auto max-w-md md:top-20"
+            className="fixed inset-x-3 top-16 z-40 mx-auto max-h-[60svh] max-w-md overflow-y-auto rounded-[28px] md:top-20"
           >
             <WidgetCard
               widget={widget}
-              onAnswer={(message) => send(message).catch(() => undefined)}
+              update={cardUpdate}
+              onEvent={(action) =>
+                sendCardEvent(new TextEncoder().encode(cardEvent(widget, action)), {
+                  reliable: true,
+                }).catch(() => undefined)
+              }
               onClose={() => setWidget(null)}
             />
           </motion.div>
