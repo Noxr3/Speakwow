@@ -6,8 +6,14 @@ import {
   phoneConfig,
   sendCode,
 } from '@/lib/phone';
+import { clientIp, underLimit } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getSessionUser } from '@/lib/supabase/server';
+
+// Codes cost money and can be sent to any number: per account and per
+// address, on top of Twilio Verify's own per-number limit.
+const CODES_PER_USER_PER_HOUR = 5;
+const CODES_PER_IP_PER_DAY = 20;
 
 export const revalidate = 0;
 
@@ -15,6 +21,11 @@ export const revalidate = 0;
  * Link a phone so the student can call and text their teacher. POST sends a
  * code to the number, PUT checks it and links the number; only then do calls
  * and texts from it share this student's memory. DELETE unlinks.
+ *
+ * POST never says whether a number belongs to someone else (that would let
+ * anyone test which numbers are students). Holding the phone, proven by the
+ * code, is what counts: a number that changed hands moves to the account
+ * that verified it last.
  */
 
 function json(body: unknown, status = 200) {
@@ -64,29 +75,27 @@ export async function POST(req: Request) {
       400
     );
   }
-  const { data: owner } = await admin
+  const { data: mine } = await admin
     .from('student_phones')
-    .select('student_id')
-    .eq('phone', phone)
-    .maybeSingle();
-  if (owner && owner.student_id !== session.user.id) {
-    return json(
-      { error: 'phone_taken', message: 'This number is linked to another account.' },
-      409
-    );
-  }
-  if (owner) return json({ linked: true, phone });
-  const { count } = await admin
-    .from('student_phones')
-    .select('phone', { count: 'exact', head: true })
+    .select('phone')
     .eq('student_id', session.user.id);
-  if ((count ?? 0) >= MAX_PHONES_PER_STUDENT) {
+  if (mine?.some((row) => row.phone === phone)) return json({ linked: true, phone });
+  if ((mine?.length ?? 0) >= MAX_PHONES_PER_STUDENT) {
     return json(
       {
         error: 'too_many_phones',
         message: `You can link up to ${MAX_PHONES_PER_STUDENT} numbers.`,
       },
       400
+    );
+  }
+  const allowed =
+    (await underLimit(`phone-code:user:${session.user.id}`, CODES_PER_USER_PER_HOUR, 3600)) &&
+    (await underLimit(`phone-code:ip:${clientIp(req.headers)}`, CODES_PER_IP_PER_DAY, 86400));
+  if (!allowed) {
+    return json(
+      { error: 'too_many_codes', message: 'Too many codes. Try again a bit later.' },
+      429
     );
   }
   const sent = await sendCode(config, phone);
@@ -115,21 +124,32 @@ export async function PUT(req: Request) {
   if (!phone || !(await checkCode(config, phone, code))) {
     return json({ error: 'wrong_code', message: 'That code is not right. Try again.' }, 400);
   }
-  const { error } = await admin
+  // the cap again: codes for several numbers could have been sent at once
+  const { data: mine } = await admin
     .from('student_phones')
-    .insert({ phone, student_id: session.user.id, verified_at: new Date().toISOString() });
-  if (error && error.code === '23505') {
-    const { data: owner } = await admin
-      .from('student_phones')
-      .select('student_id')
-      .eq('phone', phone)
-      .maybeSingle();
-    if (owner?.student_id === session.user.id) return json({ linked: true, phone });
+    .select('phone')
+    .eq('student_id', session.user.id);
+  const others = (mine ?? []).filter((row) => row.phone !== phone);
+  if (others.length >= MAX_PHONES_PER_STUDENT) {
     return json(
-      { error: 'phone_taken', message: 'This number is linked to another account.' },
-      409
+      {
+        error: 'too_many_phones',
+        message: `You can link up to ${MAX_PHONES_PER_STUDENT} numbers.`,
+      },
+      400
     );
   }
+  // Whoever just proved they hold the phone owns the link now; a number that
+  // changed hands moves to its new owner, opted back in.
+  const { error } = await admin.from('student_phones').upsert(
+    {
+      phone,
+      student_id: session.user.id,
+      verified_at: new Date().toISOString(),
+      sms_opted_out: false,
+    },
+    { onConflict: 'phone' }
+  );
   if (error) return json({ error: 'save_failed', message: 'Could not link the number.' }, 500);
   return json({ linked: true, phone });
 }

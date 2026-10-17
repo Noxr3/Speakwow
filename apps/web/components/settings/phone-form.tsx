@@ -39,14 +39,19 @@ export function PhoneForm() {
   const call = async (method: 'POST' | 'PUT' | 'DELETE', body: unknown) => {
     setBusy(true);
     setMessage(null);
-    const res = await fetch('/api/phone', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => ({}));
-    setBusy(false);
-    return { ok: res.ok, data };
+    try {
+      const res = await fetch('/api/phone', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, data };
+    } catch {
+      return { ok: false, data: { message: 'No connection. Try again.' } };
+    } finally {
+      setBusy(false);
+    }
   };
 
   const send = async (e: React.FormEvent) => {

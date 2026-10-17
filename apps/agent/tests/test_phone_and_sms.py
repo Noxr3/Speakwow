@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import httpx
@@ -7,16 +8,29 @@ from aiohttp.test_utils import TestClient, TestServer
 from agent import parse_job_metadata
 from memory import SupabaseMemory
 from personas import load_personas
-from phone import normalize_phone
+from phone import caller_verified, message_channel, normalize_phone, phone_access
 from reflect import Turn
-from sms_server import MEMORY, MODEL, PERSONAS, handle_sms, twilio_signature
+from sms_server import (
+    LIMIT,
+    MEMORY,
+    MODEL,
+    PERSONAS,
+    SENDER,
+    TASKS,
+    TOLD_TO_LINK,
+    deliver,
+    handle_sms,
+    is_from_twilio,
+    twilio_signature,
+)
 from teacher import build_instructions, render_snapshot
 from texting import (
     LOST,
+    NO_MEDIA,
     TOO_MANY,
     UNLINKED,
     answer_text,
-    as_sms,
+    as_text,
     build_text_instructions,
 )
 
@@ -34,6 +48,9 @@ def test_numbers_become_e164_or_nothing() -> None:
     assert normalize_phone("sip:+447700900001@trunk.example") == PHONE
     assert normalize_phone("tel:+8613800000000") == "+8613800000000"
     assert normalize_phone("0044 7700 900001") == PHONE
+    assert normalize_phone("whatsapp:+447700900001") == PHONE
+    assert message_channel("whatsapp:+447700900001") == "whatsapp"
+    assert message_channel("+447700900001") == "sms"
     # without a country code a number is ambiguous
     assert normalize_phone("5550109999") is None
     for bad in (None, "", "+0123456", "+1234", "+1234567890123456"):
@@ -41,6 +58,31 @@ def test_numbers_become_e164_or_nothing() -> None:
 
 
 # ---------- calls ----------
+
+
+def test_only_a_carrier_verified_caller_gets_their_memory() -> None:
+    assert caller_verified({"sip.h.x-twilio-verstat": "TN-Validation-Passed-A"})
+    assert caller_verified({"twilio.verstat": "TN-Validation-Passed-A"})
+    for weak in (
+        "TN-Validation-Passed-B",
+        "No-TN-Validation",
+        "TN-Validation-Failed-A",
+    ):
+        assert not caller_verified({"sip.h.x-twilio-verstat": weak})
+    assert not caller_verified({"sip.phoneNumber": PHONE})
+
+    assert phone_access(True, True, {}) == ("student", "verified")
+    # a spoofed caller ID must not read out someone else's memory
+    assert phone_access(False, True, {}) == ("guest", "unverified_caller_id")
+    assert phone_access(False, True, {"PHONE_TRUST_UNVERIFIED": "on"})[0] == "student"
+    assert phone_access(True, False, {}) == ("guest", "unlinked")
+    no_guests = {"ALLOW_GUESTS": "false"}
+    assert phone_access(False, True, no_guests) == ("refuse", "guests_not_allowed")
+    assert phone_access(True, True, no_guests)[0] == "student"
+    assert phone_access(True, True, {"REQUIRE_BYOK": "true"}) == (
+        "refuse",
+        "require_byok",
+    )
 
 
 def test_a_phone_call_is_marked_by_the_dispatch_rule() -> None:
@@ -113,7 +155,7 @@ async def test_memory_finds_a_student_by_number_and_reads_texts_oldest_first() -
     texts = await memory.recent_texts(STUDENT)
     assert [t["content"] for t in texts] == ["I won", "Nice!"]
     params = calls[1].url.params
-    assert params["sessions.channel"] == "eq.sms"
+    assert params["sessions.channel"] == "in.(sms,whatsapp)"
     assert params["sessions.student_id"] == f"eq.{STUDENT}"
     assert params["created_at"].startswith("gte.")
 
@@ -131,6 +173,9 @@ async def test_texts_go_into_one_session_per_day() -> None:
     assert await memory.text_session(STUDENT, "frank") == "s-1"
     assert calls[0].url.params["channel"] == "eq.sms"
     assert created["channel"] == "sms" and created["persona_id"] == "frank"
+    assert await memory.text_session(STUDENT, "frank", "whatsapp") == "s-1"
+    assert calls[2].url.params["channel"] == "eq.whatsapp"
+    assert created["channel"] == "whatsapp"
 
 
 async def test_opting_out_patches_the_number() -> None:
@@ -145,10 +190,15 @@ async def test_opting_out_patches_the_number() -> None:
 
 
 def test_replies_are_plain_short_texts() -> None:
-    assert as_sms("**Great** job!\n- one\n- two") == "Great job! one two"
+    assert as_text("**Great** job!\n- one\n- two") == "Great job! one two"
     long = "This is a sentence that goes on. " * 20
-    text = as_sms(long)
-    assert len(text) <= 320 and text.endswith(".")
+    text = as_text(long)
+    assert len(text) <= 306 and text.endswith(".")
+    # one Chinese character makes every segment 67 characters: two at most
+    chinese = as_text("你好\uff01今天过得怎么样\uff1f" * 20)
+    assert len(chinese) <= 134 and chinese.endswith("\uff1f")
+    assert "\u2026" not in as_text("word " * 200)  # no ellipsis character
+    assert len(as_text("This is a sentence that goes on. " * 40, "whatsapp")) > 306
 
 
 def test_the_text_teacher_is_the_same_teacher_without_a_screen() -> None:
@@ -177,7 +227,8 @@ class FakeMemory:
     async def last_persona(self, student_id):
         return self.last
 
-    async def text_session(self, student_id, persona_id):
+    async def text_session(self, student_id, persona_id, channel="sms"):
+        self.channel = channel
         return "s-1"
 
     async def count_texts_from(self, session_id, limit):
@@ -206,12 +257,19 @@ class FakeModel:
         return self.answer
 
 
-async def _answer(memory, model, body, limit=60):
-    return await answer_text(memory, model, TEACHERS, FRANK, PHONE, body, limit)
+async def _answer(memory, model, body, limit=60, **kw):
+    reply = await answer_text(memory, model, TEACHERS, FRANK, PHONE, body, limit, **kw)
+    return reply.text
 
 
 async def test_an_unlinked_number_is_asked_to_link() -> None:
     assert await _answer(FakeMemory(), FakeModel(), "hello") == UNLINKED
+
+
+async def test_a_picture_or_voice_note_gets_a_friendly_word() -> None:
+    linked = FakeMemory(link={"student_id": STUDENT, "sms_opted_out": False})
+    assert await _answer(linked, FakeModel(), "", has_media=True) == NO_MEDIA
+    assert await _answer(linked, FakeModel(), "") is None
 
 
 async def test_stop_and_start() -> None:
@@ -232,14 +290,16 @@ async def test_a_text_is_answered_by_the_teacher_they_talk_to_with_shared_memory
         link={"student_id": STUDENT, "sms_opted_out": False}, last="lily"
     )
     model = FakeModel()
-    assert await _answer(memory, model, "I won the match!") == "Ha, nice one!"
+    reply = await answer_text(
+        memory, model, TEACHERS, FRANK, PHONE, "I won the match!", channel="whatsapp"
+    )
+    assert reply.text == "Ha, nice one!" and reply.session_id == "s-1"
+    assert reply.body == "I won the match!" and memory.channel == "whatsapp"
     system, history, text = model.calls[0]
     assert "You are Lily" in system and "has a cat called Mimi" in system
+    assert "by WhatsApp" in system
     assert history[0]["content"] == "hi" and text == "I won the match!"
-    assert [(t.role, t.text) for t in memory.stored] == [
-        ("user", "I won the match!"),
-        ("assistant", "Ha, nice one!"),
-    ]
+    assert memory.stored == []  # stored by the server once the reply is sent
 
 
 async def test_a_failed_model_still_answers_and_the_daily_limit_holds() -> None:
@@ -268,6 +328,59 @@ def test_signature_matches_twilios_own_library() -> None:
     assert twilio_signature(URL, PARAMS, "test-auth-token-12345") == (
         "Nm1bObwxrBRo+BMZrUzUCmVzUL0="
     )
+    # a header that is not ASCII is a refusal, not a crash
+    assert not is_from_twilio(URL, PARAMS, "test-auth-token-12345", "签名")
+
+
+class FakeSender:
+    def __init__(self, ok=True):
+        self.ok = ok
+        self.sent: list[tuple[str, str, str]] = []
+
+    async def send(self, sender, to, body):
+        self.sent.append((sender, to, body))
+        return self.ok
+
+    async def aclose(self):
+        pass
+
+
+def _app(memory, sender, model=None):
+    app = web.Application()
+    app[PERSONAS] = load_personas()
+    app[MEMORY] = memory
+    app[MODEL] = model or FakeModel()
+    app[SENDER] = sender
+    app[LIMIT] = 60
+    app[TASKS] = set()
+    app[TOLD_TO_LINK] = {}
+    app.router.add_post("/twilio/sms", handle_sms)
+    return app
+
+
+async def test_a_reply_goes_back_the_way_it_came_and_is_kept_only_once_sent() -> None:
+    linked = {"student_id": STUDENT, "sms_opted_out": False}
+    memory, sender = FakeMemory(link=linked), FakeSender()
+    app = _app(memory, sender)
+    await deliver(
+        app,
+        PHONE,
+        "whatsapp",
+        "whatsapp:+15550100000",
+        f"whatsapp:{PHONE}",
+        "hi",
+        False,
+    )
+    assert sender.sent == [
+        ("whatsapp:+15550100000", f"whatsapp:{PHONE}", "Ha, nice one!")
+    ]
+    assert [t.role for t in memory.stored] == ["user", "assistant"]
+
+    failed = FakeMemory(link=linked)
+    await deliver(
+        _app(failed, FakeSender(ok=False)), PHONE, "sms", "+1555", PHONE, "hi", False
+    )
+    assert [t.role for t in failed.stored] == ["user"]  # never "remembers" a lost reply
 
 
 async def test_the_webhook_refuses_unsigned_requests_and_answers_signed_ones(
@@ -275,11 +388,8 @@ async def test_the_webhook_refuses_unsigned_requests_and_answers_signed_ones(
 ) -> None:
     monkeypatch.setenv("TWILIO_AUTH_TOKEN", "test-auth-token-12345")
     monkeypatch.setenv("SMS_WEBHOOK_URL", URL)
-    app = web.Application()
-    app[PERSONAS] = load_personas()
-    app[MEMORY] = FakeMemory()  # the number is not linked
-    app[MODEL] = FakeModel()
-    app.router.add_post("/twilio/sms", handle_sms)
+    sender = FakeSender()
+    app = _app(FakeMemory(), sender)  # the number is not linked
     async with TestClient(TestServer(app)) as client:
         forged = await client.post(
             "/twilio/sms", data=PARAMS, headers={"X-Twilio-Signature": "forged="}
@@ -293,5 +403,18 @@ async def test_the_webhook_refuses_unsigned_requests_and_answers_signed_ones(
             headers={"X-Twilio-Signature": "Nm1bObwxrBRo+BMZrUzUCmVzUL0="},
         )
         body = await signed.text()
-        assert signed.status == 200 and "<Message>" in body
-        assert "link this number" in body
+        # Twilio gets an empty answer at once; the reply goes out separately
+        assert signed.status == 200 and "<Message>" not in body
+        for _ in range(50):
+            if sender.sent:
+                break
+            await asyncio.sleep(0.01)
+        assert sender.sent == [("+15550100000", PHONE, UNLINKED)]
+        again = await client.post(
+            "/twilio/sms",
+            data=PARAMS,
+            headers={"X-Twilio-Signature": "Nm1bObwxrBRo+BMZrUzUCmVzUL0="},
+        )
+        assert again.status == 200
+        await asyncio.sleep(0.1)
+        assert len(sender.sent) == 1  # "link this number" once a day, not per text
