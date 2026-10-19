@@ -188,6 +188,18 @@ export default function LoginPage() {
                 Continue as guest
               </Link>
             </p>
+
+            <p className="text-center text-xs text-white/40">
+              By continuing, you agree to our{' '}
+              <Link href="/terms" className="hover:text-foreground underline">
+                Terms
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="hover:text-foreground underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </LiquidGlass>
       </div>
