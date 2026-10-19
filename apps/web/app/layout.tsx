@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 import { AccountLinks } from '@/components/app/account-links';
 import { AuthProvider } from '@/components/auth/auth-provider';
+import { GuestMerge } from '@/components/auth/guest-merge';
 import { cn } from '@/lib/shadcn/utils';
 import { getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
@@ -63,6 +64,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           </header>
 
           {children}
+          <GuestMerge />
         </AuthProvider>
       </body>
     </html>
