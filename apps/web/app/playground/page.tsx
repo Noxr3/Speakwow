@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { STICKERS, personaSummaries, stickerImageUrl } from '@speakwow/shared';
+import DotGrid from '@/components/DotGrid';
+import { controlBarToggleClassName } from '@/components/agents-ui/agent-control-bar';
+import { ReactionPicker } from '@/components/app/reaction-picker';
 import { WidgetCard } from '@/components/app/widget-card';
 import { teacherCardUrl } from '@/lib/teacher-card';
 import { type CardUpdate, type Widget, parseWidget } from '@/lib/widgets';
@@ -129,6 +132,60 @@ export default function Playground() {
           />
         ))}
       </div>
+      <section className="space-y-2" data-testid="call-preview">
+        <h2 className="text-foreground font-semibold">On the call screen</h2>
+        <p className="text-muted-foreground text-sm">
+          A card over the call&apos;s background and transcript, and the reaction picker: hover the
+          smiley with a mouse, tap it on a phone.
+        </p>
+        <div className="relative h-[620px] overflow-hidden rounded-3xl border border-white/10 bg-black">
+          <div className="absolute inset-0">
+            <DotGrid
+              dotSize={5}
+              gap={15}
+              baseColor="#20381f"
+              activeColor="#0c9215"
+              proximity={120}
+              shockRadius={250}
+              shockStrength={5}
+              resistance={750}
+              returnDuration={1.5}
+            />
+          </div>
+          {/* the teacher's voice bars as in a call (tile-layout: five pills,
+              scaled 4x, white while the teacher speaks), right behind the card */}
+          <div className="absolute inset-x-0 top-24 flex h-64 items-center justify-center gap-4">
+            {[90, 170, 230, 150, 100].map((h, i) => (
+              <span key={i} className="bg-foreground w-10 rounded-full" style={{ height: h }} />
+            ))}
+          </div>
+          <div className="absolute inset-x-6 bottom-28 space-y-2 text-sm leading-relaxed">
+            <p className="text-white/85">Frank: What did you do last weekend?</p>
+            <p className="text-right text-white/85">I went to the park with my sister.</p>
+            <p className="text-white/85" data-testid="last-caption">
+              Frank: Nice! Which part of the park do you like best?
+            </p>
+          </div>
+          <div className="absolute inset-x-3 top-6 mx-auto max-w-md">
+            <WidgetCard
+              widget={SAMPLES[1]}
+              update={null}
+              onEvent={(action) => setSent((s) => [...s, `w2 ${JSON.stringify(action)}`])}
+              onClose={() => undefined}
+            />
+          </div>
+          <div className="absolute inset-x-3 bottom-4">
+            <div className="relative mx-auto max-w-2xl">
+              <div className="bg-background border-input/50 flex gap-1 rounded-[31px] border p-3">
+                <ReactionPicker
+                  onPick={(sticker) => setSent((s) => [...s, `sticker ${sticker.emoji}`])}
+                  className={controlBarToggleClassName()}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       <div className="grid gap-4 md:grid-cols-2">
         {SAMPLES.map((w) => (
           <div key={w.id} data-card={w.id}>

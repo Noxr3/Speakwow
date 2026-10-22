@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useChat, useDataChannel } from '@livekit/components-react';
 import { STICKERS, STICKER_TOPIC, type Sticker, stickerImageUrl } from '@speakwow/shared';
 import { WidgetCard } from '@/components/app/widget-card';
-import { LiquidGlass } from '@/components/ui/liquid-glass';
 import {
   type CardUpdate,
   EVENT_TOPIC,
@@ -17,16 +16,14 @@ import {
 } from '@/lib/widgets';
 
 const BY_ID = new Map(STICKERS.map((s) => [s.id, s]));
-/** The tray the student reacts with; the teacher can use the whole set. */
-const TRAY = ['laugh', 'wow', 'thinking', 'sweat_smile', 'clap', 'heart', 'sleepy', 'party'];
 
-interface Burst {
+export interface Burst {
   key: number;
   sticker: Sticker;
   fromStudent: boolean;
 }
 
-function StickerImage({ sticker, size }: { sticker: Sticker; size: number }) {
+export function StickerImage({ sticker, size }: { sticker: Sticker; size: number }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
@@ -50,17 +47,12 @@ function StickerImage({ sticker, size }: { sticker: Sticker; size: number }) {
 
 /**
  * Stickers flying in from the teacher (data channel) and from the student
- * (the tray, sent as an emoji chat message the teacher reads), plus the
- * teacher's interactive card.
+ * (the reaction picker, sent as an emoji chat message the teacher reads).
+ * Used once per call (session-view), shared by the overlays and the picker.
  */
-export function LiveOverlays() {
+export function useStickers() {
   const [bursts, setBursts] = useState<Burst[]>([]);
-  const [widget, setWidget] = useState<Widget | null>(null);
-  const [cardUpdate, setCardUpdate] = useState<CardUpdate | null>(null);
   const { send } = useChat();
-  // What the student does on a card goes on its own topic, never as a chat
-  // line: a tap must not interrupt the teacher (widgets.py).
-  const { send: sendCardEvent } = useDataChannel(EVENT_TOPIC);
 
   const pop = useCallback((sticker: Sticker, fromStudent: boolean) => {
     const key = Date.now() + Math.random();
@@ -78,6 +70,26 @@ export function LiveOverlays() {
     }
   });
 
+  const sendSticker = async (sticker: Sticker) => {
+    pop(sticker, true);
+    try {
+      await send(sticker.emoji);
+    } catch {
+      // the sticker still showed locally; the call carries on
+    }
+  };
+
+  return { bursts, sendSticker };
+}
+
+/** The stickers in flight and the teacher's interactive card. */
+export function LiveOverlays({ bursts }: { bursts: Burst[] }) {
+  const [widget, setWidget] = useState<Widget | null>(null);
+  const [cardUpdate, setCardUpdate] = useState<CardUpdate | null>(null);
+  // What the student does on a card goes on its own topic, never as a chat
+  // line: a tap must not interrupt the teacher (widgets.py).
+  const { send: sendCardEvent } = useDataChannel(EVENT_TOPIC);
+
   useDataChannel(WIDGET_TOPIC, (msg) => {
     const next = parseWidget(msg.payload);
     if (next) {
@@ -88,15 +100,6 @@ export function LiveOverlays() {
     const update = parseCardUpdate(msg.payload);
     if (update) setCardUpdate(update);
   });
-
-  const sendSticker = async (sticker: Sticker) => {
-    pop(sticker, true);
-    try {
-      await send(sticker.emoji);
-    } catch {
-      // the sticker still showed locally; the call carries on
-    }
-  };
 
   return (
     <>
@@ -144,32 +147,6 @@ export function LiveOverlays() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="mx-auto mb-3 w-fit max-w-full">
-        <LiquidGlass radius={999} width="auto">
-          <div
-            className="flex flex-wrap justify-center gap-0.5 p-1"
-            role="toolbar"
-            aria-label="Send a sticker"
-          >
-            {TRAY.map((id) => {
-              const sticker = BY_ID.get(id)!;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => sendSticker(sticker)}
-                  title={`Send ${sticker.label}`}
-                  aria-label={`Send ${sticker.label} sticker`}
-                  className="rounded-full p-1.5 text-xl leading-none transition-transform hover:scale-115 hover:bg-white/10 active:scale-95"
-                >
-                  {sticker.emoji}
-                </button>
-              );
-            })}
-          </div>
-        </LiquidGlass>
-      </div>
     </>
   );
 }

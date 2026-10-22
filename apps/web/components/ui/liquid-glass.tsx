@@ -12,6 +12,9 @@ interface LiquidGlassProps {
    * panels with text get a little so the words read over moving light.
    */
   tint?: number;
+  /** Backdrop blur in px for panels of text, so what moves behind them
+   * (the call screen's dots, the transcript) cannot fight the words. */
+  frost?: number;
   width?: number | string;
   height?: number | string;
   className?: string;
@@ -29,6 +32,7 @@ export function LiquidGlass({
   children,
   radius = 28,
   tint = 0,
+  frost = 0,
   width = '100%',
   height = 'auto',
   className,
@@ -41,6 +45,7 @@ export function LiquidGlass({
       height={height}
       borderRadius={radius}
       backgroundOpacity={tint}
+      frost={frost}
       displace={0.5}
       distortionScale={-180}
       redOffset={70}

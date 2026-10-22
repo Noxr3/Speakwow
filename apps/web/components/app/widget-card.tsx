@@ -666,7 +666,7 @@ export function WidgetCard({ widget, update, onEvent, onClose }: WidgetCardProps
   }
 
   return (
-    <LiquidGlass radius={28} tint={0.35}>
+    <LiquidGlass radius={28} tint={0.92} frost={24}>
       <section aria-label={KIND_LABEL[widget.kind]} className="space-y-3 p-5">
         <header className="flex items-center gap-2">
           <span className="label-mono text-white/60">
