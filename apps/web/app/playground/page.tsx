@@ -152,6 +152,13 @@ export default function Playground() {
               returnDuration={1.5}
             />
           </div>
+          {/* the teacher's voice bars as in a call (tile-layout: five pills,
+              scaled 4x, white while the teacher speaks), right behind the card */}
+          <div className="absolute inset-x-0 top-24 flex h-64 items-center justify-center gap-4">
+            {[90, 170, 230, 150, 100].map((h, i) => (
+              <span key={i} className="bg-foreground w-10 rounded-full" style={{ height: h }} />
+            ))}
+          </div>
           <div className="absolute inset-x-6 bottom-28 space-y-2 text-sm leading-relaxed">
             <p className="text-white/85">Frank: What did you do last weekend?</p>
             <p className="text-right text-white/85">I went to the park with my sister.</p>
