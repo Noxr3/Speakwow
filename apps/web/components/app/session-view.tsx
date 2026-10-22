@@ -11,7 +11,8 @@ import {
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
 import { ChatTranscript } from '@/components/app/chat-transcript';
-import { LiveOverlays } from '@/components/app/live-overlays';
+import { LiveOverlays, useStickers } from '@/components/app/live-overlays';
+import { ReactionPicker } from '@/components/app/reaction-picker';
 import { TileLayout } from '@/components/app/tile-layout';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/shadcn/utils';
@@ -101,6 +102,7 @@ export const SessionView = ({
   const session = useSessionContext();
   const { messages } = useSessionMessages(session);
   const [chatOpen, setChatOpen] = useState(false);
+  const { bursts, sendSticker } = useStickers();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const controls: AgentControlBarControls = {
@@ -188,7 +190,7 @@ export const SessionView = ({
             )}
           </AnimatePresence>
         )}
-        <LiveOverlays />
+        <LiveOverlays bursts={bursts} />
         <div className="relative mx-auto max-w-2xl pb-3 md:pb-12">
           <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
           <AgentControlBar
@@ -198,6 +200,9 @@ export const SessionView = ({
             isConnected={session.isConnected}
             onDisconnect={session.end}
             onIsChatOpenChange={setChatOpen}
+            extra={(toggleClassName) => (
+              <ReactionPicker onPick={sendSticker} className={toggleClassName} />
+            )}
           />
         </div>
       </MotionBottom>

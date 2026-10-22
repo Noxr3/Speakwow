@@ -41,6 +41,15 @@ const TOGGLE_VARIANT_2 = [
   'dark:data-[state=on]:bg-blue-500/20 dark:data-[state=on]:text-blue-300',
 ];
 
+/** The classes of the bar's own toggles (as the transcript toggle), for
+ * controls added through `extra` or shown outside a call (the playground). */
+export function controlBarToggleClassName(variant: 'default' | 'outline' | 'livekit' = 'livekit') {
+  return agentTrackToggleVariants({
+    variant: variant === 'outline' ? 'outline' : 'default',
+    className: cn(variant === 'livekit' && [TOGGLE_VARIANT_2, 'rounded-full']),
+  });
+}
+
 const MOTION_PROPS = {
   variants: {
     hidden: {
@@ -200,6 +209,11 @@ export interface AgentControlBarProps extends UseInputControlsProps {
    * The callback for when a device error occurs.
    */
   onDeviceError?: (error: { source: Track.Source; error: Error }) => void;
+  /**
+   * More controls after the transcript toggle, given the toggles' own
+   * classes so they look the same (Speakwow: the reaction picker).
+   */
+  extra?: (toggleClassName: string) => React.ReactNode;
 }
 
 /**
@@ -234,6 +248,7 @@ export function AgentControlBar({
   onDisconnect,
   onDeviceError,
   onIsChatOpenChange,
+  extra,
   className,
   ...props
 }: AgentControlBarProps & ComponentProps<'div'>) {
@@ -370,6 +385,8 @@ export function AgentControlBar({
               <MessageSquareTextIcon />
             </Toggle>
           )}
+
+          {extra?.(controlBarToggleClassName(variant))}
         </div>
 
         {/* Disconnect */}

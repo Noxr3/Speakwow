@@ -11,6 +11,13 @@ export interface GlassSurfaceProps {
   blur?: number;
   displace?: number;
   backgroundOpacity?: number;
+  /**
+   * Backdrop blur in px for panels of text (0: the clear glass). With it,
+   * backgroundOpacity is a dark tint in every browser, not only Chromium:
+   * the frosted fallback otherwise ignores it and brightens, which made white
+   * text unreadable over the call screen.
+   */
+  frost?: number;
   saturation?: number;
   distortionScale?: number;
   redOffset?: number;
@@ -73,6 +80,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   blur = 11,
   displace = 0,
   backgroundOpacity = 0,
+  frost = 0,
   saturation = 1,
   distortionScale = -180,
   redOffset = 0,
@@ -244,7 +252,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         background: isDarkMode
           ? `hsl(0 0% 0% / ${backgroundOpacity})`
           : `hsl(0 0% 100% / ${backgroundOpacity})`,
-        backdropFilter: `url(#${filterId}) saturate(${saturation})`,
+        backdropFilter: `url(#${filterId})${frost ? ` blur(${frost}px)` : ''} saturate(${saturation})`,
         boxShadow: isDarkMode
           ? `0 0 2px 1px color-mix(in oklch, white, transparent 65%) inset,
              0 0 10px 4px color-mix(in oklch, white, transparent 85%) inset,
@@ -264,6 +272,17 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
              0px 16px 56px rgba(17, 17, 26, 0.05) inset`,
       };
     } else {
+      if (isDarkMode && frost) {
+        return {
+          ...baseStyles,
+          background: `hsl(0 0% 0% / ${backdropFilterSupported ? backgroundOpacity : Math.max(backgroundOpacity, 0.85)})`,
+          backdropFilter: `blur(${frost}px) saturate(1.4)`,
+          WebkitBackdropFilter: `blur(${frost}px) saturate(1.4)`,
+          border: '1px solid rgba(255, 255, 255, 0.18)',
+          boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+                      inset 0 -1px 0 0 rgba(255, 255, 255, 0.08)`,
+        };
+      }
       if (isDarkMode) {
         if (!backdropFilterSupported) {
           return {
