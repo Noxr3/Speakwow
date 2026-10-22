@@ -3,7 +3,7 @@ import type { PersonaSummary, TeacherMotif } from '@speakwow/shared';
 /**
  * A teacher's card as an animated SVG: two slow glows in the teacher's
  * colours, and in the middle a moving voiceprint that is theirs alone (Frank's
- * equaliser, Nora's vibrating strings, Max's ripples). Name and one tag, no
+ * equaliser, Lily's rings, Grace's sunburst, Leo's dot matrix). Name and one tag, no
  * other text. No photos: a teacher is an AI and never poses as a real person.
  *
  * SVG animations keep playing inside an <img>, so the React Bits carousel
@@ -35,6 +35,7 @@ function xml(text: string) {
 
 type Draw = (rand: () => number) => { css: string; svg: string };
 
+// The motifs no current teacher uses stay, for a new teacher to pick.
 const MOTIFS: Record<TeacherMotif, Draw> = {
   // Frank: a mirrored equaliser, bars talking over each other.
   bars: (rand) => {
@@ -48,7 +49,7 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
     }).join('');
     return { css: '@keyframes eq{from{transform:scaleY(.22)}to{transform:scaleY(1)}}', svg };
   },
-  // Lucy: one precise, elegant line.
+  // One precise, elegant line.
   wave: (rand) => {
     const path = (amp: number, phase: number) => {
       const pts = Array.from({ length: 41 }, (_, i) => {
@@ -96,7 +97,7 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
       svg,
     };
   },
-  // Kai: chunky game-console pixels, an 8-bit equaliser.
+  // Chunky game-console pixels, an 8-bit equaliser.
   pixels: (rand) => {
     const cols = 9;
     const rows = 8;
@@ -129,7 +130,7 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
       svg: `${svg}<circle cx="${CX}" cy="${CY}" r="18" fill="url(#ink)"/>`,
     };
   },
-  // Diego: a flame of heat and colour, always moving.
+  // A flame of heat and colour, always moving.
   flame: (rand) => {
     const blob = (scale: number, jitter: number) => {
       const n = 8;
@@ -155,7 +156,7 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
       svg: `<path fill="url(#core)" opacity=".85"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="${[...outer, outer[0]].join(';')}"/></path><path fill="#fff" opacity=".75"><animate attributeName="d" dur="2.2s" repeatCount="indefinite" values="${[...inner, inner[0]].join(';')}"/></path>`,
     };
   },
-  // Priya: an atom, electrons on three orbits.
+  // An atom, electrons on three orbits.
   orbit: () => {
     const orbit = `M${CX - 130},${CY} a130,46 0 1,0 260,0 a130,46 0 1,0 -260,0`;
     const svg = [0, 60, 120]
@@ -169,7 +170,7 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
       svg: `${svg}<circle cx="${CX}" cy="${CY}" r="22" fill="url(#ink)" style="transform-origin:${CX}px ${CY}px;animation:nuc 1.6s ease-in-out infinite"/>`,
     };
   },
-  // Nora: guitar strings, each ringing at its own pitch.
+  // Guitar strings, each ringing at its own pitch.
   strings: (rand) => {
     const svg = [0, 1, 2, 3, 4, 5]
       .map((i) => {
@@ -182,7 +183,7 @@ const MOTIFS: Record<TeacherMotif, Draw> = {
       .join('');
     return { css: '', svg };
   },
-  // Max: ripples spreading across calm water.
+  // Ripples spreading across calm water.
   ripple: () => ({
     css: '@keyframes rip{0%{transform:scale(.15);opacity:1}100%{transform:scale(1);opacity:0}}',
     svg:

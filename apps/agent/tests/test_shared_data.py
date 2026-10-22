@@ -14,7 +14,11 @@ REQUIRED = ["id", "display_name", "tagline_en", "personality", "openings", "voic
 
 
 def _files(base: Path) -> dict[str, str]:
-    paths = [*sorted((base / "personas").glob("*.json")), base / "stickers.json"]
+    paths = [
+        *sorted((base / "personas").glob("*.json")),
+        base / "stickers.json",
+        base / "retired-personas.json",
+    ]
     return {
         p.relative_to(base).as_posix(): p.read_text(encoding="utf-8") for p in paths
     }
@@ -60,10 +64,23 @@ def test_persona_cards_are_complete() -> None:
             )
 
 
-def test_loader_reads_both_teachers() -> None:
+def test_five_teachers_each_with_a_voice_of_their_own() -> None:
     personas = load_personas(SHARED / "personas")
-    assert {"frank", "lucy"} <= set(personas)
+    assert set(personas) == {"frank", "lily", "grace", "leo", "jade"}
     assert personas["frank"].voices["xai"] == "Rex"
+    # ten teachers shared five voices; five get one each, in both providers
+    for provider in ("xai", "openai"):
+        voices = [p.voices[provider] for p in personas.values()]
+        assert len(voices) == len(set(voices)), (provider, voices)
+
+
+def test_every_retired_teacher_has_a_living_heir() -> None:
+    personas = load_personas(SHARED / "personas")
+    retired = json.loads((SHARED / "retired-personas.json").read_text())["replacements"]
+    assert retired, "the retired list is empty"
+    for old, heir in retired.items():
+        assert old not in personas, f"{old} is retired but still a teacher"
+        assert heir in personas, f"{old} -> {heir}, who is not a teacher"
 
 
 def test_sticker_ids_are_unique_and_described() -> None:
