@@ -64,11 +64,11 @@ def test_persona_cards_are_complete() -> None:
             )
 
 
-def test_four_teachers_each_with_a_voice_of_their_own() -> None:
+def test_five_teachers_each_with_a_voice_of_their_own() -> None:
     personas = load_personas(SHARED / "personas")
-    assert set(personas) == {"frank", "lily", "grace", "leo"}
+    assert set(personas) == {"frank", "lily", "grace", "leo", "jade"}
     assert personas["frank"].voices["xai"] == "Rex"
-    # ten teachers shared five voices; four get one each, in both providers
+    # ten teachers shared five voices; five get one each, in both providers
     for provider in ("xai", "openai"):
         voices = [p.voices[provider] for p in personas.values()]
         assert len(voices) == len(set(voices)), (provider, voices)

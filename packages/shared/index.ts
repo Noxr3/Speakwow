@@ -4,6 +4,7 @@
  */
 import frank from './personas/frank.json';
 import grace from './personas/grace.json';
+import jade from './personas/jade.json';
 import leo from './personas/leo.json';
 import lily from './personas/lily.json';
 import retired from './retired-personas.json';
@@ -13,12 +14,13 @@ import type { PersonaCard, Sticker, TeacherMotif } from './types';
 export * from './types';
 
 /**
- * Four teachers, each one strong character (after Duolingo's cast: a small
+ * Five teachers, each one strong character (after Duolingo's cast: a small
  * set of contrasting personalities beats many similar ones): Frank the
  * enthusiast, Lily the bilingual big sister, Grace the storyteller, Leo the
- * dry, direct coach. Each has a voice of their own.
+ * dry, direct coach, Jade the deadpan cool older sister. Each has a voice of
+ * their own.
  */
-export const PERSONA_CARDS = [frank, lily, grace, leo] as unknown as PersonaCard[];
+export const PERSONA_CARDS = [frank, lily, grace, leo, jade] as unknown as PersonaCard[];
 
 /** Retired teacher id -> the teacher who answers for them now. */
 export const RETIRED_PERSONAS: Record<string, string> = retired.replacements;
