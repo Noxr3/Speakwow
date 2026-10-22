@@ -1,0 +1,11 @@
+{
+  "note": "Teachers retired on 2026-10-22, when ten became four. Each id is answered by the kept teacher nearest in spirit, so a saved choice, an old link, a phone caller's last teacher or a past session still finds someone. Read by resolvePersonaId (index.ts) and resolve_persona (apps/agent/src/personas.py).",
+  "replacements": {
+    "lucy": "grace",
+    "priya": "grace",
+    "nora": "lily",
+    "kai": "frank",
+    "diego": "frank",
+    "max": "leo"
+  }
+}

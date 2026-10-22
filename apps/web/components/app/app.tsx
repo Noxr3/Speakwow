@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from '@livekit/components-react';
 import { WarningIcon } from '@phosphor-icons/react/dist/ssr';
-import type { PersonaSummary } from '@speakwow/shared';
+import { type PersonaSummary, RETIRED_PERSONAS } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
 import { AgentSessionProvider } from '@/components/agents-ui/agent-session-provider';
 import { StartAudioButton } from '@/components/agents-ui/start-audio-button';
@@ -44,7 +44,7 @@ export function App({ appConfig, personas, course }: AppProps) {
 
   // Read the remembered teacher after mount so server and client render alike.
   useEffect(() => {
-    setPersonaIdState(loadPersonaId(ids, ids[0]));
+    setPersonaIdState(loadPersonaId(ids, ids[0], RETIRED_PERSONAS));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

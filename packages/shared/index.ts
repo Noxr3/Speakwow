@@ -2,33 +2,26 @@
  * @speakwow/shared — data both apps read: persona cards and the sticker set.
  * A new teacher is one JSON file in personas/ plus one line in PERSONA_CARDS.
  */
-import diego from './personas/diego.json';
 import frank from './personas/frank.json';
 import grace from './personas/grace.json';
-import kai from './personas/kai.json';
 import leo from './personas/leo.json';
 import lily from './personas/lily.json';
-import lucy from './personas/lucy.json';
-import max from './personas/max.json';
-import nora from './personas/nora.json';
-import priya from './personas/priya.json';
+import retired from './retired-personas.json';
 import stickerData from './stickers.json';
 import type { PersonaCard, Sticker, TeacherMotif } from './types';
 
 export * from './types';
 
-export const PERSONA_CARDS = [
-  frank,
-  lucy,
-  lily,
-  leo,
-  kai,
-  grace,
-  diego,
-  priya,
-  nora,
-  max,
-] as unknown as PersonaCard[];
+/**
+ * Four teachers, each one strong character (after Duolingo's cast: a small
+ * set of contrasting personalities beats many similar ones): Frank the
+ * enthusiast, Lily the bilingual big sister, Grace the storyteller, Leo the
+ * dry, direct coach. Each has a voice of their own.
+ */
+export const PERSONA_CARDS = [frank, lily, grace, leo] as unknown as PersonaCard[];
+
+/** Retired teacher id -> the teacher who answers for them now. */
+export const RETIRED_PERSONAS: Record<string, string> = retired.replacements;
 
 export const DEFAULT_PERSONA_ID = 'frank';
 
@@ -89,12 +82,14 @@ export function personaSummaries(date: Date = new Date()): PersonaSummary[] {
   }));
 }
 
-/** Matches an id ("lucy") or a legacy display name ("Lucy"). */
+/** Matches an id ("lily") or a legacy display name ("Lily"); a retired
+ * teacher ("lucy", "Lucy") is answered by the one who took their place. */
 export function resolvePersonaId(requested: unknown): string {
   if (typeof requested === 'string') {
     const key = requested.trim().toLowerCase();
     const card = PERSONA_CARDS.find((c) => c.id === key || c.display_name.toLowerCase() === key);
     if (card) return card.id;
+    if (RETIRED_PERSONAS[key]) return RETIRED_PERSONAS[key];
   }
   return DEFAULT_PERSONA_ID;
 }
