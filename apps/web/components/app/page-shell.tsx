@@ -1,15 +1,10 @@
 import Link from 'next/link';
+import { AppBackdrop } from '@/components/app/app-backdrop';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 
-/** Two slow colour glows behind a page, so its glass panels have something to show through. */
+/** The shared Aurora background for home and inner pages. */
 export function PageBackdrop() {
-  return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-      <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-[#00ff6a]/15 blur-[120px]" />
-      <div className="absolute top-1/3 -right-40 h-[560px] w-[560px] rounded-full bg-[#2c7be2]/20 blur-[140px]" />
-      <div className="absolute -bottom-48 left-1/4 h-[420px] w-[420px] rounded-full bg-[#9b5de5]/12 blur-[130px]" />
-    </div>
-  );
+  return <AppBackdrop muted />;
 }
 
 interface PageShellProps {
@@ -50,7 +45,7 @@ interface GlassPanelProps {
 
 export function GlassPanel({ title, description, children }: GlassPanelProps) {
   return (
-    <LiquidGlass radius={28} tint={0.3}>
+    <LiquidGlass radius={28} tint={0.88}>
       <section className="space-y-5 p-6 md:p-7">
         <div className="space-y-1.5">
           <h2 className="text-foreground text-lg font-medium">{title}</h2>

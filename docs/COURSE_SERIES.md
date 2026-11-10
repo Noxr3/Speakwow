@@ -2,18 +2,27 @@
 
 The home screen separates the course and unit into two compact glass panels.
 A plain swap icon opens /courses for course selection, progress and syllabuses.
-The unit panel supports touch/trackpad swiping and keyboard/arrow navigation;
+The unit panel uses React Bits Carousel with manual whole-card tilt transitions and spring-based swiping,
+trackpad and keyboard/arrow navigation (no autoplay or looping);
 it opens at the saved unit, and starting a lesson saves the displayed unit before
 requesting the call token. The Speakwow logo and wordmark appear only at top left.
 Student progress, history and memories live under Learning profile. Small talk
 is part of the tutor conversation, without a separate home-screen mode toggle.
 
-The original CommitMono typography, moving green/blue ColorBends background,
-LiquidGlass panels, DotGrid call background and palette are preserved. Text
+CommitMono typography, LiquidGlass panels and the DotGrid call background are
+preserved. Home and inner pages use the requested React Bits Aurora
+background, dimmed on inner pages for headings and form readability,
+with its reduced-motion handling and original license. Text
 panels use an 88% dark tint. Refraction is a separate, paint-contained layer
 beneath the content and rim, with bounded displacement and a neutral centre.
 Only one resize observer updates each map. Buttons inside the panels do not
 apply a nested backdrop filter; Safari/Firefox retain the frosted fallback.
+Each Carousel slide is a complete liquid-glass card: title, start button and teacher
+move together. The edge mask is disabled so it does not isolate glass from the
+page background. Navigation locks
+while starting a lesson, and inactive slides are excluded from keyboard focus.
+Both React Bits components retain their source attribution and license in
+`apps/web/licenses/react-bits.md`; Carousel reuses the project's Lucide icons.
 
 A course contains ordered units (lessons). Each unit contains stable, ordered
 sessions: learn, practise, review or exam. A LiveKit call is a conversation;
@@ -66,7 +75,7 @@ requires an authenticated end-to-end voice session.
 ## Verification (2026-11-10)
 
 - Web: production build and typecheck passed; lint passed with existing warnings
-  in vendored/unchanged components. 28 web tests and 10 script tests passed.
+  in vendored/unchanged components (including the upstream Carousel image renderer). 28 web tests and 10 script tests passed.
 - Agent: 148 offline tests and Ruff passed. The two existing live model tests
   could not run: this checkout has no voice/model provider credentials.
 - Database: the full migration chain was applied to an isolated local Supabase;
@@ -78,6 +87,9 @@ requires an authenticated end-to-end voice session.
   changed its unit, changed courses and reloaded; both places survived. A local
   agent-style score write advanced the visible session from Learn together to
   Make it your own and displayed 1/13. Course search and the plan dialog worked.
+- Carousel: checked desktop dragging, horizontal scrolling, keyboard navigation,
+  first/last boundaries, phone layout, connection locking and saved-unit reload.
+  Home and course-page Aurora rendered with readable dark panels.
 - Token route: a separate local guest requested its selected course after another
   course became active; the signed course/unit still matched that request.
 

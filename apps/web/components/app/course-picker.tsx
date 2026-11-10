@@ -55,7 +55,7 @@ export function CoursePicker({ library }: { library: HomeLibrary }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a course"
-          className="field pl-9"
+          className="field bg-black/85 pl-9"
         />
       </div>
       {(library.error || error) && (

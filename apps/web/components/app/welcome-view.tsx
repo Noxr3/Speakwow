@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { ArrowLeftRight, Check, ChevronDown } from 'lucide-react';
 import type { PersonaSummary } from '@speakwow/shared';
-import ColorBends from '@/components/ColorBends';
 import GlassSurface from '@/components/GlassSurface';
 import Magnet from '@/components/Magnet';
+import { AppBackdrop } from '@/components/app/app-backdrop';
 import { UnitCarousel } from '@/components/app/unit-carousel';
 import {
   DropdownMenu,
@@ -132,21 +132,7 @@ export const WelcomeView = ({
           </div>
         )}
       </div>
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <ColorBends
-          colors={['#00ff1e', '#2c7be2', '#501b35']}
-          rotation={0}
-          speed={0.2}
-          scale={1}
-          frequency={1}
-          warpStrength={0.95}
-          mouseInfluence={1}
-          parallax={0.5}
-          noise={0.1}
-          transparent
-          autoRotate={0}
-        />
-      </div>
+      <AppBackdrop />
     </div>
   );
 };
