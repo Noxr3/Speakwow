@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeftRight, Check, ChevronDown, Play } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  MessageCircle,
+  Play,
+} from 'lucide-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import { AppBackdrop } from '@/components/app/app-backdrop';
 import { UnitCarousel } from '@/components/app/unit-carousel';
@@ -38,19 +45,25 @@ export const WelcomeView = ({
   const startButton = (unitId?: string, continuing = false) => (
     <Button
       size="lg"
+      variant={course ? 'default' : 'outline'}
       disabled={busy}
       aria-busy={busy}
       onClick={() => onStartCall(unitId)}
       className="w-full disabled:cursor-wait"
     >
-      {!busy && <Play size={18} fill="currentColor" aria-hidden="true" />}
+      {!busy &&
+        (course ? (
+          <Play size={18} fill="currentColor" aria-hidden="true" />
+        ) : (
+          <MessageCircle size={18} aria-hidden="true" />
+        ))}
       {busy
         ? 'Connecting…'
         : course
           ? continuing
             ? 'Continue lesson'
             : 'Start lesson'
-          : 'Start talking'}
+          : 'Free chat'}
     </Button>
   );
   const teacher = (
@@ -104,18 +117,24 @@ export const WelcomeView = ({
               aria-label={course ? 'Change course, currently ' + course.title : 'Choose a course'}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground text-xs font-medium">
-                  Course{course ? ' · ' + courseLevelLabel(course) : ''}
-                </p>
+                {course && (
+                  <p className="text-muted-foreground text-xs font-medium">
+                    Course · {courseLevelLabel(course)}
+                  </p>
+                )}
                 <h1 className="mt-0.5 text-base leading-snug font-semibold sm:text-lg">
                   {course?.title ?? 'Choose a course'}
                 </h1>
               </div>
-              <ArrowLeftRight
-                size={19}
-                className="text-muted-foreground shrink-0"
-                aria-hidden="true"
-              />
+              {course ? (
+                <ArrowLeftRight
+                  size={19}
+                  className="text-muted-foreground shrink-0"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ChevronRight size={20} className="text-primary shrink-0" aria-hidden="true" />
+              )}
             </Link>
           </LiquidGlass>
         </div>
@@ -133,7 +152,12 @@ export const WelcomeView = ({
             teacher={teacher}
           />
         ) : (
-          <div className="flex flex-col items-center gap-6 py-8">
+          <div className="flex flex-col items-center gap-6">
+            <div className="text-muted-foreground flex w-full items-center gap-4 px-6 text-sm">
+              <span className="bg-border h-px flex-1" aria-hidden="true" />
+              <span>or</span>
+              <span className="bg-border h-px flex-1" aria-hidden="true" />
+            </div>
             {startButton()}
             {teacher}
           </div>
