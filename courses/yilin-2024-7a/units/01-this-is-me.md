@@ -70,6 +70,12 @@ activities:
     errors. Offer tapping or typing instead.
   - At the end, name one achievement and one next step; save the session before offering the next lesson, chat
     or a break.
+  - At read-discover, write-plan and practice, retrieve one earlier phrase before hints. Revisit it next
+    meeting and in the following unit; adjust after forgetting rather than assuming recall.
+  - In practice, prompt one self-repair before a brief model. Delay minor fluency corrections until the
+    learner finishes. During an exam, give feedback only after submission.
+  - For original texts, use mostly familiar words, explain only 2–3 essential new items and shorten sentences
+    if gist is unclear. Word count alone does not define reading difficulty.
 review:
   status: draft
   notes: "2026-11-10: workbook activity topics and word groups inspected directly. Earlier titles/grammar were
@@ -88,14 +94,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u1-g1
-      - u1-g2
-      - u1-g3
       - u1-g4
-      - u1-g5
-    brief: "Introduce the unit mission and sample the existing speaking and grammar goals without grading a
-      placement test. Teach 5–6 of these core words at a time: greet, introduce, classmate, grade, hobby,
-      friendly, polite, shy, pretty, character. Model a short exchange, then invite a new one. Optional
-      match_pairs: pair 3 words with clear meanings; use one in a new sentence."
+    brief: "Offer a brief catch-up or start now. Explain the unit mission, then focus on this small outcome: Greet
+      people when meeting for the first time. Introduce 5 useful words from the core pool and model Simple
+      present tense (I): the verb 'be' (am/is/are). Practise together, then request one independent exchange
+      using this pattern. Optional match_pairs: match 3 word meanings, then use one in a new sentence. Later
+      unit goals are not required here."
     minutes: 12
   - id: word-lab
     title: Sound, meaning and clues
@@ -208,9 +212,9 @@ sessions:
       - u1-g4
       - u1-g5
     brief: Introduce a fictional friend to a new club member. Describe age, personality and interests, ask about
-      the listener and use be accurately. Briefly recall the unit's core words and grammar. Model once only if
-      needed, then change a constraint for independent transfer. Let the learner ask their own question and
-      choose the outcome; do not force a fixed number of dialogue turns.
+      the listener and use be accurately. Model once only if needed, then change a constraint for independent
+      transfer. Let the learner ask their own question and choose the outcome; do not force a fixed number of
+      dialogue turns. Retell once with familiar words; delay minor corrections until the end.
     minutes: 18
   - id: recall
     title: Retrieve, repair, reconnect
@@ -218,18 +222,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u1-g1
-      - u1-g2
-      - u1-g3
       - u1-g4
-      - u1-g5
-      - u1-g6
-      - u1-g7
-      - u1-g8
-      - u1-g9
-    brief: "Retrieve this unit plus one earlier theme (for Unit 1, use familiar primary-school language). Play
-      Sentence rescue: fill_blank on Simple present tense (I): the verb 'be' (am/is/are), then make a new
-      spoken sentence without the card. Recall one read detail, spell one heard phrase, revise one typed
-      sentence and explain a choice. Revisit gaps without pretending this is an exam."
+    brief: "Retrieve one current-unit situation and one earlier theme without showing answers first. Use Sentence
+      rescue for Simple present tense (I): the verb 'be' (am/is/are), then remove the card and ask for a new
+      spoken example. Focus scoring on this session's two goals. Briefly revisit one other weak skill if
+      needed; the full multi-skill check comes next. Let the learner choose a familiar topic and retry it with
+      less support."
     minutes: 10
   - id: check
     title: Your independent mission
@@ -254,6 +252,8 @@ sessions:
 sources:
   - title: 用户提供《译林版七上2024 .xlsx》：单词跟读 E2:G42；阅读与问答 A2:K3；写作练习 D2:I3；看图说话 D2:M2；情景对话 E2:Q3
     date: 2026-11-10
+  - title: "IES: Organizing Instruction and Study to Improve Student Learning (2007)"
+    url: https://ies.ed.gov/ncee/wwc/PracticeGuide/1
 ---
 
 # Unit 1 · This is me!（这就是我！）

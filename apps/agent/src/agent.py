@@ -36,7 +36,12 @@ from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
 from coach import Advice, Coach, build_state, warm_up_turns, warming_up  # noqa: E402
-from curriculum import StudyFlow, make_lesson_tool, session_goals  # noqa: E402
+from curriculum import (  # noqa: E402
+    StudyFlow,
+    make_lesson_tool,
+    requires_written_response,
+    session_goals,
+)
 from handoff import handoff_rate  # noqa: E402
 from intake import (  # noqa: E402
     Intake,
@@ -307,7 +312,7 @@ async def entrypoint(ctx: JobContext) -> None:
         reflector = Reflector.from_env()
         if not reflector or not memory or not session_id:
             return None
-        if step.get("activity") in ("write", "dictation") and not any(
+        if requires_written_response(study_unit, step) and not any(
             t.role == "user" and t.text.startswith("[Written response]") for t in turns
         ):
             return None

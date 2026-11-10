@@ -1,5 +1,7 @@
 from copy import deepcopy
 
+import pytest
+
 from curriculum import StudyFlow, active_session, session_goals, sessions_for
 from reflect import Turn
 
@@ -145,3 +147,47 @@ async def test_spoken_dictation_is_not_evidence_of_spelling():
     flow.observe(Turn("user", "The dog runs."))
     await flow.change("finish")
     assert "[Written response]" in calls[0][2][-1].text
+
+
+@pytest.mark.parametrize("kind", ["exam", "practice"])
+async def test_mixed_session_with_writing_goal_requires_typed_evidence(kind):
+    unit = deepcopy(UNIT)
+    unit["goals"].append(
+        {"id": "u1-g2", "kind": "writing", "text": "Write an invitation"}
+    )
+    step = unit["content"]["sessions"][0]
+    step.update(kind=kind, activity="mixed", goal_ids=["u1-g1", "u1-g2"])
+    calls = []
+
+    async def save(*args):
+        calls.append(args)
+        return None
+
+    flow = StudyFlow(unit, save=save)
+    await flow.change("start")
+    flow.observe(Turn("user", "Come to my party."))
+    assert "typed" in (await flow.change("finish")).lower()
+    assert not calls
+    flow.record_written("Come to my party on Friday.")
+    flow.observe(Turn("user", "Come to my party on Friday."))
+    await flow.change("finish")
+    assert len(calls) == 1
+    assert calls[0][2][-1].text.startswith("[Written response]")
+
+
+async def test_writing_goal_in_another_session_does_not_block_speaking():
+    unit = deepcopy(UNIT)
+    unit["goals"].append(
+        {"id": "u1-g2", "kind": "writing", "text": "Write an invitation"}
+    )
+    calls = []
+
+    async def save(*args):
+        calls.append(args)
+        return None
+
+    flow = StudyFlow(unit, save=save)
+    await flow.change("start")
+    flow.observe(Turn("user", "Tea please."))
+    await flow.change("finish")
+    assert len(calls) == 1

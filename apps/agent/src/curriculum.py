@@ -70,6 +70,12 @@ def session_goals(unit: dict, step: dict | None = None) -> list[dict]:
     return [g for g in unit.get("goals", []) if g.get("id") in ids]
 
 
+def requires_written_response(unit: dict, step: dict) -> bool:
+    return step.get("activity") in ("write", "dictation") or any(
+        goal.get("kind") == "writing" for goal in session_goals(unit, step)
+    )
+
+
 Save = Callable[[dict, dict, list[Turn], str], Awaitable[dict | None]]
 
 
@@ -149,7 +155,7 @@ class StudyFlow:
                     return (
                         "No teaching evidence to assess. Continue at the current place."
                     )
-                if self.step.get("activity") in ("write", "dictation") and not any(
+                if requires_written_response(self.unit, self.step) and not any(
                     t.role == "user" and t.text.startswith("[Written response]")
                     for t in self.turns
                 ):

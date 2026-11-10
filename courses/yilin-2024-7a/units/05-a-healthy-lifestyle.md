@@ -70,6 +70,12 @@ activities:
     errors. Offer tapping or typing instead.
   - At the end, name one achievement and one next step; save the session before offering the next lesson, chat
     or a break.
+  - At read-discover, write-plan and practice, retrieve one earlier phrase before hints. Revisit it next
+    meeting and in the following unit; adjust after forgetting rather than assuming recall.
+  - In practice, prompt one self-repair before a brief model. Delay minor fluency corrections until the
+    learner finishes. During an exam, give feedback only after submission.
+  - For original texts, use mostly familiar words, explain only 2–3 essential new items and shorten sentences
+    if gist is unclear. Word count alone does not define reading difficulty.
 review:
   status: draft
   notes: "2026-11-10: workbook activity topics and word groups inspected directly. Earlier titles/grammar were
@@ -88,14 +94,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u5-g1
-      - u5-g2
-      - u5-g3
       - u5-g4
-      - u5-g5
-    brief: "Introduce the unit mission and sample the existing speaking and grammar goals without grading a
-      placement test. Teach 5–6 of these core words at a time: lifestyle, health, diet, delicious, carrot,
-      cucumber, chocolate, cheese, watermelon, tooth. Model a short exchange, then invite a new one. Optional
-      match_pairs: pair 3 words with clear meanings; use one in a new sentence."
+    brief: "Offer a brief catch-up or start now. Explain the unit mission, then focus on this small outcome: Talk
+      about kinds of food. Introduce 5 useful words from the core pool and model Countable and uncountable
+      nouns (incl. how many / how much). Practise together, then request one independent exchange using this
+      pattern. Optional match_pairs: match 3 word meanings, then use one in a new sentence. Later unit goals
+      are not required here."
     minutes: 12
   - id: word-lab
     title: Sound, meaning and clues
@@ -208,9 +212,9 @@ sessions:
       - u5-g4
       - u5-g5
     brief: Plan a class party menu. Ask about preferences, agree on amounts with how much/how many and explain one
-      routine-friendly choice; swap host and guest. Briefly recall the unit's core words and grammar. Model
-      once only if needed, then change a constraint for independent transfer. Let the learner ask their own
-      question and choose the outcome; do not force a fixed number of dialogue turns.
+      routine-friendly choice; swap host and guest. Model once only if needed, then change a constraint for
+      independent transfer. Let the learner ask their own question and choose the outcome; do not force a
+      fixed number of dialogue turns. Retell once with familiar words; delay minor corrections until the end.
     minutes: 18
   - id: recall
     title: Retrieve, repair, reconnect
@@ -218,18 +222,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u5-g1
-      - u5-g2
-      - u5-g3
       - u5-g4
-      - u5-g5
-      - u5-g6
-      - u5-g7
-      - u5-g8
-      - u5-g9
-    brief: "Retrieve this unit plus one earlier theme (for Unit 1, use familiar primary-school language). Play
-      Sentence rescue: fill_blank on Countable and uncountable nouns (incl. how many / how much), then make a
-      new spoken sentence without the card. Recall one read detail, spell one heard phrase, revise one typed
-      sentence and explain a choice. Revisit gaps without pretending this is an exam."
+    brief: Retrieve one current-unit situation and one earlier theme without showing answers first. Use Sentence
+      rescue for Countable and uncountable nouns (incl. how many / how much), then remove the card and ask for
+      a new spoken example. Focus scoring on this session's two goals. Briefly revisit one other weak skill if
+      needed; the full multi-skill check comes next. Let the learner choose a familiar topic and retry it with
+      less support.
     minutes: 10
   - id: check
     title: Your independent mission
@@ -254,6 +252,8 @@ sessions:
 sources:
   - title: 用户提供《译林版七上2024 .xlsx》：单词跟读 E184:G236；阅读与问答 A10:K11；写作练习 D10:I11；看图说话 D6:M6；情景对话 E10:Q11
     date: 2026-11-10
+  - title: "IES: Organizing Instruction and Study to Improve Student Learning (2007)"
+    url: https://ies.ed.gov/ncee/wwc/PracticeGuide/1
 ---
 
 # Unit 5 · A healthy lifestyle（健康的生活方式）

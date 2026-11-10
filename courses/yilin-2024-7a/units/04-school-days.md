@@ -75,6 +75,12 @@ activities:
     errors. Offer tapping or typing instead.
   - At the end, name one achievement and one next step; save the session before offering the next lesson, chat
     or a break.
+  - At read-discover, write-plan and practice, retrieve one earlier phrase before hints. Revisit it next
+    meeting and in the following unit; adjust after forgetting rather than assuming recall.
+  - In practice, prompt one self-repair before a brief model. Delay minor fluency corrections until the
+    learner finishes. During an exam, give feedback only after submission.
+  - For original texts, use mostly familiar words, explain only 2–3 essential new items and shorten sentences
+    if gist is unclear. Word count alone does not define reading difficulty.
 review:
   status: draft
   notes: "2026-11-10: workbook activity topics and word groups inspected directly. Earlier titles/grammar were
@@ -93,15 +99,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u4-g1
-      - u4-g2
-      - u4-g3
       - u4-g4
-      - u4-g5
-      - u4-g6
-    brief: "Introduce the unit mission and sample the existing speaking and grammar goals without grading a
-      placement test. Teach 5–6 of these core words at a time: activity, homework, housework, weekday,
-      practise, usually, seldom, field trip, teamwork, tiring. Model a short exchange, then invite a new one.
-      Optional match_pairs: pair 3 words with clear meanings; use one in a new sentence."
+    brief: "Offer a brief catch-up or start now. Explain the unit mission, then focus on this small outcome:
+      Describe a school day and timetable. Introduce 5 useful words from the core pool and model Prepositions
+      of time (in/on/at). Practise together, then request one independent exchange using this pattern.
+      Optional match_pairs: match 3 word meanings, then use one in a new sentence. Later unit goals are not
+      required here."
     minutes: 12
   - id: word-lab
     title: Sound, meaning and clues
@@ -220,9 +223,10 @@ sessions:
       - u4-g5
       - u4-g6
     brief: Plan a fictional family day with one time conflict and shared housework. Negotiate activities,
-      frequency and timings, then explain what each person can learn. Briefly recall the unit's core words and
-      grammar. Model once only if needed, then change a constraint for independent transfer. Let the learner
-      ask their own question and choose the outcome; do not force a fixed number of dialogue turns.
+      frequency and timings, then explain what each person can learn. Model once only if needed, then change a
+      constraint for independent transfer. Let the learner ask their own question and choose the outcome; do
+      not force a fixed number of dialogue turns. Retell once with familiar words; delay minor corrections
+      until the end.
     minutes: 18
   - id: recall
     title: Retrieve, repair, reconnect
@@ -230,19 +234,11 @@ sessions:
     activity: mixed
     goal_ids:
       - u4-g1
-      - u4-g2
-      - u4-g3
       - u4-g4
-      - u4-g5
-      - u4-g6
-      - u4-g7
-      - u4-g8
-      - u4-g9
-      - u4-g10
-    brief: "Retrieve this unit plus one earlier theme (for Unit 1, use familiar primary-school language). Play
-      Sentence rescue: fill_blank on Prepositions of time (in/on/at), then make a new spoken sentence without
-      the card. Recall one read detail, spell one heard phrase, revise one typed sentence and explain a
-      choice. Revisit gaps without pretending this is an exam."
+    brief: Retrieve one current-unit situation and one earlier theme without showing answers first. Use Sentence
+      rescue for Prepositions of time (in/on/at), then remove the card and ask for a new spoken example. Focus
+      scoring on this session's two goals. Briefly revisit one other weak skill if needed; the full
+      multi-skill check comes next. Let the learner choose a familiar topic and retry it with less support.
     minutes: 10
   - id: check
     title: Welcome-day checkpoint
@@ -268,6 +264,8 @@ sessions:
 sources:
   - title: 用户提供《译林版七上2024 .xlsx》：单词跟读 E134:G183；阅读与问答 A8:K9；写作练习 D8:I9；看图说话 D5:M5；情景对话 E8:Q9
     date: 2026-11-10
+  - title: "IES: Organizing Instruction and Study to Improve Student Learning (2007)"
+    url: https://ies.ed.gov/ncee/wwc/PracticeGuide/1
 ---
 
 # Unit 4 · School days（校园时光）

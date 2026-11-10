@@ -71,6 +71,12 @@ activities:
     errors. Offer tapping or typing instead.
   - At the end, name one achievement and one next step; save the session before offering the next lesson, chat
     or a break.
+  - At read-discover, write-plan and practice, retrieve one earlier phrase before hints. Revisit it next
+    meeting and in the following unit; adjust after forgetting rather than assuming recall.
+  - In practice, prompt one self-repair before a brief model. Delay minor fluency corrections until the
+    learner finishes. During an exam, give feedback only after submission.
+  - For original texts, use mostly familiar words, explain only 2–3 essential new items and shorten sentences
+    if gist is unclear. Word count alone does not define reading difficulty.
 review:
   status: draft
   notes: "2026-11-10: workbook activity topics and word groups inspected directly. Earlier titles/grammar were
@@ -89,14 +95,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u6-g1
-      - u6-g2
-      - u6-g3
       - u6-g4
-      - u6-g5
-    brief: "Introduce the unit mission and sample the existing speaking and grammar goals without grading a
-      placement test. Teach 5–6 of these core words at a time: blouse, jacket, jeans, scarf, tie, style,
-      comfortable, suitable, colour, size. Model a short exchange, then invite a new one. Optional
-      match_pairs: pair 3 words with clear meanings; use one in a new sentence."
+    brief: "Offer a brief catch-up or start now. Explain the unit mission, then focus on this small outcome: Name
+      and describe clothes and colours. Introduce 5 useful words from the core pool and model Asking
+      questions: yes/no questions, wh-questions, alternative (choice) questions. Practise together, then
+      request one independent exchange using this pattern. Optional match_pairs: match 3 word meanings, then
+      use one in a new sentence. Later unit goals are not required here."
     minutes: 12
   - id: word-lab
     title: Sound, meaning and clues
@@ -212,10 +216,10 @@ sessions:
       - u6-g4
       - u6-g5
     brief: Interview a fictional guest about one garment they choose to share. Ask about use, material and
-      personal meaning; compare preferences without generalising to a whole country. Briefly recall the unit's
-      core words and grammar. Model once only if needed, then change a constraint for independent transfer.
-      Let the learner ask their own question and choose the outcome; do not force a fixed number of dialogue
-      turns.
+      personal meaning; compare preferences without generalising to a whole country. Model once only if
+      needed, then change a constraint for independent transfer. Let the learner ask their own question and
+      choose the outcome; do not force a fixed number of dialogue turns. Retell once with familiar words;
+      delay minor corrections until the end.
     minutes: 18
   - id: recall
     title: Retrieve, repair, reconnect
@@ -223,19 +227,12 @@ sessions:
     activity: mixed
     goal_ids:
       - u6-g1
-      - u6-g2
-      - u6-g3
       - u6-g4
-      - u6-g5
-      - u6-g6
-      - u6-g7
-      - u6-g8
-      - u6-g9
-    brief: "Retrieve this unit plus one earlier theme (for Unit 1, use familiar primary-school language). Play
-      Sentence rescue: fill_blank on Asking questions: yes/no questions, wh-questions, alternative (choice)
-      questions, then make a new spoken sentence without the card. Recall one read detail, spell one heard
-      phrase, revise one typed sentence and explain a choice. Revisit gaps without pretending this is an
-      exam."
+    brief: "Retrieve one current-unit situation and one earlier theme without showing answers first. Use Sentence
+      rescue for Asking questions: yes/no questions, wh-questions, alternative (choice) questions, then remove
+      the card and ask for a new spoken example. Focus scoring on this session's two goals. Briefly revisit
+      one other weak skill if needed; the full multi-skill check comes next. Let the learner choose a familiar
+      topic and retry it with less support."
     minutes: 10
   - id: check
     title: Your independent mission
@@ -260,6 +257,8 @@ sessions:
 sources:
   - title: 用户提供《译林版七上2024 .xlsx》：单词跟读 E237:G291；阅读与问答 A12:K13；写作练习 D12:I13；看图说话 D7:M7；情景对话 E12:Q13
     date: 2026-11-10
+  - title: "IES: Organizing Instruction and Study to Improve Student Learning (2007)"
+    url: https://ies.ed.gov/ncee/wwc/PracticeGuide/1
 ---
 
 # Unit 6 · My clothes, my style（我的服装，我的风格）
