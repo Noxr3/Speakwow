@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from curriculum import active_session, session_goals
 from promptdata import as_data
 
 MASTERED_AT = 0.8
@@ -43,8 +44,11 @@ def lesson_section(snapshot: dict | None) -> str | None:
     if not unit:
         return None
     course = snapshot["current_course"]
-    scores = unit.get("goal_scores") or {}
-    goals = sorted(unit_goals(unit), key=lambda g: scores.get(g["id"], 0))
+    step = active_session(unit) or {}
+    scores = (unit.get("session_progress") or {}).get(step.get("id"), {}).get(
+        "scores"
+    ) or {}
+    goals = sorted(session_goals(unit), key=lambda g: scores.get(g["id"], 0))
     goal_lines = "\n".join(
         f"- [{g['id']}] ({g.get('kind', 'skill')}) {g.get('text', '')}"
         f" (so far: {round(float(scores.get(g['id'], 0)) * 100)}%)"
@@ -81,6 +85,14 @@ def lesson_section(snapshot: dict | None) -> str | None:
             f"Course: {course.get('title')}. Current unit: {header}.",
             f"Unit mastery so far: {round(float(unit.get('mastery') or 0) * 100)}% "
             f"after {unit.get('sessions') or 0} lessons.",
+            f"Teaching session: {(active_session(unit) or {}).get('title', 'Complete')}",
+            "Last work in this session: "
+            + str(
+                (unit.get("session_progress") or {})
+                .get(step.get("id"), {})
+                .get("summary")
+                or "No prior work recorded."
+            ),
             "Goals, weakest first:",
             goal_lines or "- (no goals listed: practise the unit's topic)",
             *material,
@@ -88,8 +100,8 @@ def lesson_section(snapshot: dict | None) -> str | None:
     )
     return f"""## Today's lesson
 This is a lesson from the student's course. Teach it the way you always
-talk: through real conversation, not drills or lectures, and in the order of
-"How the conversation goes" above.
+talk: through short explanations, modelling, practice and real conversation,
+in the order of "How the conversation goes" above.
 - Check learning by having them use what they learn (say it, explain it,
   apply it), never by asking "do you understand?".
 <lesson_plan>

@@ -1,40 +1,10 @@
-import localFont from 'next/font/local';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { AccountLinks } from '@/components/app/account-links';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { GuestMerge } from '@/components/auth/guest-merge';
-import { cn } from '@/lib/shadcn/utils';
 import { getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
-
-// One typeface throughout: CommitMono.
-const commitMono = localFont({
-  display: 'swap',
-  variable: '--font-commit-mono',
-  src: [
-    {
-      path: '../fonts/CommitMono-400-Regular.otf',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/CommitMono-700-Regular.otf',
-      weight: '700',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/CommitMono-400-Italic.otf',
-      weight: '400',
-      style: 'italic',
-    },
-    {
-      path: '../fonts/CommitMono-700-Italic.otf',
-      weight: '700',
-      style: 'italic',
-    },
-  ],
-});
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -47,7 +17,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const { pageTitle, pageDescription, logo } = appConfig;
 
   return (
-    <html lang="en" className={cn(commitMono.variable, 'dark scroll-smooth font-sans antialiased')}>
+    <html lang="en" className="dark font-sans antialiased">
       <head>
         {styles && <style>{styles}</style>}
         <title>{pageTitle}</title>
@@ -55,15 +25,23 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className="overflow-x-hidden">
         <AuthProvider>
-          <header className="fixed top-0 left-0 z-50 flex w-full flex-row items-center justify-between p-4 md:p-6">
-            <Link href="/" className="scale-100 transition-transform duration-300 hover:scale-110">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logo} alt="Speakwow Logo" className="h-6 w-auto" />
-            </Link>
-            <AccountLinks />
+          <a href="#main-content" className="skip-link">
+            Skip to content
+          </a>
+          <header className="app-header">
+            <div className="app-header-inner">
+              <Link href="/" className="brand-link" aria-label="Speakwow home">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logo} alt="" className="h-7 w-7" />
+                <span className="text-xl font-semibold tracking-tight">Speakwow</span>
+              </Link>
+              <AccountLinks />
+            </div>
           </header>
 
-          {children}
+          <main id="main-content" tabIndex={-1}>
+            {children}
+          </main>
           <GuestMerge />
         </AuthProvider>
       </body>

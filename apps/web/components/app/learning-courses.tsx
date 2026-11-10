@@ -1,17 +1,7 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { type CatalogCourse, CourseCatalog } from '@/components/app/course-catalog';
 import { GlassPanel } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import {
-  COURSES_PER_PAGE,
-  type CatalogParams,
-  OFFERED_SUBJECTS,
-  catalogHref,
-  catalogParams,
-  catalogPattern,
-} from '@/lib/course-catalog';
 
 const STATUS_LABEL: Record<string, string> = {
   learning: 'Learning',
@@ -22,40 +12,21 @@ const STATUS_LABEL: Record<string, string> = {
 export async function LearningCourses({
   supabase,
   userId,
-  params,
-  enroll,
   setCurrentUnit,
 }: {
   supabase: SupabaseClient;
   userId: string;
-  params: CatalogParams;
-  enroll: (form: FormData) => Promise<void>;
   setCurrentUnit: (form: FormData) => Promise<void>;
 }) {
-  const { q, page, from, to } = catalogParams(params);
-  let query = supabase
-    .from('courses')
-    .select('id, title, description, subject, publisher, units:course_units(count)', {
-      count: 'exact',
-    });
-  query = query.in('subject', OFFERED_SUBJECTS);
-  if (q) query = query.ilike('search_text', catalogPattern(q));
-  const [catalog, enrollment] = await Promise.all([
-    query.order('title').order('id').range(from, to),
-    supabase
-      .from('enrollments')
-      .select('course_id, current_unit_id, course:courses(title)')
-      .eq('student_id', userId)
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-  if (catalog.error || enrollment.error)
-    throw new Error('Could not load courses. Please try again.');
-  const total = catalog.count ?? 0;
-  const pages = Math.max(1, Math.ceil(total / COURSES_PER_PAGE));
-  if (page > pages) redirect(catalogHref(q, pages));
+  const enrollment = await supabase
+    .from('enrollments')
+    .select('course_id, current_unit_id, course:courses(title)')
+    .eq('student_id', userId)
+    .eq('status', 'active')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (enrollment.error) throw new Error('Could not load your course. Please try again.');
   const active = enrollment.data;
   const course = active?.course as unknown as { title: string } | null;
   const unitsResult = active
@@ -93,16 +64,16 @@ export async function LearningCourses({
                 <p className="text-muted-foreground text-sm">
                   {current ? `Unit ${current.position} · ${current.title}` : 'Choose a unit below'}
                 </p>
-                <p className="text-xs text-white/45">
+                <p className="text-muted-foreground text-xs">
                   {mastered} of {units.length} units mastered
                 </p>
               </div>
               <Button asChild className="shrink-0 self-start rounded-full px-5 sm:self-auto">
-                <Link href="/">Continue →</Link>
+                <Link href="/">Continue lesson</Link>
               </Button>
             </div>
             <details className="group border-t border-white/10 pt-4">
-              <summary className="text-primary cursor-pointer text-sm">
+              <summary className="text-primary flex min-h-11 cursor-pointer items-center text-sm">
                 View units & progress
               </summary>
               <ol className="mt-4 space-y-2">
@@ -114,7 +85,7 @@ export async function LearningCourses({
                       key={u.id}
                       className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl p-4 text-sm ${isCurrent ? 'border border-white/25 bg-white/[0.08]' : 'bg-white/[0.03]'}`}
                     >
-                      <span className="label-mono text-xs text-white/45">
+                      <span className="label-caption text-muted-foreground text-xs">
                         {u.position.toString().padStart(2, '0')}
                       </span>
                       <span className="text-foreground min-w-0 flex-1 break-words">{u.title}</span>
@@ -131,7 +102,7 @@ export async function LearningCourses({
                           <input type="hidden" name="unit_id" value={u.id} />
                           <button
                             type="submit"
-                            className="text-primary px-2 py-1 text-xs underline"
+                            className="text-primary inline-flex min-h-11 items-center px-2 text-sm underline"
                           >
                             Study
                           </button>
@@ -142,17 +113,25 @@ export async function LearningCourses({
                 })}
               </ol>
             </details>
+            <Link
+              href="/courses"
+              className="text-primary inline-flex min-h-11 items-center text-sm"
+            >
+              Browse courses
+            </Link>
           </GlassPanel>
         </div>
       )}
-      <CourseCatalog
-        courses={(catalog.data ?? []) as CatalogCourse[]}
-        total={total}
-        query={q}
-        page={page}
-        activeCourseId={active?.course_id}
-        enroll={enroll}
-      />
+      {!active && (
+        <GlassPanel title="Your courses">
+          <p className="text-muted-foreground text-base">
+            Choose a course to begin learning with your teacher.
+          </p>
+          <Button asChild>
+            <Link href="/courses">Browse courses</Link>
+          </Button>
+        </GlassPanel>
+      )}
     </div>
   );
 }

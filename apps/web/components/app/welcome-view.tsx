@@ -1,174 +1,169 @@
+'use client';
+
 import Link from 'next/link';
-import { CaretDownIcon } from '@phosphor-icons/react/dist/ssr';
+import {
+  ArrowLeftRight,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  MessageCircle,
+  Play,
+} from 'lucide-react';
 import type { PersonaSummary } from '@speakwow/shared';
-import GlassSurface from '@/components/GlassSurface';
-import Magnet from '@/components/Magnet';
-import type { CourseSpot } from '@/components/app/app';
+import { AppBackdrop } from '@/components/app/app-backdrop';
+import { UnitCarousel } from '@/components/app/unit-carousel';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/shadcn/utils';
-import type { CallMode } from '@/lib/token-source';
-import ColorBends from '../ColorBends';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
+import { courseLevelLabel } from '@/lib/course-categories';
+import type { HomeLibrary } from '@/lib/study-plan';
 
 interface WelcomeViewProps {
   personas: PersonaSummary[];
   persona: PersonaSummary;
   onSelectPersona: (id: string) => void;
-  course: CourseSpot | null;
-  mode: CallMode;
-  onSelectMode: (mode: CallMode) => void;
-  onStartCall: () => void;
+  library: HomeLibrary;
+  busy: boolean;
+  onStartCall: (unitId?: string) => void;
 }
 
-/**
- * The first screen, kept as plain as the very first Speakwow: the name, one
- * line, and one button. The caret beside it switches teacher.
- */
 export const WelcomeView = ({
   personas,
   persona,
   onSelectPersona,
-  course,
-  mode,
-  onSelectMode,
+  library,
+  busy,
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
+  const course = library.courses.find((c) => c.id === library.selectedId);
+  const startButton = (unitId?: string, continuing = false) => (
+    <Button
+      size="lg"
+      variant={course ? 'default' : 'outline'}
+      disabled={busy}
+      aria-busy={busy}
+      onClick={() => onStartCall(unitId)}
+      className="w-full disabled:cursor-wait"
+    >
+      {!busy &&
+        (course ? (
+          <Play size={18} fill="currentColor" aria-hidden="true" />
+        ) : (
+          <MessageCircle size={18} aria-hidden="true" />
+        ))}
+      {busy
+        ? 'Connecting…'
+        : course
+          ? continuing
+            ? 'Continue lesson'
+            : 'Start lesson'
+          : 'Free chat'}
+    </Button>
+  );
+  const teacher = (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        disabled={busy}
+        className="teacher-trigger"
+        aria-label={'Choose a teacher, currently ' + persona.display_name}
+      >
+        <span className="teacher-monogram" aria-hidden="true">
+          {persona.display_name[0]}
+        </span>
+        With {persona.display_name}
+        <ChevronDown size={16} className="text-muted-foreground" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="center"
+        className="max-h-[min(28rem,var(--radix-dropdown-menu-content-available-height))] w-88 max-w-[calc(100vw-2rem)] overflow-y-auto"
+      >
+        {personas.map((p) => (
+          <DropdownMenuItem
+            key={p.id}
+            onSelect={() => onSelectPersona(p.id)}
+            className="items-start gap-3 px-3 py-3"
+          >
+            <span className="teacher-monogram mt-0.5" aria-hidden="true">
+              {p.display_name[0]}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">{p.display_name}</span>
+              <span className="text-muted-foreground mt-1 block text-sm leading-relaxed">
+                {p.tagline_en}
+              </span>
+            </span>
+            {persona.id === p.id && (
+              <Check size={16} className="text-primary mt-0.5 shrink-0" aria-hidden="true" />
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
   return (
-    <div ref={ref}>
-      <section className="flex flex-col items-center justify-center gap-6 text-center">
-        <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/wow5-logo-white.png" alt="" className="h-10 w-auto" />
-          <span className="text-foreground font-mono text-2xl font-bold tracking-tight">
-            Speakwow
-          </span>
-        </div>
-
-        <p className="text-foreground text-sm md:text-base">A teacher who remembers you.</p>
-
-        <div className="mt-2 flex items-stretch">
-          <Magnet padding={10} disabled={false} magnetStrength={10}>
-            <button
-              type="button"
-              onClick={onStartCall}
-              className="cursor-pointer rounded-full transition-transform duration-400 hover:scale-105 active:scale-95"
+    <div ref={ref} className="home-stage">
+      <div className="home-column">
+        <div className="mb-6">
+          <LiquidGlass radius={28} tint={0.65}>
+            <Link
+              href="/courses"
+              className="course-capsule"
+              aria-label={course ? 'Change course, currently ' + course.title : 'Choose a course'}
             >
-              <GlassSurface
-                className="w-60 rounded-full font-mono text-xs uppercase"
-                displace={0.5}
-                width={240}
-                height={48}
-                distortionScale={-180}
-                redOffset={70}
-                borderRadius={50}
-                greenOffset={10}
-                blueOffset={20}
-                brightness={50}
-                opacity={0.63}
-                mixBlendMode="screen"
-                forceDark
-              >
-                <span>Talk with {persona.display_name}</span>
-              </GlassSurface>
-            </button>
-          </Magnet>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Choose a teacher"
-                className="ml-2 flex h-12 w-10 cursor-pointer items-center justify-center rounded-full border border-white/20 text-white transition-transform duration-300 hover:scale-105 active:scale-95"
-              >
-                <CaretDownIcon size={16} weight="bold" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              collisionPadding={12}
-              className="max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-60 overflow-y-auto"
-            >
-              {personas.map((p) => (
-                <DropdownMenuItem
-                  key={p.id}
-                  onSelect={() => onSelectPersona(p.id)}
-                  className={persona.id === p.id ? 'bg-accent' : ''}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{p.display_name}</span>
-                    {p.specialty_en && (
-                      <span className="text-muted-foreground text-xs">{p.specialty_en}</span>
-                    )}
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {course && (
-          <div className="flex gap-4 font-mono text-xs" role="group" aria-label="What to do">
-            {(
-              [
-                ['course', `Lesson · Unit ${course.unitPosition}`],
-                ['free', 'Free talk'],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => onSelectMode(value)}
-                aria-pressed={mode === value}
-                className={cn(
-                  'cursor-pointer underline-offset-4 transition-colors',
-                  mode === value ? 'text-foreground underline' : 'text-white/50 hover:text-white'
+              <div className="min-w-0 flex-1">
+                {course && (
+                  <p className="text-muted-foreground text-xs font-medium">
+                    Course · {courseLevelLabel(course)}
+                  </p>
                 )}
-              >
-                {label}
-              </button>
-            ))}
+                <h1 className="mt-0.5 text-base leading-snug font-semibold sm:text-lg">
+                  {course?.title ?? 'Choose a course'}
+                </h1>
+              </div>
+              {course ? (
+                <ArrowLeftRight
+                  size={19}
+                  className="text-muted-foreground shrink-0"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ChevronRight size={20} className="text-primary shrink-0" aria-hidden="true" />
+              )}
+            </Link>
+          </LiquidGlass>
+        </div>
+        {library.error && (
+          <p role="alert" className="text-muted-foreground mb-4 text-sm">
+            {library.error}
+          </p>
+        )}
+        {course ? (
+          <UnitCarousel
+            key={course.id}
+            course={course}
+            busy={busy}
+            startButton={startButton}
+            teacher={teacher}
+          />
+        ) : (
+          <div className="flex flex-col items-center gap-6">
+            <div className="text-muted-foreground flex w-full items-center gap-4 px-6 text-sm">
+              <span className="bg-border h-px flex-1" aria-hidden="true" />
+              <span>or</span>
+              <span className="bg-border h-px flex-1" aria-hidden="true" />
+            </div>
+            {startButton()}
+            {teacher}
           </div>
         )}
-
-        <Link
-          href="/courses"
-          className="flex max-w-[85vw] items-center gap-1.5 font-mono text-xs text-white/60 underline-offset-4 transition-colors hover:text-white hover:underline"
-        >
-          {course ? (
-            <>
-              <span className="min-w-0 truncate">{course.title}</span>
-              <span className="shrink-0">· change course</span>
-            </>
-          ) : (
-            'Choose a course'
-          )}
-        </Link>
-
-        {/* The teacher talks as themselves and never brings up being an AI,
-            so the page says it before every call. */}
-        <p className="font-mono text-xs text-white/40">{persona.display_name} is an AI teacher.</p>
-      </section>
-
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <ColorBends
-          colors={['#00ff1e', '#2c7be2', '#501b35']}
-          rotation={0}
-          speed={0.2}
-          scale={1}
-          frequency={1}
-          warpStrength={0.95}
-          mouseInfluence={1}
-          parallax={0.5}
-          noise={0.1}
-          transparent
-          autoRotate={0}
-        />
       </div>
+      <AppBackdrop />
     </div>
   );
 };

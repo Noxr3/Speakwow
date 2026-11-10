@@ -31,3 +31,6 @@ coverage/
 
 # supabase CLI link state (project ref, pooler URL)
 supabase/.temp/
+
+# Local visual verification
+/artifacts/

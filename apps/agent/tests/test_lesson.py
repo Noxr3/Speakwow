@@ -21,6 +21,7 @@ UNIT = {
     "goals": GOALS,
     "content": {"vocabulary": ["hobby", "classmate"], "grammar": ["be verbs"]},
     "goal_scores": {"u1-g1": 0.9},
+    "session_progress": {"learn": {"scores": {"u1-g1": 0.9}}},
     "mastery": 0.45,
     "sessions": 2,
 }
@@ -45,8 +46,8 @@ def test_lesson_plan_lists_weakest_goal_first_and_course_mode_uses_it() -> None:
     # A course student with nothing remembered yet is meeting the teacher for
     # the first time: the lesson is only offered, after getting to know them.
     first = build_instructions(FRANK, SNAPSHOT, mode="course")
-    assert "a first taste of today's lesson topic" in first
-    assert first.index("1. Get to know each other") < first.index("a first taste")
+    assert "if they want to start, start immediately" in first
+    assert first.index("1. Catch up") < first.index("2. Agree")
     assert lesson_section({"current_course": None}) is None
     assert current_unit({}) is None
 

@@ -9,6 +9,7 @@ export type CallMode = 'free' | 'course';
 export interface CallChoice {
   persona: string;
   mode: CallMode;
+  course_id?: string | null;
 }
 
 /**
@@ -18,7 +19,9 @@ export interface CallChoice {
  */
 export function getAgentTokenSource(choiceRef: { current: CallChoice }) {
   const endpoint = process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT || '/api/connection-details';
-  return TokenSource.custom(async () => {
+  // A function-backed literal fetches fresh credentials for every start, including
+  // after guest sign-in or a course change; prepared tokens must never be reused.
+  return TokenSource.literal(async () => {
     const url = new URL(endpoint, window.location.origin);
     const res = await fetch(url.toString(), {
       method: 'POST',

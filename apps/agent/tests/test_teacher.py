@@ -139,7 +139,10 @@ def test_a_lesson_is_agreed_after_the_catch_up() -> None:
         },
     }
     lesson = build_instructions(FRANK, course, mode="course")
-    assert "link today's lesson topic" in lesson and "## Today's lesson" in lesson
+    assert (
+        "Agree on the current session's goal" in lesson
+        and "## Today's lesson" in lesson
+    )
     # Course mode without a unit is free talk.
     assert "today's lesson topic" not in build_instructions(
         FRANK, SNAPSHOT, mode="course"

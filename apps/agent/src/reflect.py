@@ -211,8 +211,9 @@ class Reflector:
         goals: list[dict] | None = None,
         student: str | None = None,
         memories: list[dict] | None = None,
+        min_student_turns: int = MIN_STUDENT_TURNS,
     ) -> Reflection | None:
-        if student_turns(turns) < MIN_STUDENT_TURNS:
+        if student_turns(turns) < min_student_turns:
             return None
         goals = goals or []
         goals_block = (

@@ -77,6 +77,20 @@ export async function POST(req: Request) {
     }
 
     const mode = body.mode === 'course' && user ? 'course' : 'free';
+    let courseId: string | undefined;
+    let unitId: string | undefined;
+    if (mode === 'course' && supabase && user) {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select('course_id,current_unit_id')
+        .eq('student_id', user.id)
+        .eq('course_id', typeof body.course_id === 'string' ? body.course_id : '')
+        .maybeSingle();
+      if (error || !data?.current_unit_id)
+        return refuse(409, 'course_unavailable', 'Choose your course again before starting.');
+      courseId = data.course_id;
+      unitId = data.current_unit_id;
+    }
     // || not ??: a guest (anonymous user) has an empty email, not none
     const participantName =
       (user?.user_metadata?.display_name as string | undefined) ||
@@ -88,6 +102,8 @@ export async function POST(req: Request) {
       agent: persona.display_name, // read by agents older than persona ids
       student_id: user?.id,
       mode,
+      course_id: courseId,
+      unit_id: unitId,
       byok: sealedKey,
       native_language: languageTag(body.native_language),
     };

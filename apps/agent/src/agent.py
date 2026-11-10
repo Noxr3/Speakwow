@@ -36,6 +36,12 @@ from livekit.plugins import noise_cancellation  # noqa: E402
 
 from byok import UserKey, open_sealed, secret_from_env  # noqa: E402
 from coach import Advice, Coach, build_state, warm_up_turns, warming_up  # noqa: E402
+from curriculum import (  # noqa: E402
+    StudyFlow,
+    make_lesson_tool,
+    requires_written_response,
+    session_goals,
+)
 from handoff import handoff_rate  # noqa: E402
 from intake import (  # noqa: E402
     Intake,
@@ -51,6 +57,7 @@ from intake import (  # noqa: E402
 )
 from lesson import current_unit, unit_goals  # noqa: E402
 from life import news_today  # noqa: E402
+from materials import make_material_tool  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
 from pacing import (  # noqa: E402
     BREAK_AFTER_S,
@@ -141,6 +148,8 @@ class JobRequest:
     persona_given: bool = False
     # the browser's language ("zh-CN"): the onboarding interview speaks it
     native_language: str | None = None
+    course_id: str | None = None
+    unit_id: str | None = None
 
 
 def parse_job_metadata(raw: str | None) -> JobRequest:
@@ -171,6 +180,8 @@ def parse_job_metadata(raw: str | None) -> JobRequest:
         channel,
         persona_given,
         language_tag(meta.get("native_language")),
+        meta.get("course_id") if is_uuid(meta.get("course_id")) else None,
+        meta.get("unit_id") if is_uuid(meta.get("unit_id")) else None,
     )
 
 
@@ -237,6 +248,15 @@ async def entrypoint(ctx: JobContext) -> None:
         snapshot = await memory.load_snapshot(student_id)
         if snapshot is not None and (texts := await memory.recent_texts(student_id)):
             snapshot["recent_texts"] = texts
+    if job.mode == "course" and job.course_id and job.unit_id and memory and student_id:
+        selected = await memory.load_study_course(
+            student_id, job.course_id, job.unit_id
+        )
+        if selected:
+            snapshot = {**(snapshot or {}), "current_course": selected}
+        else:
+            ctx.shutdown(reason="selected course could not be loaded")
+            return
     unit = current_unit(snapshot) if job.mode == "course" else None
     mode = "course" if unit else "free"
     if memory and student_id:
@@ -263,8 +283,10 @@ async def entrypoint(ctx: JobContext) -> None:
     # interview, in their own language (intake.py).
     intake = None
     signed_in = bool(memory and student_id)
-    if job.channel != "phone" and needs_intake(
-        snapshot, has_learning_context(snapshot), signed_in
+    if (
+        not unit
+        and job.channel != "phone"
+        and needs_intake(snapshot, has_learning_context(snapshot), signed_in)
     ):
         tag = job.native_language
         intake = Intake(
@@ -286,13 +308,42 @@ async def entrypoint(ctx: JobContext) -> None:
         min_interruption_duration=0.3,
     )
 
+    async def save_study(study_unit, step, turns, attempt_id):
+        reflector = Reflector.from_env()
+        if not reflector or not memory or not session_id:
+            return None
+        if requires_written_response(study_unit, step) and not any(
+            t.role == "user" and t.text.startswith("[Written response]") for t in turns
+        ):
+            return None
+        goals = session_goals(study_unit, step)
+        if step.get("kind") == "exam":
+            goals = [
+                {
+                    **g,
+                    "text": g["text"]
+                    + " (Independent assessment: score only fresh unassisted answers; omit a goal if the teacher supplied the answer or a hint.)",
+                }
+                for g in goals
+            ]
+        reflection = await reflector.reflect(
+            turns, persona.display_name, goals, memories=[], min_student_turns=1
+        )
+        if not reflection or not reflection.goal_scores:
+            return None
+        return await memory.record_study_attempt(
+            session_id, study_unit["id"], step["id"], attempt_id, reflection
+        )
+
+    study = StudyFlow(unit, save=save_study) if unit else None
+
     # set when the interview's memories were written during this call
     intake_saved = [False]
 
     if memory and student_id and session_id:
         lesson = (
             {"course_id": snapshot["current_course"]["id"], "unit": unit}
-            if unit
+            if unit and not study
             else None
         )
 
@@ -307,16 +358,31 @@ async def entrypoint(ctx: JobContext) -> None:
             )
             memory_snapshot = review_memories(fresh.get("memories") if fresh else None)
             reflector = Reflector.from_env()
-            reflection = (
-                await reflector.reflect(
-                    turns,
-                    persona.display_name,
-                    unit_goals(unit),
-                    memories=memory_snapshot,
-                )
-                if reflector
-                else None
-            )
+
+            async def score_pending():
+                if study:
+                    async with study.lock:
+                        if study.step and study.turns:
+                            await save_study(
+                                study.unit,
+                                study.step,
+                                list(study.turns),
+                                study.attempt_id,
+                            )
+
+            async def reflect_call():
+                if reflector:
+                    return await reflector.reflect(
+                        turns,
+                        persona.display_name,
+                        [] if study else unit_goals(unit),
+                        memories=memory_snapshot,
+                    )
+                return None
+
+            # Both model calls share the shutdown budget; the transcript is
+            # already durable, and two sequential 30s calls exceed that budget.
+            reflection, _ = await asyncio.gather(reflect_call(), score_pending())
             await memory.finish_session(
                 student_id=student_id,
                 session_id=session_id,
@@ -370,10 +436,29 @@ async def entrypoint(ctx: JobContext) -> None:
             make_sticker_tool(STICKERS),
             make_widget_tool(ledger=cards),
             make_mark_tool(cards),
+            make_material_tool(),
         ]
     )
     if intake:
         tools.append(make_profile_tool(intake, save_profile))
+
+    async def study_changed():
+        await teacher.set_study_flow(study)
+        if job.channel != "phone":
+            await ctx.room.local_participant.publish_data(
+                json.dumps(
+                    {
+                        "phase": study.phase,
+                        "title": study.unit.get("title"),
+                        "session": (study.step or {}).get("title"),
+                    }
+                ).encode(),
+                topic="speakwow.study",
+                reliable=True,
+            )
+
+    if study:
+        tools.append(make_lesson_tool(study, study_changed))
     teacher = Teacher(
         persona,
         snapshot,
@@ -383,26 +468,86 @@ async def entrypoint(ctx: JobContext) -> None:
         provider=provider,
         channel=job.channel,
         # the onboarding's progress note comes from Jev instead (attach_intake)
-        warm_up_turns=None if intake else warm_up_turns(first_meeting),
+        warm_up_turns=None if intake or study else warm_up_turns(first_meeting),
         intake=intake,
     )
-    coach = Coach.from_env()
+    if study:
+        teacher.phase_note = study.note()
+        await teacher.update_instructions(teacher._compose_instructions())
+
+        @session.on("conversation_item_added")
+        def observe_study(event):
+            role = getattr(event.item, "role", None)
+            text = getattr(event.item, "text_content", None)
+            if role in ("user", "assistant") and text and not is_stand_in(text):
+                study.observe(Turn(role, text))
+                if study.phase == "chat" and role == "user":
+                    task = asyncio.create_task(teacher.set_phase_note(study.note()))
+                    task.add_done_callback(_report_failure)
+
+    coach = None if study else Coach.from_env()
     if intake:
         if coach:
             attach_intake(session, teacher, intake, coach)
-    else:
+    elif not study:
         attach_phase(session, teacher, first_meeting)
     if coach:
         attach_coach(ctx, session, teacher, coach, unit, first_meeting, job.channel)
     # quiet while a card is open is work, not a stuck student
     attach_pacing(
-        ctx, session, teacher, first_meeting, lambda: cards.live() is not None
+        ctx,
+        session,
+        teacher,
+        first_meeting,
+        lambda: cards.live() is not None or bool(study and study.quiet),
+        study=study,
     )
     if job.channel == "phone":
         attach_call_limit(ctx, session, teacher)
-    reactions = attach_reactions(ctx, session, teacher)
+    reactions = attach_reactions(
+        ctx, session, teacher, study.record_written if study else None
+    )
     if job.channel != "phone":
         attach_cards(ctx, session, teacher, cards)
+
+    if study:
+        pending_study: set[asyncio.Task] = set()
+
+        async def control_study(action):
+            session.interrupt()
+            await study.change(action)
+            await study_changed()
+            session.generate_reply(
+                instructions=teacher.with_note(
+                    "Acknowledge the student's choice briefly. "
+                    + (
+                        "They asked for silence: one short acknowledgement, no question, then wait."
+                        if study.quiet
+                        else study.note()
+                    )
+                )
+            )
+
+        def on_study_data(packet):
+            if getattr(packet, "topic", None) != "speakwow.study.action":
+                return
+            if (
+                getattr(getattr(packet, "participant", None), "identity", None)
+                != f"user_{student_id}"
+            ):
+                return
+            try:
+                action = json.loads(bytes(packet.data).decode()).get("action")
+            except (ValueError, AttributeError):
+                return
+            if action not in ("start", "pause", "chat", "resume") or pending_study:
+                return
+            task = asyncio.create_task(control_study(action), name="study-control")
+            pending_study.add(task)
+            task.add_done_callback(pending_study.discard)
+            task.add_done_callback(_report_failure)
+
+        ctx.room.on("data_received", on_study_data)
 
     await session.start(
         agent=teacher,
@@ -414,6 +559,8 @@ async def entrypoint(ctx: JobContext) -> None:
             ),
         ),
     )
+    if study:
+        await study_changed()
 
 
 def _report_failure(task: asyncio.Task) -> None:
@@ -440,6 +587,7 @@ def attach_pacing(
     teacher: Teacher,
     first_meeting: bool,
     busy_on_screen: Callable[[], bool] = lambda: False,
+    study: StudyFlow | None = None,
 ) -> None:
     """Patience when the student is quiet, a break after half an hour, and
     the student's share of the talking in the log (pacing.py). While they are
@@ -447,13 +595,20 @@ def attach_pacing(
     nudges, never a sentence starter."""
 
     async def nudge(note: str) -> None:
-        if _busy(session):
-            return  # a reply is already on its way
+        if _busy(session) or (study and study.quiet):
+            return  # a requested break never expires into a silence nudge
         session.generate_reply(user_input=QUIET, instructions=teacher.with_note(note))
 
     warm_up_steps = warm_up_silence_steps(news_today(teacher.persona), first_meeting)
 
     def steps() -> tuple[str, ...]:
+        if study:
+            if study.step and study.step.get("kind") == "exam":
+                return (
+                    "Give them time to answer independently. Offer to repeat the question, without hints or the answer.",
+                    "There is no rush. Wait quietly.",
+                )
+            return SILENCE_STEPS
         if warming_up(transcript(session), first_meeting):
             return warm_up_steps
         return SILENCE_STEPS
@@ -474,7 +629,17 @@ def attach_pacing(
             if not _busy(session):
                 break
             await asyncio.sleep(0.5)
-        ladder.close()  # the break closes the call; no nudges after it
+        if study:
+            if study.quiet:
+                return
+            session.generate_reply(
+                user_input=BREAK_TIME,
+                instructions=teacher.with_note(
+                    "Offer a short break without ending the call. If they agree, call lesson_step(pause); otherwise continue."
+                ),
+            )
+            return
+        ladder.close()  # free conversation may finish here
         session.generate_reply(
             user_input=BREAK_TIME, instructions=teacher.with_note(BREAK_NOTE)
         )
@@ -591,13 +756,18 @@ def attach_intake(
 
 
 def attach_reactions(
-    ctx: JobContext, session: AgentSession, teacher: Teacher
+    ctx: JobContext,
+    session: AgentSession,
+    teacher: Teacher,
+    on_typed: Callable[[str], None] | None = None,
 ) -> ReactionInbox:
     """A tapped sticker is a face, not a message: it never interrupts, and the
     teacher answers it in a few words only while waiting (reactions.py).
     Typed text is still a turn of its own."""
 
     def typed(text: str) -> None:
+        if on_typed:
+            on_typed(text)
         session.interrupt()
         session.generate_reply(user_input=text)
 

@@ -52,7 +52,7 @@ too!" may open a turn, never end it. Follow up what they just said more often
 than starting something new, and vary the form: not the same hand-off twice
 in a row, and "How about you?" only now and then. If they asked you
 something, answer in a sentence or two, then hand back a connected question.
-Only a goodbye, or a short "mm-hm" while they are in the middle of telling
+A requested silent break needs no hand-off. Only a goodbye, or a short "mm-hm" while they are in the middle of telling
 you something, ends without one.
 """.strip()
 
@@ -160,9 +160,9 @@ CRITICAL = """
 ## Critical
 - When the student wants to stop, say one warm goodbye and stop. Never ask
   them to stay, and never make them feel bad for leaving.
-- End every turn with exactly one hand-off, said last: one question, choice
-  or invitation they can answer, and nothing after it.
-- Once you are practising, correct mistakes even when the student is sad or
+- Except during a requested silent break or goodbye, end every turn with one hand-off: one question, choice or invitation, and nothing after it.
+- During independent exams, wait until submission before correcting or hinting.
+- Otherwise, once you are practising, correct mistakes even when the student is sad or
   tired: briefly and kindly, but always. Before that, only use the right form
   in your own reply.
 """.strip()
@@ -256,6 +256,22 @@ def conversation_flow(
 ) -> str:
     """The shape of a call, like a home tutor's visit: get to know the person
     first, and only teach once they are at ease and happy to start."""
+    if mode == "course":
+        return """## How the conversation goes
+Be a home tutor with a clear syllabus and room for the person.
+1. Catch up briefly. Follow their mood; if they want to start, start immediately.
+2. Agree on the current session's goal. Call lesson_step(start) before teaching.
+3. Teach in small steps: model, guided practice, independent application.
+4. Let them explore a related thought. Call lesson_step(chat) on a tangent;
+   after two or three exchanges offer a natural bridge back. Respect a request
+   to keep chatting, take a break or stop.
+5. Call lesson_step(finish) to assess and save actual work. Give a short recap,
+   then offer the next session, a chat or a rest. Never begin an exam without agreement.
+A break is quiet time, not the end of the call. Call lesson_step(pause), wait
+without nudging, then resume at the same place when they choose.
+The current teaching phase below takes precedence over general teaching advice.
+During an exam, do not correct, hint or model until submission.
+"""
     starters = _rotate(persona.starters, today, 3)
     topics = (
         f" If you need a topic, take the idea (not the words) of one of these: "
@@ -417,11 +433,11 @@ def build_instructions(
             if intake
             else (
                 "On a first meeting, getting to know each other is the whole point. "
-                if first_meeting
+                if first_meeting and not lesson
                 else ""
             )
             + (
-                "Today is a lesson from their textbook course (the plan is below)."
+                "Today is a lesson from their selected course (the plan is below)."
                 if lesson
                 else "Today is free conversation."
             )
@@ -541,6 +557,9 @@ class Teacher(Agent):
             channel=channel,
             intake=intake,
         )
+        self.provider = provider
+        self.channel = channel
+        self.stickers = stickers
         self.intake = intake
         self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
         self.coaching_note: str | None = None
@@ -580,6 +599,20 @@ class Teacher(Agent):
             return
         self.coaching_note = note
         await self.update_instructions(self._compose_instructions())
+
+    async def set_study_flow(self, flow) -> None:
+        if self.snapshot and self.snapshot.get("current_course"):
+            self.snapshot["current_course"]["current_unit"] = flow.unit
+        self.base_instructions = build_instructions(
+            self.persona,
+            self.snapshot,
+            self.stickers,
+            mode=self.mode,
+            provider=self.provider,
+            channel=self.channel,
+        )
+        self.coaching_note = None
+        await self.set_phase_note(flow.note())
 
     async def on_enter(self) -> None:
         await asyncio.sleep(OPENING_PAUSE_S)

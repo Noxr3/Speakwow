@@ -32,9 +32,9 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   isPreConnectBufferEnabled: true,
 
   logo: '/wow5-logo-white.png',
-  accent: '#1fd5f9',
+  accent: '#237c32',
   logoDark: '/wow5-logo-white.png',
-  accentDark: '#1fd5f9',
+  accentDark: '#7cff67',
   startButtonText: 'Start Speaking',
 
   // agent dispatch configuration

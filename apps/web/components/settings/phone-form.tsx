@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
-import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 interface PhoneStatus {
   enabled: boolean;
@@ -84,10 +83,10 @@ export function PhoneForm() {
   };
 
   return (
-    <LiquidGlass radius={28} tint={0.3}>
-      <section className="space-y-5 p-6 md:p-7">
+    <div className="content-panel">
+      <section className="panel-padding space-y-5">
         <div className="space-y-1.5">
-          <h2 className="text-foreground text-lg font-medium">Phone</h2>
+          <h2 className="section-title">Phone</h2>
           <p className="text-muted-foreground text-sm">
             {status?.line
               ? `Call or text your teacher at ${status.line}.`
@@ -112,7 +111,7 @@ export function PhoneForm() {
             key={p.phone}
             className="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]"
           >
-            <span className="text-foreground font-mono">{p.phone}</span>
+            <span className="text-foreground tabular-nums">{p.phone}</span>
             {p.sms_opted_out && (
               <span className="text-muted-foreground text-xs">Texts off (you sent STOP)</span>
             )}
@@ -120,7 +119,7 @@ export function PhoneForm() {
               type="button"
               onClick={() => unlink(p.phone)}
               disabled={busy}
-              className="text-muted-foreground hover:text-foreground ml-auto text-xs underline"
+              className="text-muted-foreground hover:text-foreground ml-auto inline-flex min-h-11 items-center text-sm underline"
             >
               Unlink
             </button>
@@ -172,7 +171,7 @@ export function PhoneForm() {
               <button
                 type="button"
                 onClick={() => setPending(null)}
-                className="text-muted-foreground hover:text-foreground text-xs underline"
+                className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center text-sm underline"
               >
                 Use another number
               </button>
@@ -186,6 +185,6 @@ export function PhoneForm() {
           </p>
         )}
       </section>
-    </LiquidGlass>
+    </div>
   );
 }

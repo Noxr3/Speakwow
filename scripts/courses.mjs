@@ -133,6 +133,19 @@ export function checkCourse(course) {
       if (ids.has(goal.id)) problems.push(`${where}: goal id ${goal.id} is used twice`);
       ids.add(goal.id);
     }
+    const sessionIds = new Set();
+    const covered = new Set();
+    for (const session of unit.data.sessions ?? []) {
+      if (sessionIds.has(session.id)) problems.push(`${where}: duplicate session id ${session.id}`);
+      sessionIds.add(session.id);
+      for (const id of session.goal_ids ?? []) {
+        if (!ids.has(id)) problems.push(`${where}: session references unknown goal ${id}`);
+        covered.add(id);
+      }
+    }
+    if (unit.data.sessions && [...ids].some((id) => !covered.has(id))) {
+      problems.push(`${where}: sessions must cover every unit goal`);
+    }
     for (const field of LIST_FIELDS) {
       const seen = new Set();
       for (const item of unit.data[field] ?? []) {
@@ -194,6 +207,7 @@ export function toRows(course) {
         content: {
           ...Object.fromEntries(LIST_FIELDS.map((f) => [f, u.data[f] ?? []])),
           sources: u.data.sources ?? [],
+          ...(u.data.sessions ? { sessions: u.data.sessions } : {}),
         },
         source_ref: `courses/${d.slug}/units/${u.file}`,
       })),

@@ -1,13 +1,17 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
+import { toast } from 'sonner';
 import { useSessionContext } from '@livekit/components-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
-import type { CourseSpot } from '@/components/app/app';
+import { chooseCourse } from '@/app/courses/actions';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
 import { ensureGuestSession } from '@/lib/guest';
+import type { HomeLibrary } from '@/lib/study-plan';
 import { createClient } from '@/lib/supabase/client';
 import type { CallMode } from '@/lib/token-source';
 
@@ -37,9 +41,8 @@ interface ViewControllerProps {
   personas: PersonaSummary[];
   persona: PersonaSummary;
   onSelectPersona: (id: string) => void;
-  course: CourseSpot | null;
+  library: HomeLibrary;
   mode: CallMode;
-  onSelectMode: (mode: CallMode) => void;
 }
 
 export function ViewController({
@@ -47,18 +50,49 @@ export function ViewController({
   personas,
   persona,
   onSelectPersona,
-  course,
+  library,
   mode,
-  onSelectMode,
 }: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const wasConnected = useRef(false);
+  useEffect(() => {
+    const justEnded = wasConnected.current && !isConnected;
+    wasConnected.current = isConnected;
+    if (!justEnded) return;
+    router.refresh();
+    // The final reflection finishes after disconnect; refresh its saved result.
+    const timers = [3000, 10000, 30000, 45000].map((delay) =>
+      window.setTimeout(() => router.refresh(), delay)
+    );
+    return () => timers.forEach(window.clearTimeout);
+  }, [isConnected, router]);
 
   // A visitor becomes a guest when they start a call, not when the page
   // loads (the page fetches a token early to connect faster), so the call
   // is kept and can join their account later (lib/guest.ts).
-  const startCall = async () => {
-    await ensureGuestSession(createClient()).catch(() => undefined);
-    await start();
+  const startCall = async (unitId?: string) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (unitId && library.selectedId) {
+        await ensureGuestSession(createClient());
+        const result = await chooseCourse(library.selectedId, unitId);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        router.refresh();
+      } else {
+        await ensureGuestSession(createClient()).catch(() => undefined);
+      }
+      await start();
+    } catch {
+      toast.error('Could not start the lesson. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -71,9 +105,8 @@ export function ViewController({
           personas={personas}
           persona={persona}
           onSelectPersona={onSelectPersona}
-          course={course}
-          mode={mode}
-          onSelectMode={onSelectMode}
+          library={library}
+          busy={busy}
           onStartCall={startCall}
         />
       )}
@@ -84,7 +117,7 @@ export function ViewController({
           {...VIEW_MOTION_PROPS}
           appConfig={appConfig}
           persona={persona}
-          mode={course ? mode : 'free'}
+          mode={library.selectedId ? mode : 'free'}
         />
       )}
     </AnimatePresence>

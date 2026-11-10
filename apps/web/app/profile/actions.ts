@@ -56,55 +56,24 @@ export async function forgetMemory(form: FormData) {
 }
 
 export async function enroll(form: FormData) {
-  const { supabase, user } = await student();
-  const courseId = String(form.get('course_id') ?? '');
-  const { data: first } = await supabase
-    .from('course_units')
-    .select('id')
-    .eq('course_id', courseId)
-    .order('position')
-    .limit(1)
-    .maybeSingle();
-  if (!first) return;
-  const now = new Date().toISOString();
-  // One active course at a time: pause the others, keep their progress.
-  await supabase
-    .from('enrollments')
-    .update({ status: 'paused', updated_at: now })
-    .eq('student_id', user.id)
-    .eq('status', 'active')
-    .neq('course_id', courseId);
-  const { data: existing } = await supabase
-    .from('enrollments')
-    .select('course_id')
-    .eq('student_id', user.id)
-    .eq('course_id', courseId)
-    .maybeSingle();
-  if (existing) {
-    await supabase
-      .from('enrollments')
-      .update({ status: 'active', updated_at: now })
-      .eq('student_id', user.id)
-      .eq('course_id', courseId);
-  } else {
-    await supabase.from('enrollments').insert({
-      student_id: user.id,
-      course_id: courseId,
-      current_unit_id: first.id,
-      updated_at: now,
-    });
-  }
+  const { supabase } = await student();
+  const { error } = await supabase.rpc('select_course', {
+    p_course: String(form.get('course_id') ?? ''),
+    p_unit: null,
+  });
+  if (error) throw new Error('Your course could not be saved. Please try again.');
   revalidatePath('/profile');
   revalidatePath('/');
+  revalidatePath('/courses');
 }
 
 export async function setCurrentUnit(form: FormData) {
-  const { supabase, user } = await student();
-  await supabase
-    .from('enrollments')
-    .update({ current_unit_id: String(form.get('unit_id')), updated_at: new Date().toISOString() })
-    .eq('student_id', user.id)
-    .eq('course_id', String(form.get('course_id')));
+  const { supabase } = await student();
+  const { error } = await supabase.rpc('select_course', {
+    p_course: String(form.get('course_id') ?? ''),
+    p_unit: String(form.get('unit_id') ?? ''),
+  });
+  if (error) throw new Error('Your lesson could not be saved. Please try again.');
   revalidatePath('/profile');
   revalidatePath('/');
 }

@@ -6,8 +6,6 @@ export interface GlassSurfaceProps {
   height?: number | string;
   borderRadius?: number;
   borderWidth?: number;
-  brightness?: number;
-  opacity?: number;
   blur?: number;
   displace?: number;
   backgroundOpacity?: number;
@@ -41,6 +39,8 @@ export interface GlassSurfaceProps {
   style?: React.CSSProperties;
   /** Speakwow: the app is always dark, whatever the OS theme. */
   forceDark?: boolean;
+  /** Disable SVG distortion on text panels containing another glass surface. */
+  refract?: boolean;
   /** Speakwow: layout of the content box (default: centred, 8px padding). */
   contentClassName?: string;
 }
@@ -68,8 +68,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   height = 80,
   borderRadius = 20,
   borderWidth = 0.07,
-  brightness = 50,
-  opacity = 0.93,
   blur = 11,
   displace = 0,
   backgroundOpacity = 0,
@@ -84,6 +82,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   className = '',
   style = {},
   forceDark = false,
+  refract = true,
   contentClassName = 'flex items-center justify-center p-2',
 }) => {
   const uniqueId = useId().replace(/:/g, '-');
@@ -92,6 +91,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const blueGradId = `blue-grad-${uniqueId}`;
 
   const [svgSupported, setSvgSupported] = useState<boolean>(false);
+  const [backdropFilterSupported, setBackdropFilterSupported] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const feImageRef = useRef<SVGFEImageElement>(null);
@@ -102,13 +102,15 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
 
   const isDarkMode = useDarkMode() || forceDark;
 
-  const generateDisplacementMap = () => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    const actualWidth = rect?.width || 400;
-    const actualHeight = rect?.height || 200;
-    const edgeSize = Math.min(actualWidth, actualHeight) * (borderWidth * 0.5);
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const generateDisplacementMap = () => {
+      const actualWidth = containerRef.current?.clientWidth || 400;
+      const actualHeight = containerRef.current?.clientHeight || 200;
+      const edgeSize = Math.min(actualWidth, actualHeight) * (borderWidth * 0.5);
 
-    const svgContent = `
+      const svgContent = `
       <svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="${redGradId}" x1="100%" y1="0%" x2="0%" y2="0%">
@@ -123,39 +125,42 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" fill="black"></rect>
         <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${redGradId})" />
         <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${borderRadius}" fill="url(#${blueGradId})" style="mix-blend-mode: ${mixBlendMode}" />
-        <rect x="${edgeSize}" y="${edgeSize}" width="${actualWidth - edgeSize * 2}" height="${actualHeight - edgeSize * 2}" rx="${borderRadius}" fill="hsl(0 0% ${brightness}% / ${opacity})" style="filter:blur(${blur}px)" />
+        <rect x="${edgeSize}" y="${edgeSize}" width="${actualWidth - edgeSize * 2}" height="${actualHeight - edgeSize * 2}" rx="${borderRadius}" fill="#808080" style="filter:blur(${blur}px)" />
       </svg>
     `;
 
-    return `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
-  };
+      return `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
+    };
 
-  const updateDisplacementMap = () => {
-    feImageRef.current?.setAttribute('href', generateDisplacementMap());
-  };
-
-  useEffect(() => {
-    updateDisplacementMap();
-    [
-      { ref: redChannelRef, offset: redOffset },
-      { ref: greenChannelRef, offset: greenOffset },
-      { ref: blueChannelRef, offset: blueOffset },
-    ].forEach(({ ref, offset }) => {
-      if (ref.current) {
-        ref.current.setAttribute('scale', (distortionScale + offset).toString());
-        ref.current.setAttribute('xChannelSelector', xChannel);
-        ref.current.setAttribute('yChannelSelector', yChannel);
-      }
-    });
-
-    gaussianBlurRef.current?.setAttribute('stdDeviation', displace.toString());
+    const update = () => {
+      feImageRef.current?.setAttribute('href', generateDisplacementMap());
+      // Refraction stays in the bevel; never pull whole panels across the screen.
+      const limit = Math.min(32, Math.min(element.clientWidth, element.clientHeight) * 0.35);
+      const largestScale = Math.max(
+        1,
+        ...[redOffset, greenOffset, blueOffset].map((offset) => Math.abs(distortionScale + offset))
+      );
+      const ratio = Math.min(1, limit / largestScale);
+      [
+        { ref: redChannelRef, offset: redOffset },
+        { ref: greenChannelRef, offset: greenOffset },
+        { ref: blueChannelRef, offset: blueOffset },
+      ].forEach(({ ref, offset }) => {
+        ref.current?.setAttribute('scale', String((distortionScale + offset) * ratio));
+        ref.current?.setAttribute('xChannelSelector', xChannel);
+        ref.current?.setAttribute('yChannelSelector', yChannel);
+      });
+      gaussianBlurRef.current?.setAttribute('stdDeviation', String(displace));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
   }, [
     width,
     height,
     borderRadius,
     borderWidth,
-    brightness,
-    opacity,
     blur,
     displace,
     distortionScale,
@@ -165,66 +170,18 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     xChannel,
     yChannel,
     mixBlendMode,
+    redGradId,
+    blueGradId,
   ]);
 
   useEffect(() => {
-    setSvgSupported(supportsSVGFilters());
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
-    });
-
-    resizeObserver.observe(containerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
-    });
-
-    resizeObserver.observe(containerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    setTimeout(updateDisplacementMap, 0);
-  }, [width, height]);
-
-  const supportsSVGFilters = () => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      return false;
-    }
-
     const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
     const isFirefox = /Firefox/.test(navigator.userAgent);
-
-    if (isWebkit || isFirefox) {
-      return false;
-    }
-
-    const div = document.createElement('div');
-    div.style.backdropFilter = `url(#${filterId})`;
-
-    return div.style.backdropFilter !== '';
-  };
-
-  const supportsBackdropFilter = () => {
-    if (typeof window === 'undefined') return false;
-    return CSS.supports('backdrop-filter', 'blur(10px)');
-  };
+    setSvgSupported(
+      !isWebkit && !isFirefox && CSS.supports('backdrop-filter', `url(#${filterId})`)
+    );
+    setBackdropFilterSupported(CSS.supports('backdrop-filter', 'blur(10px)'));
+  }, [filterId]);
 
   const getContainerStyles = (): React.CSSProperties => {
     const baseStyles: React.CSSProperties = {
@@ -236,9 +193,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       '--glass-saturation': saturation,
     } as React.CSSProperties;
 
-    const backdropFilterSupported = supportsBackdropFilter();
-
-    if (svgSupported) {
+    if (svgSupported && refract) {
       return {
         ...baseStyles,
         background: isDarkMode
@@ -265,10 +220,10 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       };
     } else {
       if (isDarkMode) {
-        if (!backdropFilterSupported) {
+        if (!backdropFilterSupported || !refract) {
           return {
             ...baseStyles,
-            background: 'rgba(0, 0, 0, 0.4)',
+            background: `rgba(0, 0, 0, ${Math.max(0.4, backgroundOpacity)})`,
             border: '1px solid rgba(255, 255, 255, 0.2)',
             boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
                         inset 0 -1px 0 0 rgba(255, 255, 255, 0.1)`,
@@ -276,7 +231,10 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         } else {
           return {
             ...baseStyles,
-            background: 'rgba(255, 255, 255, 0.1)',
+            background:
+              backgroundOpacity > 0
+                ? `rgba(0, 0, 0, ${backgroundOpacity})`
+                : 'rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(12px) saturate(1.8) brightness(1.2)',
             WebkitBackdropFilter: 'blur(12px) saturate(1.8) brightness(1.2)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -285,7 +243,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
           };
         }
       } else {
-        if (!backdropFilterSupported) {
+        if (!backdropFilterSupported || !refract) {
           return {
             ...baseStyles,
             background: 'rgba(255, 255, 255, 0.4)',
@@ -314,17 +272,24 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     'relative flex items-center justify-center overflow-hidden transition-opacity duration-[260ms] ease-out';
 
   const focusVisibleClasses = isDarkMode
-    ? 'focus-visible:outline-2 focus-visible:outline-[#0A84FF] focus-visible:outline-offset-2'
-    : 'focus-visible:outline-2 focus-visible:outline-[#007AFF] focus-visible:outline-offset-2';
+    ? 'focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2'
+    : 'focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2';
 
+  const {
+    background,
+    backdropFilter,
+    WebkitBackdropFilter,
+    boxShadow,
+    border,
+    ...containerStyles
+  } = getContainerStyles();
   return (
-    <div
-      ref={containerRef}
-      className={`${glassSurfaceClasses} ${focusVisibleClasses} ${className}`}
-      style={getContainerStyles()}
-    >
+    <>
       <svg
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-0"
+        aria-hidden="true"
+        width="0"
+        height="0"
+        className="pointer-events-none absolute"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -346,13 +311,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
               result="map"
             />
 
-            <feDisplacementMap
-              ref={redChannelRef}
-              in="SourceGraphic"
-              in2="map"
-              id="redchannel"
-              result="dispRed"
-            />
+            <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" result="dispRed" />
             <feColorMatrix
               in="dispRed"
               type="matrix"
@@ -367,7 +326,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
               ref={greenChannelRef}
               in="SourceGraphic"
               in2="map"
-              id="greenchannel"
               result="dispGreen"
             />
             <feColorMatrix
@@ -384,7 +342,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
               ref={blueChannelRef}
               in="SourceGraphic"
               in2="map"
-              id="bluechannel"
               result="dispBlue"
             />
             <feColorMatrix
@@ -404,10 +361,26 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         </defs>
       </svg>
 
-      <div className={`relative z-10 h-full w-full rounded-[inherit] ${contentClassName}`}>
-        {children}
+      <div
+        ref={containerRef}
+        className={`${glassSurfaceClasses} ${focusVisibleClasses} ${className}`}
+        style={{ ...containerStyles, contain: 'paint' }}
+      >
+        <div
+          aria-hidden="true"
+          className="glass-surface-backdrop pointer-events-none absolute inset-0 rounded-[inherit]"
+          style={{ background, backdropFilter, WebkitBackdropFilter }}
+        />
+        <div className={`relative z-10 h-full w-full rounded-[inherit] ${contentClassName}`}>
+          {children}
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 rounded-[inherit]"
+          style={{ boxShadow, border }}
+        />
       </div>
-    </div>
+    </>
   );
 };
 

@@ -74,7 +74,7 @@ function Tile({
       )}
     >
       {letter && (
-        <span className="label-mono flex size-6 shrink-0 items-center justify-center rounded-md border border-white/20 text-white/70">
+        <span className="label-caption flex size-6 shrink-0 items-center justify-center rounded-md border border-white/20 text-white/70">
           {letter}
         </span>
       )}
@@ -669,7 +669,7 @@ export function WidgetCard({ widget, update, onEvent, onClose }: WidgetCardProps
     <LiquidGlass radius={28} tint={0.35}>
       <section aria-label={KIND_LABEL[widget.kind]} className="space-y-3 p-5">
         <header className="flex items-center gap-2">
-          <span className="label-mono text-white/60">
+          <span className="label-caption text-white/60">
             {widget.title || KIND_LABEL[widget.kind]}
           </span>
           <button
