@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
-import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { type GuestKey, loadGuestKey, saveGuestKey } from '@/lib/client-prefs';
 
 type Provider = GuestKey['provider'];
@@ -99,10 +98,10 @@ export function ByokForm() {
   };
 
   return (
-    <LiquidGlass radius={28} tint={0.3}>
-      <section className="space-y-5 p-6 md:p-7">
+    <div className="content-panel">
+      <section className="panel-padding space-y-5">
         <div className="space-y-1.5">
-          <h2 className="text-foreground text-lg font-medium">API key</h2>
+          <h2 className="section-title">API key</h2>
           <p className="text-muted-foreground text-sm">
             {status?.required
               ? 'Required to start a call.'
@@ -128,7 +127,7 @@ export function ByokForm() {
               type="button"
               onClick={remove}
               disabled={busy}
-              className="text-muted-foreground hover:text-foreground ml-auto text-xs underline"
+              className="text-muted-foreground hover:text-foreground ml-auto inline-flex min-h-11 items-center text-sm underline"
             >
               Remove
             </button>
@@ -153,7 +152,7 @@ export function ByokForm() {
                     value={p.id}
                     checked={provider === p.id}
                     onChange={() => setProvider(p.id)}
-                    className="sr-only"
+                    className="accent-primary mr-2 h-4 w-4"
                   />
                   <span className="text-foreground block font-medium">{p.name}</span>
                   <a
@@ -197,6 +196,6 @@ export function ByokForm() {
           </p>
         )}
       </section>
-    </LiquidGlass>
+    </div>
   );
 }

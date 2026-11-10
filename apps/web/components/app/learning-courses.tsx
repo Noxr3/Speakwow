@@ -64,16 +64,16 @@ export async function LearningCourses({
                 <p className="text-muted-foreground text-sm">
                   {current ? `Unit ${current.position} · ${current.title}` : 'Choose a unit below'}
                 </p>
-                <p className="text-xs text-white/45">
+                <p className="text-muted-foreground text-xs">
                   {mastered} of {units.length} units mastered
                 </p>
               </div>
               <Button asChild className="shrink-0 self-start rounded-full px-5 sm:self-auto">
-                <Link href="/">Continue →</Link>
+                <Link href="/">Continue lesson</Link>
               </Button>
             </div>
             <details className="group border-t border-white/10 pt-4">
-              <summary className="text-primary cursor-pointer text-sm">
+              <summary className="text-primary flex min-h-11 cursor-pointer items-center text-sm">
                 View units & progress
               </summary>
               <ol className="mt-4 space-y-2">
@@ -85,7 +85,7 @@ export async function LearningCourses({
                       key={u.id}
                       className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl p-4 text-sm ${isCurrent ? 'border border-white/25 bg-white/[0.08]' : 'bg-white/[0.03]'}`}
                     >
-                      <span className="label-mono text-xs text-white/45">
+                      <span className="label-caption text-muted-foreground text-xs">
                         {u.position.toString().padStart(2, '0')}
                       </span>
                       <span className="text-foreground min-w-0 flex-1 break-words">{u.title}</span>
@@ -102,7 +102,7 @@ export async function LearningCourses({
                           <input type="hidden" name="unit_id" value={u.id} />
                           <button
                             type="submit"
-                            className="text-primary px-2 py-1 text-xs underline"
+                            className="text-primary inline-flex min-h-11 items-center px-2 text-sm underline"
                           >
                             Study
                           </button>
@@ -113,12 +113,25 @@ export async function LearningCourses({
                 })}
               </ol>
             </details>
+            <Link
+              href="/courses"
+              className="text-primary inline-flex min-h-11 items-center text-sm"
+            >
+              Browse courses
+            </Link>
           </GlassPanel>
         </div>
       )}
-      <Link href="/courses" className="text-primary inline-flex min-h-11 items-center text-sm">
-        Browse courses →
-      </Link>
+      {!active && (
+        <GlassPanel title="Your courses">
+          <p className="text-muted-foreground text-base">
+            Choose a course to begin learning with your teacher.
+          </p>
+          <Button asChild>
+            <Link href="/courses">Browse courses</Link>
+          </Button>
+        </GlassPanel>
+      )}
     </div>
   );
 }

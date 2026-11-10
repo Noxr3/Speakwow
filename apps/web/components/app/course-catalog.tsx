@@ -45,7 +45,7 @@ export function CourseCatalog({
   return (
     <section id="courses" aria-labelledby="catalog-title" className="scroll-mt-24 space-y-6">
       <div className="space-y-2">
-        <p className="label-mono text-primary">Explore & learn</p>
+        <p className="label-caption text-primary">Explore & learn</p>
         <h2 id="catalog-title" className="text-foreground text-2xl font-medium">
           Course catalog
         </h2>
@@ -119,7 +119,7 @@ export function CourseCatalog({
                     aria-hidden="true"
                     className="text-cyan-100/65"
                   />
-                  <span className="label-mono max-w-[70%] truncate rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[10px] text-white/70">
+                  <span className="label-caption max-w-[70%] truncate rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[10px] text-white/70">
                     {course.subject}
                   </span>
                 </div>

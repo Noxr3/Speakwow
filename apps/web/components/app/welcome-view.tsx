@@ -1,18 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, ChevronDown } from 'lucide-react';
+import { ArrowLeftRight, Check, ChevronDown, Play } from 'lucide-react';
 import type { PersonaSummary } from '@speakwow/shared';
-import GlassSurface from '@/components/GlassSurface';
-import Magnet from '@/components/Magnet';
 import { AppBackdrop } from '@/components/app/app-backdrop';
 import { UnitCarousel } from '@/components/app/unit-carousel';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
+import { courseLevelLabel } from '@/lib/course-categories';
 import type { HomeLibrary } from '@/lib/study-plan';
 
 interface WelcomeViewProps {
@@ -34,68 +35,58 @@ export const WelcomeView = ({
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   const course = library.courses.find((c) => c.id === library.selectedId);
-
   const startButton = (unitId?: string, continuing = false) => (
-    <Magnet padding={10} disabled={busy} magnetStrength={10}>
-      <button
-        disabled={busy}
-        onClick={() => onStartCall(unitId)}
-        className="cursor-pointer rounded-full transition-transform duration-300 hover:scale-105 active:scale-95 disabled:cursor-wait"
-      >
-        <GlassSurface
-          className="rounded-full font-mono text-xs uppercase"
-          width={220}
-          height={48}
-          displace={0.5}
-          distortionScale={-180}
-          redOffset={70}
-          greenOffset={10}
-          blueOffset={20}
-          borderRadius={50}
-          backgroundOpacity={0.55}
-          mixBlendMode="screen"
-          forceDark
-          refract={!course}
-        >
-          {busy
-            ? 'One moment…'
-            : course
-              ? continuing
-                ? 'Continue lesson'
-                : 'Start lesson'
-              : 'Start talking'}
-        </GlassSurface>
-      </button>
-    </Magnet>
+    <Button
+      size="lg"
+      disabled={busy}
+      aria-busy={busy}
+      onClick={() => onStartCall(unitId)}
+      className="w-full disabled:cursor-wait"
+    >
+      {!busy && <Play size={18} fill="currentColor" aria-hidden="true" />}
+      {busy
+        ? 'Connecting…'
+        : course
+          ? continuing
+            ? 'Continue lesson'
+            : 'Start lesson'
+          : 'Start talking'}
+    </Button>
   );
   const teacher = (
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={busy}
-        className="text-muted-foreground mt-3 inline-flex min-h-11 items-center gap-2 px-2 text-xs"
-        aria-label={`Choose a teacher, currently ${persona.display_name}`}
+        className="teacher-trigger"
+        aria-label={'Choose a teacher, currently ' + persona.display_name}
       >
+        <span className="teacher-monogram" aria-hidden="true">
+          {persona.display_name[0]}
+        </span>
         With {persona.display_name}
-        <ChevronDown size={13} />
+        <ChevronDown size={16} className="text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="center"
-        className="max-h-96 w-80 max-w-[calc(100vw-2rem)] overflow-y-auto"
+        className="max-h-[min(28rem,var(--radix-dropdown-menu-content-available-height))] w-88 max-w-[calc(100vw-2rem)] overflow-y-auto"
       >
         {personas.map((p) => (
           <DropdownMenuItem
             key={p.id}
             onSelect={() => onSelectPersona(p.id)}
-            className="min-h-11 items-start gap-3 px-3 py-3"
+            className="items-start gap-3 px-3 py-3"
           >
+            <span className="teacher-monogram mt-0.5" aria-hidden="true">
+              {p.display_name[0]}
+            </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-medium">{p.display_name}</span>
-              <span className="text-muted-foreground mt-1 block text-xs leading-relaxed">
+              <span className="block font-semibold">{p.display_name}</span>
+              <span className="text-muted-foreground mt-1 block text-sm leading-relaxed">
                 {p.tagline_en}
               </span>
             </span>
             {persona.id === p.id && (
-              <Check size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <Check size={16} className="text-primary mt-0.5 shrink-0" aria-hidden="true" />
             )}
           </DropdownMenuItem>
         ))}
@@ -103,20 +94,33 @@ export const WelcomeView = ({
     </DropdownMenu>
   );
   return (
-    <div
-      ref={ref}
-      className="flex min-h-svh flex-col items-center justify-center overflow-x-clip px-5 pt-28 pb-20"
-    >
-      <div className="w-full max-w-sm space-y-4">
-        <h1 className="px-6 text-center text-sm leading-relaxed text-white/70">
-          {course?.title ?? (
-            <Link href="/courses" className="hover:text-white">
-              Choose a course
+    <div ref={ref} className="home-stage">
+      <div className="home-column">
+        <div className="mb-6">
+          <LiquidGlass radius={28} tint={0.65}>
+            <Link
+              href="/courses"
+              className="course-capsule"
+              aria-label={course ? 'Change course, currently ' + course.title : 'Choose a course'}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-xs font-medium">
+                  Course{course ? ' · ' + courseLevelLabel(course) : ''}
+                </p>
+                <h1 className="mt-0.5 text-base leading-snug font-semibold sm:text-lg">
+                  {course?.title ?? 'Choose a course'}
+                </h1>
+              </div>
+              <ArrowLeftRight
+                size={19}
+                className="text-muted-foreground shrink-0"
+                aria-hidden="true"
+              />
             </Link>
-          )}
-        </h1>
+          </LiquidGlass>
+        </div>
         {library.error && (
-          <p role="alert" className="text-muted-foreground text-center text-xs">
+          <p role="alert" className="text-muted-foreground mb-4 text-sm">
             {library.error}
           </p>
         )}
@@ -129,7 +133,7 @@ export const WelcomeView = ({
             teacher={teacher}
           />
         ) : (
-          <div className="flex flex-col items-center gap-4 py-6">
+          <div className="flex flex-col items-center gap-6 py-8">
             {startButton()}
             {teacher}
           </div>

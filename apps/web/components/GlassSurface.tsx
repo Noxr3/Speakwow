@@ -272,8 +272,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     'relative flex items-center justify-center overflow-hidden transition-opacity duration-[260ms] ease-out';
 
   const focusVisibleClasses = isDarkMode
-    ? 'focus-visible:outline-2 focus-visible:outline-[#0A84FF] focus-visible:outline-offset-2'
-    : 'focus-visible:outline-2 focus-visible:outline-[#007AFF] focus-visible:outline-offset-2';
+    ? 'focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2'
+    : 'focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2';
 
   const {
     background,
@@ -368,7 +368,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[inherit]"
+          className="glass-surface-backdrop pointer-events-none absolute inset-0 rounded-[inherit]"
           style={{ background, backdropFilter, WebkitBackdropFilter }}
         />
         <div className={`relative z-10 h-full w-full rounded-[inherit] ${contentClassName}`}>

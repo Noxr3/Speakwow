@@ -9,7 +9,7 @@ export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogTitle = DialogPrimitive.Title;
 export function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('pr-8 text-xl font-semibold', className)} {...props} />;
+  return <div className={cn('pr-10 text-2xl font-semibold', className)} {...props} />;
 }
 export function DialogContent({
   className,
@@ -29,7 +29,7 @@ export function DialogContent({
       >
         {children}
         <DialogPrimitive.Close
-          aria-label="Close plan"
+          aria-label="Close"
           className="text-muted-foreground absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/5"
         >
           <X size={18} />

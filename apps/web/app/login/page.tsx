@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { PageBackdrop } from '@/components/app/page-shell';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
-import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { safeNext } from '@/lib/courses';
 
 export default function LoginPage() {
@@ -69,12 +68,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4 py-24">
       <PageBackdrop />
       <div className="w-full max-w-md">
-        <LiquidGlass radius={28} tint={0.3}>
+        <div className="content-panel">
           <div className="space-y-7 p-7 md:p-9">
-            <div className="space-y-2 text-center">
-              <h1 className="text-foreground text-2xl font-medium">
-                {isSignUp ? 'Create account' : 'Sign in'}
-              </h1>
+            <div className="space-y-2 text-left">
+              <h1 className="text-3xl font-semibold">{isSignUp ? 'Create account' : 'Sign in'}</h1>
             </div>
 
             {!enabled && (
@@ -85,11 +82,12 @@ export default function LoginPage() {
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div>
-                <label htmlFor="email" className="label-mono mb-2 block text-white/55">
+                <label htmlFor="email" className="label-caption text-muted-foreground mb-2 block">
                   Email
                 </label>
                 <input
                   id="email"
+                  autoComplete="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -100,11 +98,15 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="label-mono mb-2 block text-white/55">
+                <label
+                  htmlFor="password"
+                  className="label-caption text-muted-foreground mb-2 block"
+                >
                   Password
                 </label>
                 <input
                   id="password"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -116,17 +118,22 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+                <div
+                  role="alert"
+                  className="bg-destructive/10 text-destructive rounded-md p-3 text-sm"
+                >
                   {error}
                 </div>
               )}
 
               {message && (
-                <div className="bg-primary/10 text-primary rounded-md p-3 text-sm">{message}</div>
+                <div role="status" className="bg-primary/10 text-primary rounded-md p-3 text-sm">
+                  {message}
+                </div>
               )}
 
               <Button type="submit" className="w-full rounded-full" disabled={loading}>
-                {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                {loading ? 'Loading...' : isSignUp ? 'Create account' : 'Sign in'}
               </Button>
             </form>
 
@@ -135,7 +142,7 @@ export default function LoginPage() {
                 <div className="border-border w-full border-t" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="label-mono bg-transparent px-3 text-white/40 backdrop-blur-xl">
+                <span className="label-caption bg-transparent px-3 text-white/40 backdrop-blur-xl">
                   or
                 </span>
               </div>
@@ -177,19 +184,22 @@ export default function LoginPage() {
                   setError(null);
                   setMessage(null);
                 }}
-                className="text-primary font-medium hover:underline"
+                className="text-primary inline-flex min-h-11 items-center font-medium hover:underline"
               >
-                {isSignUp ? 'Sign In' : 'Sign Up'}
+                {isSignUp ? 'Sign in' : 'Create account'}
               </button>
             </p>
 
             <p className="text-center text-sm">
-              <Link href="/" className="text-muted-foreground hover:text-foreground underline">
+              <Link
+                href="/"
+                className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center underline"
+              >
                 Continue as guest
               </Link>
             </p>
           </div>
-        </LiquidGlass>
+        </div>
       </div>
     </div>
   );

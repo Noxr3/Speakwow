@@ -32,11 +32,15 @@ export default async function CoursesPage({
   }));
   return (
     <PageShell
+      wide
       title={category?.title ?? 'Courses'}
-      subtitle={category?.description}
+      subtitle={category?.description ?? 'Find the right course for your next step.'}
       breadcrumb={
         category ? (
-          <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-xs text-white/60">
+          <nav
+            aria-label="Breadcrumb"
+            className="text-muted-foreground flex flex-wrap items-center gap-3 text-[15px]"
+          >
             <Link href="/courses" className="inline-flex min-h-11 items-center hover:text-white">
               ← All categories
             </Link>

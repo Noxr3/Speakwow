@@ -13,7 +13,7 @@ import {
 import { Toggle, toggleVariants } from '@/components/ui/toggle';
 import { cn } from '@/lib/shadcn/utils';
 
-export const agentTrackToggleVariants = cva(['size-9'], {
+export const agentTrackToggleVariants = cva(['size-11'], {
   variants: {
     variant: {
       default: [

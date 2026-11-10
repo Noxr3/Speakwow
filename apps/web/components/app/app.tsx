@@ -66,7 +66,7 @@ export function App({ appConfig, personas, library }: AppProps) {
   return (
     <AgentSessionProvider session={session}>
       <AppSetup />
-      <main className="min-h-svh">
+      <div className="min-h-svh">
         <ViewController
           appConfig={appConfig}
           personas={personas}
@@ -75,7 +75,7 @@ export function App({ appConfig, personas, library }: AppProps) {
           library={library}
           mode={mode}
         />
-      </main>
+      </div>
       <StartAudioButton label="Start Audio" />
       <Toaster
         icons={{ warning: <WarningIcon weight="bold" /> }}

@@ -53,7 +53,7 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
             {phase !== 'teaching' && phase !== 'complete' && (
               <button
                 onClick={() => change(phase === 'welcome' ? 'start' : 'resume')}
-                className="text-primary inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs"
+                className="text-primary inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm"
               >
                 <Play size={14} />
                 {phase === 'welcome' ? 'Begin lesson' : 'Continue lesson'}
@@ -62,7 +62,7 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
             {phase === 'teaching' && (
               <button
                 onClick={() => change('pause')}
-                className="text-muted-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs"
+                className="text-muted-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm"
               >
                 <Pause size={14} />
                 Take a break
@@ -71,7 +71,7 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
             {phase !== 'chat' && (
               <button
                 onClick={() => change('chat')}
-                className="text-muted-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs"
+                className="text-muted-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm"
               >
                 <MessageCircle size={14} />
                 Just chat
@@ -86,7 +86,7 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
           className="border-border bg-card fixed inset-x-4 top-52 bottom-40 z-30 mx-auto flex max-w-xl flex-col overflow-auto rounded-3xl border p-5 shadow-2xl sm:top-48 sm:bottom-44 sm:p-7"
         >
           <div className="mb-4 flex items-start justify-between gap-3">
-            <h2 className="pt-2 text-lg font-medium">{material.title}</h2>
+            <h2 className="pt-2 text-xl font-semibold">{material.title}</h2>
             <button
               aria-label="Close material"
               onClick={() => setMaterial(null)}

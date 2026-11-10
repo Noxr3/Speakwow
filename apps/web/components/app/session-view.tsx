@@ -154,7 +154,7 @@ export const SessionView = ({
           <div className="flex items-center gap-2.5 px-4 py-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153)]" />
             <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
-            <span className="label-mono text-white/50">
+            <span className="label-caption text-white/50">
               {mode === 'course' ? 'Lesson' : 'Free talk'}
             </span>
           </div>

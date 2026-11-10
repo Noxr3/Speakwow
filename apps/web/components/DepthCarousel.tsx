@@ -382,9 +382,21 @@ const DepthCarousel = ({
   );
 
   useEffect(() => {
-    reducedRef.current =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => {
+      reducedRef.current = preference.matches;
+      if (preference.matches) {
+        tweenRef.current?.kill();
+        posRef.current = focusRef.current;
+        layout(posRef.current);
+      }
+    };
+    update();
+    preference.addEventListener('change', update);
+    return () => preference.removeEventListener('change', update);
+  }, [layout]);
+
+  useEffect(() => {
     if (disabled || !autoplay || reducedRef.current || count < 2) return;
     const root = rootRef.current;
     let hovered = false;
@@ -525,7 +537,7 @@ const DepthCarousel = ({
         >
           <button
             type="button"
-            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/50 text-white/75 transition-colors hover:border-white/35 hover:bg-black/70 hover:text-white disabled:opacity-25"
+            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-[#1d211c]/90 text-white/90 transition-colors hover:border-white/35 hover:bg-[#364030] hover:text-white disabled:opacity-25"
             aria-label="Previous unit"
             disabled={disabled || (!loop && active === 0)}
             onClick={() => navigateBy(-1)}
@@ -543,7 +555,7 @@ const DepthCarousel = ({
           </button>
           <button
             type="button"
-            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/50 text-white/75 transition-colors hover:border-white/35 hover:bg-black/70 hover:text-white disabled:opacity-25"
+            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-[#1d211c]/90 text-white/90 transition-colors hover:border-white/35 hover:bg-[#364030] hover:text-white disabled:opacity-25"
             aria-label="Next unit"
             disabled={disabled || (!loop && active === count - 1)}
             onClick={() => navigateBy(1)}

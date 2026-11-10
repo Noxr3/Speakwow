@@ -1,6 +1,6 @@
 # Continuous courses and a home tutor
 
-The home screen centres the current unit beneath a quiet course title.
+The home screen centres the current unit beneath a course-selection capsule with its CEFR range.
 Courses and Profile live in the top navigation (and the mobile navigation menu).
 Courses opens /courses for category selection, progress and syllabuses.
 The unit panel uses React Bits Depth Carousel: whole cards move along a depth rail,
@@ -12,21 +12,23 @@ requesting the call token. The Speakwow logo and wordmark appear only at top lef
 Student progress, history and memories live under Profile. Small talk
 is part of the tutor conversation, without a separate home-screen mode toggle.
 
-CommitMono typography, LiquidGlass panels and the DotGrid call background are
-preserved. Home and inner pages use the requested React Bits Aurora
-background, dimmed on inner pages for headings and form readability,
-with its reduced-motion handling and original license. Text
-panels use an 88% dark tint. Refraction is a separate, paint-contained layer
-beneath the content and rim, with bounded displacement and a neutral centre.
-Only one resize observer updates each map. Buttons inside the panels do not
-apply a nested backdrop filter; Safari/Firefox retain the frosted fallback.
-Each Carousel slide is a complete liquid-glass card: unit number, title,
-introduction and start button move together. The teacher selector sits below
-the carousel and its menu shows each teacher's existing English tagline. The active card has no filter or opacity compositing hints that
-would isolate its glass from the page backdrop. Navigation locks
-while starting a lesson, and inactive slides are excluded from keyboard focus.
-Both React Bits components retain their source attribution and license in
-`apps/web/licenses/react-bits.md`; Depth Carousel uses the existing GSAP dependency.
+The interface uses a system sans-serif stack (the platform font on Apple devices),
+a shared 1120px page grid, 8pt spacing rhythm, left-aligned headings and semantic
+dark surfaces. The course capsule and lesson cards retain Liquid Glass; lesson glass uses an
+88% dark tint. Catalog, Profile, settings and login use readable standard surfaces.
+The requested Aurora rises from the bottom, is dimmed on inner pages, and pauses
+with reduced motion. Primary actions use the green brand accent.
+See [UI design system](UI_DESIGN_SYSTEM.md) for tokens and HIG references.
+
+Each carousel slide contains its unit number, title, introduction, real session
+progress and primary action. Natural content height is measured so wrapped or
+enlarged text is not clipped. The teacher selector sits below the carousel;
+its menu has each teacher's existing description. Navigation locks while starting
+a lesson, and inactive slides are excluded from keyboard focus. Buttons, toggles,
+fields and menus share larger targets and keyboard focus styles.
+Reduced-transparency and increased-contrast preferences provide solid control
+surfaces. Both React Bits components retain attribution and license in
+apps/web/licenses/react-bits.md; Depth Carousel uses the existing GSAP dependency.
 
 A course contains ordered units (lessons). Each unit contains stable, ordered
 sessions: learn, practise, review or exam. A LiveKit call is a conversation;

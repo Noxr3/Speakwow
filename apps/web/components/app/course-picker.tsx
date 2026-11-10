@@ -3,8 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronDown, ChevronRight, Search } from 'lucide-react';
+import {
+  BookOpen,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Globe2,
+  GraduationCap,
+  Search,
+} from 'lucide-react';
 import { chooseCourse } from '@/app/courses/actions';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   CEFR_LEVELS,
@@ -82,10 +91,10 @@ export function CoursePicker({
   };
   return (
     <>
-      <div className="relative">
+      <div className="relative max-w-xl">
         <Search
-          size={16}
-          className="text-muted-foreground pointer-events-none absolute top-3.5 left-3"
+          size={20}
+          className="text-muted-foreground pointer-events-none absolute top-3.5 left-4"
         />
         <input
           aria-label={category ? `Search ${category.title}` : 'Search all courses'}
@@ -93,7 +102,7 @@ export function CoursePicker({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={category ? 'Find a course' : 'Search all courses'}
-          className="field bg-black/85 pl-9"
+          className="field pl-12"
         />
       </div>
       {categoryId === 'school-english' && (
@@ -114,7 +123,7 @@ export function CoursePicker({
               href={`${categoryHref(categoryId)}${value ? `&grade=${encodeURIComponent(value)}` : ''}`}
               scroll={false}
               aria-current={grade === value ? 'page' : undefined}
-              className={`inline-flex min-h-10 items-center rounded-full border px-3 text-xs ${grade === value ? 'border-white/40 bg-white/15 text-white' : 'border-white/15 bg-black/50 text-white/60 hover:text-white'}`}
+              className="filter-chip"
             >
               {value ? `Grade ${value}` : 'All grades'}
             </Link>
@@ -123,7 +132,7 @@ export function CoursePicker({
       )}
       {!browsingCategories && categoryId !== 'school-english' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-white/60">
+          <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-3 text-sm">
             <span>CEFR level</span>
             <a href={CEFR_SOURCE} target="_blank" rel="noreferrer" className="hover:text-white">
               About the levels ↗
@@ -136,13 +145,13 @@ export function CoursePicker({
                 href={courseLevelHref(categoryId, value)}
                 scroll={false}
                 aria-current={level === value ? 'page' : undefined}
-                className={`inline-flex min-h-10 items-center rounded-full border px-3 text-xs ${level === value ? 'border-white/40 bg-white/15 text-white' : 'border-white/15 bg-black/50 text-white/60 hover:text-white'}`}
+                className="filter-chip"
               >
                 {value ?? 'All levels'}
               </Link>
             ))}
           </nav>
-          <p className="text-xs leading-relaxed text-white/50">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             {level
               ? CEFR_LEVELS.find((item) => item.id === level)?.description
               : 'A range shows where a course starts and the skills it builds toward.'}
@@ -155,25 +164,30 @@ export function CoursePicker({
         </p>
       )}
       {browsingCategories && !library.error && (
-        <nav aria-label="Course categories" className="space-y-3">
+        <nav aria-label="Course categories" className="grid gap-6 md:grid-cols-3">
           {categories.map((item) => (
-            <Link
-              key={item.id}
-              href={categoryHref(item.id)}
-              className="group flex items-center gap-4 rounded-2xl border border-white/15 bg-black/85 p-5 transition-colors hover:border-white/35"
-            >
+            <Link key={item.id} href={categoryHref(item.id)} className="category-tile group">
+              <span className="category-icon" aria-hidden="true">
+                {item.id === 'school-english' ? (
+                  <GraduationCap size={24} />
+                ) : item.id === 'ielts-toefl' ? (
+                  <Globe2 size={24} />
+                ) : (
+                  <BookOpen size={24} />
+                )}
+              </span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-base font-medium">{item.title}</h2>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                <h2 className="text-xl font-semibold">{item.title}</h2>
+                <p className="text-muted-foreground mt-3 text-[15px] leading-relaxed">
                   {item.description}
                 </p>
-                <p className="mt-3 text-xs text-white/50">
+                <p className="text-muted-foreground mt-5 text-sm">
                   {item.courses.length ? `${item.courses.length} courses` : 'No courses yet'}
                 </p>
               </div>
               <ChevronRight
                 size={18}
-                className="shrink-0 text-white/50 group-hover:text-white"
+                className="text-muted-foreground mt-auto self-end group-hover:text-white"
                 aria-hidden="true"
               />
             </Link>
@@ -181,37 +195,30 @@ export function CoursePicker({
         </nav>
       )}
       {!browsingCategories && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((course) => {
             const position = coursePosition(course);
             const active = course.id === library.selectedId;
             return (
-              <article
-                key={course.id}
-                className={`overflow-hidden rounded-2xl border bg-black/85 backdrop-blur-xl ${active ? 'border-white/40' : 'border-white/15'}`}
-              >
+              <article key={course.id} className="course-tile" data-active={active}>
                 <button
                   disabled={busy || !course.units.length}
                   aria-pressed={active}
                   onClick={() => selectCourse(course.id)}
-                  className="flex w-full items-center gap-4 p-5 text-left hover:bg-white/5 disabled:cursor-wait"
+                  className="course-select"
                 >
                   <span className="min-w-0 flex-1">
                     {!categoryId && (
-                      <span className="mb-2 block text-xs text-white/50">
+                      <span className="text-muted-foreground mb-2 block text-sm">
                         {
                           COURSE_CATEGORIES.find((item) => item.id === courseCategory(course))
                             ?.title
                         }
                       </span>
                     )}
-                    <span className="block text-sm leading-relaxed font-medium">
-                      {course.title}
-                    </span>
-                    <span className="mt-2 inline-block rounded-md border border-white/15 px-2 py-1 text-xs text-white/75">
-                      {courseLevelLabel(course)}
-                    </span>
-                    <span className="text-muted-foreground mt-2 block text-xs">
+                    <span className="block text-xl leading-snug font-semibold">{course.title}</span>
+                    <span className="level-badge mt-4">{courseLevelLabel(course)}</span>
+                    <span className="text-muted-foreground mt-4 block text-sm">
                       {course.started
                         ? `${position.completed} of ${position.total} sessions`
                         : `${course.units.length} lessons`}
@@ -226,15 +233,15 @@ export function CoursePicker({
                     )}
                   </span>
                   {active ? (
-                    <Check size={17} className="text-primary shrink-0" />
+                    <Check size={17} className="text-primary mt-1 shrink-0" />
                   ) : (
-                    <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+                    <ChevronRight size={16} className="text-muted-foreground mt-1 shrink-0" />
                   )}
                 </button>
                 <button
                   onClick={() => setOutline(course)}
                   aria-label={`View plan for ${course.title}`}
-                  className="text-muted-foreground hover:text-foreground min-h-11 w-full border-t border-white/10 px-5 text-left text-xs"
+                  className="text-primary min-h-12 w-full border-t border-white/10 px-6 text-left text-sm hover:bg-white/5"
                 >
                   View plan
                 </button>
@@ -262,9 +269,13 @@ export function CoursePicker({
           <DialogContent className="max-h-[85svh] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>{outline.title}</DialogTitle>
-              <p className="text-xs text-white/60">{courseLevelLabel(outline)}</p>
+              <p className="text-muted-foreground mt-2 text-sm font-normal">
+                {courseLevelLabel(outline)}
+              </p>
             </DialogHeader>
-            <p className="text-muted-foreground text-sm">{outline.description}</p>
+            <p className="text-muted-foreground mt-4 text-base leading-relaxed">
+              {outline.description}
+            </p>
             {error && (
               <p role="alert" className="text-sm">
                 {error}
@@ -276,12 +287,12 @@ export function CoursePicker({
                 return (
                   <li key={unit.id} className="py-3">
                     <details open={unit.id === outline.currentUnitId}>
-                      <summary className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+                      <summary className="flex min-h-12 cursor-pointer items-center gap-3 text-base">
                         <span className="text-muted-foreground w-6 tabular-nums">
                           {done === unit.sessions.length ? <Check size={16} /> : unit.position}
                         </span>
                         <span className="flex-1 font-medium">{unit.title}</span>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-muted-foreground text-sm">
                           {done}/{unit.sessions.length}
                         </span>
                         <ChevronDown size={14} />
@@ -290,7 +301,7 @@ export function CoursePicker({
                         {unit.sessions.map((session) => (
                           <li key={session.id} className="flex items-center justify-between gap-4">
                             <span>{session.title}</span>
-                            <span className="text-muted-foreground text-xs">
+                            <span className="text-muted-foreground text-sm">
                               {unit.progress?.status === 'mastered' ||
                               unit.progress?.session_progress?.[session.id]?.status === 'mastered'
                                 ? 'Completed'
@@ -317,13 +328,13 @@ export function CoursePicker({
                 );
               })}
             </ol>
-            <button
+            <Button
               disabled={busy}
               onClick={() => selectCourse(outline.id)}
-              className="mt-4 min-h-11 w-full rounded-full border border-white/25 px-5 text-sm hover:bg-white/10"
+              className="mt-6 w-full"
             >
               {busy ? 'One moment…' : 'Study this course'}
-            </button>
+            </Button>
           </DialogContent>
         )}
       </Dialog>
