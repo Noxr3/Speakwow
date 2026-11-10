@@ -94,12 +94,16 @@ export const WelcomeView = ({
     </DropdownMenu>
   );
   return (
-    <div ref={ref} className="flex min-h-svh flex-col items-center justify-center px-5 pt-28 pb-20">
+    <div
+      ref={ref}
+      className="flex min-h-svh flex-col items-center justify-center overflow-x-clip px-5 pt-28 pb-20"
+    >
       <div className="w-full max-w-sm space-y-4">
         <section aria-label="Choose a course">
           <LiquidGlass radius={24} tint={0.88}>
             <div className="flex min-h-14 items-center justify-between gap-3 px-5 py-1.5">
               <h1 className="text-sm leading-relaxed font-medium">
+                <span className="text-muted-foreground mr-2 font-normal">Course: </span>
                 {course?.title ?? 'Choose a course'}
               </h1>
               <Link

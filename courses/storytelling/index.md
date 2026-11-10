@@ -5,12 +5,16 @@
   "description": "Build a story someone wants to hear.",
   "subject": "english",
   "teaching_language": "en",
-  "level": "Adaptive A1–B1",
+  "level": "CEFR B1",
   "sources": [
     {
       "title": "Speakwow wow3 activity catalog and legacy creators",
       "url": "https://github.com/Speakwow/wow3",
       "date": "2026-11-10"
+    },
+    {
+      "title": "Council of Europe CEFR global scale — editorial course-level alignment",
+      "url": "https://www.coe.int/en/web/common-European-framework-reference-languages/table-1-cefr-3.3-common-reference-levels-global-scale"
     }
   ]
 }

@@ -9,7 +9,7 @@ export async function homeCourses(): Promise<HomeLibrary> {
   const [catalog, enrollments] = await Promise.all([
     supabase
       .from('courses')
-      .select('id,title,description,units:course_units(id,title,position,content,goals)')
+      .select('id,slug,grade,title,description,units:course_units(id,title,position,content,goals)')
       .in('subject', OFFERED_SUBJECTS)
       .order('title')
       .limit(100),
@@ -49,6 +49,8 @@ export async function homeCourses(): Promise<HomeLibrary> {
         }));
       return {
         id: course.id,
+        slug: course.slug,
+        grade: course.grade,
         title: course.title,
         description: course.description,
         units,

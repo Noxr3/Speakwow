@@ -1,18 +1,9 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
-import Carousel from '@/components/Carousel';
+import type { ReactNode } from 'react';
+import DepthCarousel from '@/components/DepthCarousel';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import type { HomeCourse } from '@/lib/study-plan';
-
-const transparentCards = {
-  '--carousel-tile': 'transparent',
-  '--carousel-tile-edge': 'transparent',
-  '--carousel-tile-highlight': 'transparent',
-  '--carousel-tile-shadow': 'none',
-  '--carousel-hover': 'none',
-  '--carousel-press': 'none',
-} as CSSProperties;
 
 export function UnitCarousel({
   course,
@@ -32,26 +23,21 @@ export function UnitCarousel({
   if (!course.units.length) return null;
 
   return (
-    <Carousel
+    <DepthCarousel
       key={`${course.id}:${course.currentUnitId}`}
-      label="Choose a unit"
-      itemLabel="Unit"
-      baseWidth="100%"
-      contentHeight={284}
-      frame={false}
-      effect="tilt"
-      fadeEdges={false}
+      cardWidth={384}
+      cardHeight={284}
       radius={28}
-      gap={20}
-      peek={0}
-      indicator="counter"
-      controlsPosition="bottom"
-      arrows
+      depth={220}
+      spread={90}
+      tilt={22}
+      visibleCards={3}
+      blur={3}
+      duration={650}
       autoplay={false}
       loop={false}
       disabled={busy}
       initialIndex={initial}
-      style={transparentCards}
       items={course.units.map((unit) => (
         <LiquidGlass key={unit.id} radius={28} tint={0.88} height="100%">
           <div className="flex h-full flex-col items-center justify-center px-6 py-5 text-center sm:px-8">

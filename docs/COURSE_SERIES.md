@@ -2,9 +2,10 @@
 
 The home screen separates the course and unit into two compact glass panels.
 A plain swap icon opens /courses for course selection, progress and syllabuses.
-The unit panel uses React Bits Carousel with manual whole-card tilt transitions and spring-based swiping,
-trackpad and keyboard/arrow navigation (no autoplay or looping);
-it opens at the saved unit, and starting a lesson saves the displayed unit before
+The unit panel uses React Bits Depth Carousel: whole cards move along a depth rail,
+with one-lesson-per-flick dragging, horizontal trackpad and keyboard navigation (no autoplay or looping). Arrow buttons
+sit at the screen edges, centred vertically on the card; the unit counter stays below.
+It opens at the saved unit, and starting a lesson saves the displayed unit before
 requesting the call token. The Speakwow logo and wordmark appear only at top left.
 Student progress, history and memories live under Learning profile. Small talk
 is part of the tutor conversation, without a separate home-screen mode toggle.
@@ -18,11 +19,11 @@ beneath the content and rim, with bounded displacement and a neutral centre.
 Only one resize observer updates each map. Buttons inside the panels do not
 apply a nested backdrop filter; Safari/Firefox retain the frosted fallback.
 Each Carousel slide is a complete liquid-glass card: title, start button and teacher
-move together. The edge mask is disabled so it does not isolate glass from the
-page background. Navigation locks
+move together. The active card has no filter or opacity compositing hints that
+would isolate its glass from the page backdrop. Navigation locks
 while starting a lesson, and inactive slides are excluded from keyboard focus.
 Both React Bits components retain their source attribution and license in
-`apps/web/licenses/react-bits.md`; Carousel reuses the project's Lucide icons.
+`apps/web/licenses/react-bits.md`; Depth Carousel uses the existing GSAP dependency.
 
 A course contains ordered units (lessons). Each unit contains stable, ordered
 sessions: learn, practise, review or exam. A LiveKit call is a conversation;
@@ -72,10 +73,39 @@ Run course checks, script tests, web type/build/lint checks, Python tests and
 SQL tests before deployment. Real microphone/model teaching quality still
 requires an authenticated end-to-end voice session.
 
+## Course navigation and CEFR difficulty
+
+The course directory starts with Adult English, IELTS & TOEFL, and School English.
+Stable slugs map the eight existing general series to Adult English; textbook grade
+metadata maps the four Yilin volumes to School English. IELTS/TOEFL currently has
+no courses and says so. Unknown courses remain discoverable under More English.
+Category and CEFR level links are URL state, with breadcrumbs, browser back/reload,
+category-scoped search, school-grade filters and global search across categories. No enrollment changes
+until the student chooses a course or lesson.
+
+Difficulty uses the [Council of Europe CEFR global scale](https://www.coe.int/en/web/common-European-framework-reference-languages/table-1-cefr-3.3-common-reference-levels-global-scale).
+The current editorial alignment is provisional while these outlines remain draft:
+
+| Series | CEFR scope | Alignment rationale |
+| --- | --- | --- |
+| Listen & write; Pronunciation & rhythm | A1–A2 | Familiar words, short messages, intelligible everyday phrases. |
+| Everyday conversations | A2–B1 | Routine transactions progressing to explaining problems and negotiating solutions. |
+| Picture conversations; Words in use | A2–B1 | Simple descriptions progressing to connected narratives and paraphrasing. |
+| Read & discover; Writing workshop | A2–B1 | Short everyday texts progressing to connected paragraphs, inferences and reasons. |
+| Storytelling | B1 | Independently tell a connected story with a beginning, middle and end. |
+
+The A1–C2 filters include both ends of a course range. B2–C2 have no matching
+courses yet. School grade is not automatically equated to CEFR; textbooks show
+Grade 7/8 with grade filters; they make no CEFR equivalence claim. These are course skill
+scopes, not official certification or a measurement of the student's proficiency.
+Update `lib/course-categories.ts`, the relevant course `level` and its log together
+when the curriculum scope changes. No schema migration is required for catalog
+navigation; existing slugs and grades supply membership metadata.
+
 ## Verification (2026-11-10)
 
 - Web: production build and typecheck passed; lint passed with existing warnings
-  in vendored/unchanged components (including the upstream Carousel image renderer). 28 web tests and 10 script tests passed.
+  in unchanged components. 32 web tests and 10 script tests passed.
 - Agent: 148 offline tests and Ruff passed. The two existing live model tests
   could not run: this checkout has no voice/model provider credentials.
 - Database: the full migration chain was applied to an isolated local Supabase;
@@ -89,7 +119,9 @@ requires an authenticated end-to-end voice session.
   Make it your own and displayed 1/13. Course search and the plan dialog worked.
 - Carousel: checked desktop dragging, horizontal scrolling, keyboard navigation,
   first/last boundaries, phone layout, connection locking and saved-unit reload.
-  Home and course-page Aurora rendered with readable dark panels.
+  Home and course-page Aurora rendered with readable dark panels. Category links,
+  A1 filtering, empty B2 results, grade filtering, browser back and global search
+  were checked; choosing an existing course preserved its saved unit.
 - Token route: a separate local guest requested its selected course after another
   course became active; the signed course/unit still matched that request.
 

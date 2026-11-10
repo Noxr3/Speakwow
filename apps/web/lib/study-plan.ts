@@ -37,6 +37,8 @@ export interface HomeUnit {
 }
 export interface HomeCourse {
   id: string;
+  slug?: string | null;
+  grade?: string | null;
   title: string;
   description: string | null;
   units: HomeUnit[];
