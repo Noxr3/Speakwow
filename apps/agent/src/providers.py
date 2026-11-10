@@ -1,12 +1,10 @@
 """Which speech-to-speech model voices the teacher, and how it takes turns.
 
 Speech-to-speech, not a speech-to-text -> LLM -> text-to-speech chain: the
-model hears HOW the student sounds (hesitant, excited, tired) and answers
-with emotion in its own voice, with the lowest delay. As of 2026-10 Grok
-Voice 3.0 leads the Artificial Analysis speech-to-speech index (time to
-first audio 0.81 s), so xAI is the default.
+model hears HOW the student sounds and can answer with vocal expression.
+OpenAI Realtime is the default, using a server key or the student's own key.
 
-    REALTIME_PROVIDER      xai (default) | openai
+    REALTIME_PROVIDER      openai (default) | xai
     XAI_REALTIME_MODEL     default grok-voice-3.0 (pinned: grok-voice-latest moves
                            to each new generation, and a teacher should not change
                            voice or manner overnight)
@@ -39,6 +37,7 @@ DEFAULT_VOICES = {"xai": "Ara", "openai": "marin"}
 XAI_REALTIME_URL = "wss://api.x.ai/v1/realtime"
 
 XAI_MODEL = "grok-voice-3.0"
+OPENAI_MODEL = "gpt-realtime-2.1"
 
 # Learners pause mid-sentence to find a word, beginners for 600-900 ms and
 # more. The plugin's default (200 ms of silence ends the turn) has the teacher
@@ -49,8 +48,8 @@ FLUENT_TURN_SILENCE_MS = 750
 
 
 def default_provider() -> str:
-    provider = (os.getenv("REALTIME_PROVIDER") or "xai").strip().lower()
-    return provider if provider in PROVIDERS else "xai"
+    provider = (os.getenv("REALTIME_PROVIDER") or "openai").strip().lower()
+    return provider if provider in PROVIDERS else "openai"
 
 
 def voice_for(persona: Persona, provider: str) -> str:
@@ -73,18 +72,18 @@ def build_realtime_model(
 ):
     voice = voice_for(persona, provider)
     if provider == "openai":
+        model_id = (os.getenv("OPENAI_REALTIME_MODEL") or OPENAI_MODEL).removeprefix(
+            "openai/"
+        )
+        # Wait for a learner's thought, including pauses to find a word.
+        turn_detection = SemanticVad(
+            type="semantic_vad",
+            eagerness="low",
+            create_response=True,
+            interrupt_response=True,
+        )
         return openai.realtime.RealtimeModel(
-            model=os.getenv("OPENAI_REALTIME_MODEL") or "gpt-realtime-2.1",
-            voice=voice,
-            api_key=api_key,
-            # Semantic VAD judges whether the sentence is finished, not just
-            # whether it went quiet; "low" waits for a learner who is thinking.
-            turn_detection=SemanticVad(
-                type="semantic_vad",
-                eagerness="low",
-                create_response=True,
-                interrupt_response=True,
-            ),
+            model=model_id, voice=voice, api_key=api_key, turn_detection=turn_detection
         )
     model_id = os.getenv("XAI_REALTIME_MODEL") or XAI_MODEL
     model = XaiRealtimeModel(

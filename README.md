@@ -32,7 +32,7 @@ learning for life.
 
 | | |
 |---|---|
-| 🎙️ **Real-time voice** | Speech-to-speech, so the teacher hears hesitation and excitement and answers with feeling. Defaults to Grok Voice (`grok-voice-3.0`, pinned), with OpenAI Realtime one setting away. Turn-taking is tuned for learners who pause to find a word. |
+| 🎙️ **Real-time voice** | OpenAI Realtime (`gpt-realtime-2.1`) hears the learner directly and speaks with context-sensitive emotion, emphasis and pacing. Each teacher keeps their own voice; semantic turn detection gives learners time to find a word. |
 | 🧠 **Remembers you** | After every call the lesson is reflected on: a summary, what you are working on, things a teacher would remember (your goals, your cat's name), and an estimated CEFR level. Next time, the teacher picks up where you left off. |
 | 🧑‍🏫 **A teacher, not a chatbot** | Recasts mistakes instead of lecturing, stretches you when it is easy, scaffolds when you are stuck, and praises specifically. A fast background "coach" model notices when you are stuck or bored and quietly tells the teacher, without adding any delay. |
 | 🏡 **Ten teachers, each with a life** | Frank, Lucy, Lily, Leo, Kai, Grace, Diego, Priya, Nora and Max: different accents, teaching styles and specialities (beginners, interviews, stories, science, songs…). Each has a backstory and storylines that move forward every few days, so small talk is two-way and consistent. Pick one from the menu beside the start button. |
@@ -50,7 +50,7 @@ flowchart LR
   B[Browser<br/>Next.js] -- token with signed metadata --> W[/api/connection-details/]
   B <-- WebRTC audio, cards, stickers --> L[(LiveKit)]
   L <--> A[Voice agent<br/>LiveKit Agents, Python]
-  A <-- speech to speech --> M[Grok Voice / OpenAI Realtime]
+  A <-- speech to speech --> M[OpenAI Realtime / optional Grok Voice]
   A -. after each student turn .-> C[Coach: Jev decision model]
   A -- snapshot / lesson record --> S[(Supabase<br/>Postgres + RLS)]
   A -. after the call .-> R[Reflection: flash model]
@@ -66,14 +66,14 @@ flowchart LR
 
 You need Node 22, pnpm 9, Python 3.10+ with [uv](https://docs.astral.sh/uv/), a
 [LiveKit](https://livekit.io) project (the free cloud tier, or
-`livekit-server --dev` locally), and an xAI or OpenAI API key.
+`livekit-server --dev` locally), and an OpenAI API key (or xAI with `REALTIME_PROVIDER=xai`).
 
 ```bash
 git clone https://github.com/Noxr3/Speakwow && cd Speakwow
 pnpm install
 
 # the teacher
-cd apps/agent && cp .env.example .env.local   # LIVEKIT_* and XAI_API_KEY
+cd apps/agent && cp .env.example .env.local   # LIVEKIT_* and OPENAI_API_KEY
 uv sync && uv run src/agent.py download-files && uv run src/agent.py dev
 
 # the web app (another terminal)
@@ -98,7 +98,7 @@ and `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` for the agent.
 |---|---|---|
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | web, agent | Your LiveKit project |
 | `XAI_API_KEY` / `OPENAI_API_KEY` | agent | The operator's voice-model key (not needed if every user brings their own) |
-| `REALTIME_PROVIDER` | agent | `xai` (default) or `openai` |
+| `REALTIME_PROVIDER` | agent | `openai` (default) or `xai`; a student's explicitly configured personal key selects its own provider |
 | `XAI_REALTIME_MODEL` / `OPENAI_REALTIME_MODEL` | agent | Default `grok-voice-3.0` (pinned, so a teacher's voice never changes overnight) / `gpt-realtime-2.1` |
 | `TURN_SILENCE_MS` | agent | Silence that ends a student's turn on xAI (default 1100 ms for beginners and school students, 750 ms for B1+ adults) |
 | `AI_GATEWAY_API_KEY` | agent | Turns on the coaching sidecar (Jev) and flash-model reflection via the Vercel AI Gateway |

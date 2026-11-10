@@ -20,8 +20,8 @@
 ## 它能做什么
 
 - 🎙️ **实时语音对话**：语音直接对语音，老师听得出你的犹豫和兴奋，也会带着情绪回应。默认用
-  Grok Voice（`grok-voice-3.0`，固定版本），一个配置就能切到 OpenAI Realtime。专门为「边想边说」
-  的学习者放宽了判停时间，不会你一停顿就抢话。
+  OpenAI Realtime（`gpt-realtime-2.1`），按教学情境引导语调、重音和节奏，并使用更耐心的语义判停，
+  给「边想边说」的学习者留出思考时间。显式配置仍可使用 Grok Voice。
 - 🧠 **记得你**：每次通话后自动复盘，记下这节课的总结、你在练的薄弱点、一个好老师会记住的事
   （你的目标、你家猫的名字），并估计你的 CEFR 等级。下次开口就接着上次聊。
 - 🧑‍🏫 **是老师，不是聊天机器人**：用「重述」纠错而不是说教，简单时加难度，卡住时搭梯子，
@@ -43,14 +43,14 @@
 ## 快速开始
 
 需要 Node 22、pnpm 9、Python 3.10+ 和 [uv](https://docs.astral.sh/uv/)、一个
-[LiveKit](https://livekit.io) 项目（免费云端，或本地 `livekit-server --dev`），以及一个 xAI 或 OpenAI 的 key。
+[LiveKit](https://livekit.io) 项目（免费云端，或本地 `livekit-server --dev`），以及一个 OpenAI API key（使用 xAI 时须设置 `REALTIME_PROVIDER=xai`）。
 
 ```bash
 git clone https://github.com/Noxr3/Speakwow && cd Speakwow
 pnpm install
 
 # 老师（语音 agent）
-cd apps/agent && cp .env.example .env.local   # 填 LIVEKIT_* 和 XAI_API_KEY
+cd apps/agent && cp .env.example .env.local   # 填 LIVEKIT_* 和 OPENAI_API_KEY
 uv sync && uv run src/agent.py download-files && uv run src/agent.py dev
 
 # 网页（另开一个终端）

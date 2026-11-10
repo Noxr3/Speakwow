@@ -157,6 +157,18 @@ def test_voice_note_reaches_the_model_in_each_providers_terms() -> None:
     assert f"Tone: {FRANK.voice_note}" in gpt and "Unhurried" in gpt
 
 
+def test_default_teacher_directs_vocal_expression_without_spoken_stage_directions():
+    prompt = build_instructions(FRANK)
+    assert "## Vocal delivery" in prompt
+    assert "Perform these directions in the audio" in prompt
+    assert "never read them aloud" in prompt
+    assert "Correction" in prompt and "target word" in prompt
+    assert "Curiosity" in prompt and "pitch" in prompt
+    assert "Demonstration" in prompt and "connected speech" in prompt
+    assert "never laugh at a learner's mistake" in prompt
+    assert "## Vocal delivery" not in build_instructions(FRANK, provider="xai")
+
+
 def test_beginners_get_simpler_words_and_more_time() -> None:
     assert is_beginner(None)
     assert is_beginner({"profile": {"grade": "7"}})

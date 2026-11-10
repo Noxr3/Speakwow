@@ -38,7 +38,7 @@ export function ByokForm() {
   const { user } = useAuth();
   const [status, setStatus] = useState<ByokStatus | null>(null);
   const [guestKey, setGuestKey] = useState<GuestKey | null>(null);
-  const [provider, setProvider] = useState<Provider>('xai');
+  const [provider, setProvider] = useState<Provider>('openai');
   const [key, setKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
