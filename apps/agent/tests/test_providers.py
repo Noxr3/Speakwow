@@ -33,12 +33,31 @@ def test_env_overrides_are_bounded(monkeypatch) -> None:
     monkeypatch.setenv("REALTIME_PROVIDER", "OpenAI")
     assert default_provider() == "openai"
     monkeypatch.setenv("REALTIME_PROVIDER", "nope")
-    assert default_provider() == "xai"
+    assert default_provider() == "openai"
     monkeypatch.setenv("TURN_SILENCE_MS", "50")
     assert turn_silence_ms() == 200
     monkeypatch.setenv("TURN_SILENCE_MS", "abc")
     assert turn_silence_ms() == 1100
     assert turn_silence_ms(beginner=False) == 750
+
+
+def test_openai_is_default_and_explicit_provider_override_is_respected(monkeypatch):
+    monkeypatch.delenv("REALTIME_PROVIDER", raising=False)
+    assert default_provider() == "openai"
+    monkeypatch.setenv("REALTIME_PROVIDER", " xAI ")
+    assert default_provider() == "xai"
+
+
+def test_server_key_and_personal_key_use_openai_directly(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "server-key")
+    monkeypatch.delenv("OPENAI_REALTIME_MODEL", raising=False)
+    model = build_realtime_model(FRANK, "openai")
+    assert model.model == "gpt-realtime-2.1"
+    assert model._opts.voice == "cedar"
+    assert model._opts.turn_detection.eagerness == "low"
+    assert model._opts.api_key == "server-key"
+    personal = build_realtime_model(FRANK, "openai", api_key="personal-key")
+    assert personal._opts.api_key == "personal-key"
 
 
 def test_reflection_prefers_an_explicit_key_then_the_gateway_flash_model(

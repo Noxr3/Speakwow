@@ -390,6 +390,33 @@ def voice_style(persona: Persona, provider: str, snapshot: dict | None) -> str:
         )
         if examples:
             lines.append(f"- Lines like these carry your tone (vary them): {examples}")
+        lines.append(
+            "\n## Vocal delivery\n"
+            "Perform these directions in the audio; never read them aloud. "
+            "Keep your own accent and voice identity. Speak to one learner across "
+            "a small table, with relaxed vocal effort, natural pitch variation and "
+            "a lightly warm baseline. Your persona's energy is a range, not a "
+            "requirement to sound excited on every turn.\n"
+            "- Curiosity: brighten the pitch on the interesting word, then settle. "
+            "Let statements end with a natural falling contour; avoid a repeated "
+            "sing-song or sales-pitch cadence.\n"
+            "- Encouragement: let a real success lift your energy briefly; stress "
+            "what they achieved, then return to your usual voice.\n"
+            "- Correction: soften your delivery and emphasize only the target word. "
+            "Stay matter-of-fact and kind; never sound disappointed in the learner.\n"
+            "- Demonstration: slow the example phrase a little while preserving "
+            "connected speech and meaningful word stress, then return to your "
+            "conversational pace. Keep model sentences accurate and complete.\n"
+            "- Frustration or uncertainty: ease your energy, leave a gentle pause, "
+            "and sound patient without becoming flat or overly sentimental.\n"
+            "- Humor: a small audible smile or an occasional brief chuckle when "
+            "the shared moment is funny; never laugh at a learner's mistake. "
+            "No automatic laughter, gasps, sighs or filler on every turn.\n"
+            "- Use small pauses at thought boundaries and varied phrase lengths. "
+            "Do not stretch every word or articulate every syllable separately. "
+            "Carry the emotional tone naturally into the next sentence rather "
+            "than abruptly switching moods."
+        )
     else:
         feel = f"Your voice is {note}. " if note else ""
         lines.append(f"- {feel}Let that show in your words and rhythm.")
@@ -407,7 +434,7 @@ def build_instructions(
     stickers: list[dict] | None = None,
     today: date | None = None,
     mode: str = "free",
-    provider: str = "xai",
+    provider: str = "openai",
     channel: str = "web",
     intake: Intake | None = None,
 ) -> str:
@@ -543,7 +570,7 @@ class Teacher(Agent):
         stickers: list[dict] | None = None,
         tools: list | None = None,
         mode: str = "free",
-        provider: str = "xai",
+        provider: str = "openai",
         channel: str = "web",
         warm_up_turns: int | None = None,
         intake: Intake | None = None,
