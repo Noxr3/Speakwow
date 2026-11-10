@@ -49,8 +49,6 @@ export function LiquidGlass({
       redOffset={70}
       greenOffset={10}
       blueOffset={20}
-      brightness={50}
-      opacity={0.63}
       mixBlendMode="screen"
       forceDark
       className={className}

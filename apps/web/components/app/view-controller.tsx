@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
+import { toast } from 'sonner';
 import { useSessionContext } from '@livekit/components-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
+import { chooseCourse } from '@/app/courses/actions';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
 import { ensureGuestSession } from '@/lib/guest';
@@ -41,7 +43,6 @@ interface ViewControllerProps {
   onSelectPersona: (id: string) => void;
   library: HomeLibrary;
   mode: CallMode;
-  onSelectMode: (mode: CallMode) => void;
 }
 
 export function ViewController({
@@ -51,7 +52,6 @@ export function ViewController({
   onSelectPersona,
   library,
   mode,
-  onSelectMode,
 }: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
   const [busy, setBusy] = useState(false);
@@ -72,14 +72,24 @@ export function ViewController({
   // A visitor becomes a guest when they start a call, not when the page
   // loads (the page fetches a token early to connect faster), so the call
   // is kept and can join their account later (lib/guest.ts).
-  const startCall = async () => {
+  const startCall = async (unitId?: string) => {
     if (busy) return;
     setBusy(true);
     try {
-      await ensureGuestSession(createClient()).catch(() => undefined);
+      if (unitId && library.selectedId) {
+        await ensureGuestSession(createClient());
+        const result = await chooseCourse(library.selectedId, unitId);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        router.refresh();
+      } else {
+        await ensureGuestSession(createClient()).catch(() => undefined);
+      }
       await start();
     } catch {
-      /* The token source shows the error. */
+      toast.error('Could not start the lesson. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -97,8 +107,6 @@ export function ViewController({
           onSelectPersona={onSelectPersona}
           library={library}
           busy={busy}
-          mode={mode}
-          onSelectMode={onSelectMode}
           onStartCall={startCall}
         />
       )}

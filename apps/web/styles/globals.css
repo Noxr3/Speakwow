@@ -229,3 +229,11 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Native touch/trackpad paging without a second horizontal scrollbar. */
+.unit-carousel {
+  scrollbar-width: none;
+}
+.unit-carousel::-webkit-scrollbar {
+  display: none;
+}

@@ -36,7 +36,7 @@ export function App({ appConfig, personas, library }: AppProps) {
   useEffect(() => {
     setCourseId(library.selectedId);
   }, [library.selectedId]);
-  const [mode, setMode] = useState<CallMode>(library.selectedId ? 'course' : 'free');
+  const mode: CallMode = courseId ? 'course' : 'free';
   const choiceRef = useRef<CallChoice>({ persona: personaId, mode });
   choiceRef.current = { persona: personaId, mode, course_id: courseId };
 
@@ -74,7 +74,6 @@ export function App({ appConfig, personas, library }: AppProps) {
           onSelectPersona={setPersonaId}
           library={library}
           mode={mode}
-          onSelectMode={setMode}
         />
       </main>
       <StartAudioButton label="Start Audio" />

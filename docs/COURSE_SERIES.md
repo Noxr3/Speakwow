@@ -1,15 +1,19 @@
 # Continuous courses and a home tutor
 
-The home screen has one primary action: continue the selected course. Its compact
-course link opens a separate /courses page for selection, individual progress and
-on-demand syllabuses. The logo appears only in the top-left navigation. Student
-progress, history and memories live under Learning profile.
-The existing CommitMono typography, moving green/blue ColorBends background,
-refractive GlassSurface buttons, LiquidGlass panels, DotGrid call background
-and original palette are preserved. Simplification is limited to information
-hierarchy, shorter copy and progressive disclosure of the syllabus. Text panels
-use an opaque dark tint (85–90%) to keep moving light from obscuring the text;
-loading a course preserves text contrast.
+The home screen separates the course and unit into two compact glass panels.
+A plain swap icon opens /courses for course selection, progress and syllabuses.
+The unit panel supports touch/trackpad swiping and keyboard/arrow navigation;
+it opens at the saved unit, and starting a lesson saves the displayed unit before
+requesting the call token. The Speakwow logo and wordmark appear only at top left.
+Student progress, history and memories live under Learning profile. Small talk
+is part of the tutor conversation, without a separate home-screen mode toggle.
+
+The original CommitMono typography, moving green/blue ColorBends background,
+LiquidGlass panels, DotGrid call background and palette are preserved. Text
+panels use an 88% dark tint. Refraction is a separate, paint-contained layer
+beneath the content and rim, with bounded displacement and a neutral centre.
+Only one resize observer updates each map. Buttons inside the panels do not
+apply a nested backdrop filter; Safari/Firefox retain the frosted fallback.
 
 A course contains ordered units (lessons). Each unit contains stable, ordered
 sessions: learn, practise, review or exam. A LiveKit call is a conversation;

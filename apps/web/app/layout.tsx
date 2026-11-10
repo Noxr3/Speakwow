@@ -56,9 +56,14 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <body className="overflow-x-hidden">
         <AuthProvider>
           <header className="fixed top-0 left-0 z-50 flex w-full flex-row items-center justify-between p-4 md:p-6">
-            <Link href="/" className="scale-100 transition-transform duration-300 hover:scale-110">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-2.5"
+              aria-label="Speakwow home"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logo} alt="Speakwow Logo" className="h-6 w-auto" />
+              <img src={logo} alt="" className="h-6 w-auto" />
+              <span className="font-mono text-base font-bold tracking-tight">Speakwow</span>
             </Link>
             <AccountLinks />
           </header>
