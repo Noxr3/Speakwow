@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
-import { toast } from 'sonner';
 import { useSessionContext } from '@livekit/components-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
-import { chooseCourse } from '@/app/courses/actions';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
 import { ensureGuestSession } from '@/lib/guest';
@@ -42,7 +40,6 @@ interface ViewControllerProps {
   persona: PersonaSummary;
   onSelectPersona: (id: string) => void;
   library: HomeLibrary;
-  onSelectCourseId: (id: string | null) => void;
   mode: CallMode;
   onSelectMode: (mode: CallMode) => void;
 }
@@ -53,18 +50,13 @@ export function ViewController({
   persona,
   onSelectPersona,
   library,
-  onSelectCourseId,
   mode,
   onSelectMode,
 }: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
-  const [current, setCurrent] = useState(library);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const wasConnected = useRef(false);
-  useEffect(() => {
-    setCurrent(library);
-  }, [library]);
   useEffect(() => {
     const justEnded = wasConnected.current && !isConnected;
     wasConnected.current = isConnected;
@@ -76,27 +68,6 @@ export function ViewController({
     );
     return () => timers.forEach(window.clearTimeout);
   }, [isConnected, router]);
-  const selectCourse = async (id: string, unitId?: string) => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await ensureGuestSession(createClient());
-      const result = await chooseCourse(id, unitId);
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      if (result.library) {
-        setCurrent(result.library);
-        onSelectCourseId(result.library.selectedId);
-        onSelectMode('course');
-      }
-    } catch {
-      toast.error('Your course could not be saved. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  };
 
   // A visitor becomes a guest when they start a call, not when the page
   // loads (the page fetches a token early to connect faster), so the call
@@ -124,8 +95,7 @@ export function ViewController({
           personas={personas}
           persona={persona}
           onSelectPersona={onSelectPersona}
-          library={current}
-          onSelectCourse={selectCourse}
+          library={library}
           busy={busy}
           mode={mode}
           onSelectMode={onSelectMode}
@@ -139,7 +109,7 @@ export function ViewController({
           {...VIEW_MOTION_PROPS}
           appConfig={appConfig}
           persona={persona}
-          mode={current.selectedId ? mode : 'free'}
+          mode={library.selectedId ? mode : 'free'}
         />
       )}
     </AnimatePresence>

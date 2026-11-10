@@ -1,7 +1,9 @@
 # Continuous courses and a home tutor
 
-The home screen has one primary action: continue the selected course. A quiet
-course list shows progress for each course. The syllabus opens on demand.
+The home screen has one primary action: continue the selected course. Its compact
+course link opens a separate /courses page for selection, individual progress and
+on-demand syllabuses. The logo appears only in the top-left navigation. Student
+progress, history and memories live under Learning profile.
 The existing CommitMono typography, moving green/blue ColorBends background,
 refractive GlassSurface buttons, LiquidGlass panels, DotGrid call background
 and original palette are preserved. Simplification is limited to information
@@ -67,7 +69,8 @@ requires an authenticated end-to-end voice session.
   all SQL regression files passed with empty course fixtures inside rolled-back
   transactions. Selection, foreign-unit rejection, RLS, failed exam, retry,
   idempotency and review preservation were exercised.
-- Browser: production UI checked at desktop and phone sizes. Selected a course,
+- Browser: UI checked at desktop and phone sizes, including the separate course
+  page, returning home after selection, and the Learning profile navigation. Selected a course,
   changed its unit, changed courses and reloaded; both places survived. A local
   agent-style score write advanced the visible session from Learn together to
   Make it your own and displayed 1/13. Course search and the plan dialog worked.

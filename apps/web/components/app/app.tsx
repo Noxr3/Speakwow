@@ -73,7 +73,6 @@ export function App({ appConfig, personas, library }: AppProps) {
           persona={persona}
           onSelectPersona={setPersonaId}
           library={library}
-          onSelectCourseId={setCourseId}
           mode={mode}
           onSelectMode={setMode}
         />

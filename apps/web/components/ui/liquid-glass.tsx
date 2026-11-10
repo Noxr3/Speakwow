@@ -12,6 +12,7 @@ interface LiquidGlassProps {
    * panels with text get a little so the words read over moving light.
    */
   tint?: number;
+  refract?: boolean;
   width?: number | string;
   height?: number | string;
   className?: string;
@@ -29,6 +30,7 @@ export function LiquidGlass({
   children,
   radius = 28,
   tint = 0,
+  refract = true,
   width = '100%',
   height = 'auto',
   className,
@@ -41,6 +43,7 @@ export function LiquidGlass({
       height={height}
       borderRadius={radius}
       backgroundOpacity={tint}
+      refract={refract}
       displace={0.5}
       distortionScale={-180}
       redOffset={70}

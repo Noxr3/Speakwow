@@ -2,23 +2,17 @@ import { redirect } from 'next/navigation';
 import { LearningCourses } from '@/components/app/learning-courses';
 import { GlassPanel, PageShell } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import type { CatalogParams } from '@/lib/course-catalog';
 import { memorySummary } from '@/lib/memory-summary';
 import { getSessionUser } from '@/lib/supabase/server';
-import { enroll, forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
+import { forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
 
-export const metadata = { title: 'Learning record · Speakwow' };
+export const metadata = { title: 'Learning profile · Speakwow' };
 
 const field = 'field';
 
 /** 学习档案: who the student is, where they are in their course, and what the
  * teacher remembers — every remembered thing can be erased here. */
-export default async function ProfilePage({
-  searchParams,
-}: {
-  searchParams: Promise<CatalogParams>;
-}) {
-  const params = await searchParams;
+export default async function ProfilePage() {
   const { supabase, user } = await getSessionUser();
   if (!supabase || !user) redirect('/login');
 
@@ -51,7 +45,7 @@ export default async function ProfilePage({
   const summary = memorySummary(memories.data ?? []);
 
   return (
-    <PageShell title="Your progress" wide>
+    <PageShell title="Learning profile" wide>
       {attempts.data && attempts.data.length > 0 && (
         <GlassPanel title="Recent learning">
           <ul className="divide-border divide-y">
@@ -140,13 +134,7 @@ export default async function ProfilePage({
         </details>
       </GlassPanel>
 
-      <LearningCourses
-        supabase={supabase}
-        userId={user.id}
-        params={params}
-        enroll={enroll}
-        setCurrentUnit={setCurrentUnit}
-      />
+      <LearningCourses supabase={supabase} userId={user.id} setCurrentUnit={setCurrentUnit} />
 
       {weaknesses.data?.length ? (
         <GlassPanel title="What you are practising">
