@@ -20,10 +20,13 @@ def test_defaults_to_a_guest_free_talk_with_frank() -> None:
 
 def test_reads_persona_student_mode_and_legacy_agent_name() -> None:
     job = parse_job_metadata(
-        json.dumps({"persona": "lucy", "student_id": STUDENT, "mode": "course"})
+        json.dumps({"persona": "lily", "student_id": STUDENT, "mode": "course"})
     )
-    assert (job.persona.id, job.student_id, job.mode) == ("lucy", STUDENT, "course")
-    assert parse_job_metadata(json.dumps({"agent": "Lucy"})).persona.id == "lucy"
+    assert (job.persona.id, job.student_id, job.mode) == ("lily", STUDENT, "course")
+    assert parse_job_metadata(json.dumps({"agent": "Lily"})).persona.id == "lily"
+    # a retired teacher, from an old link or an old browser, finds their heir
+    assert parse_job_metadata(json.dumps({"persona": "lucy"})).persona.id == "grace"
+    assert parse_job_metadata(json.dumps({"agent": "Lucy"})).persona.id == "grace"
 
 
 def test_course_mode_needs_a_real_student() -> None:

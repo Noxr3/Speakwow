@@ -26,7 +26,7 @@ def session(monkeypatch):
 
     monkeypatch.setattr(XaiSession, "__init__", init)
     model = build_realtime_model(
-        load_personas()["lucy"], "xai", api_key="offline-test-key"
+        load_personas()["grace"], "xai", api_key="offline-test-key"
     )
     session = model.session()
     assert session in model._sessions

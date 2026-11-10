@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 DEFAULT_PERSONA_ID = "frank"
@@ -87,8 +88,22 @@ def load_personas(directory: Path | None = None) -> dict[str, Persona]:
     raise FileNotFoundError(f"no persona cards found in {candidates}")
 
 
+@cache
+def retired_personas() -> dict[str, str]:
+    """Retired teacher id -> the teacher who answers for them now
+    (packages/shared/retired-personas.json; empty when the file is missing)."""
+    for directory in shared_dirs():
+        path = directory / "retired-personas.json"
+        if path.is_file():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return dict(data.get("replacements") or {})
+    return {}
+
+
 def resolve_persona(personas: dict[str, Persona], requested: str | None) -> Persona:
-    """Match an id ("lucy") or a legacy display name ("Lucy"); default otherwise."""
+    """Match an id ("lily") or a legacy display name ("Lily"); a retired
+    teacher ("lucy", from an old link or a phone caller's last call) is
+    answered by the one who took their place; default otherwise."""
     if requested:
         key = requested.strip().lower()
         if key in personas:
@@ -96,4 +111,6 @@ def resolve_persona(personas: dict[str, Persona], requested: str | None) -> Pers
         for persona in personas.values():
             if persona.display_name.lower() == key:
                 return persona
+        if (heir := retired_personas().get(key)) in personas:
+            return personas[heir]
     return personas.get(DEFAULT_PERSONA_ID) or next(iter(personas.values()))

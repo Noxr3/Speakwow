@@ -5,7 +5,7 @@
 // ---------- Persona cards (packages/shared/personas/*.json) ----------
 
 export interface PersonaCard {
-  /** stable id, e.g. "frank" | "lucy" */
+  /** stable id, e.g. "frank" | "lily" */
   id: string;
   display_name: string;
   /** one-line persona for the teacher-picker page (display only, never in prompt) */

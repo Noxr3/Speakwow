@@ -32,8 +32,12 @@ SNAPSHOT = {
 
 
 def test_resolve_persona_accepts_ids_and_legacy_names() -> None:
-    assert resolve_persona(PERSONAS, "lucy").id == "lucy"
-    assert resolve_persona(PERSONAS, "Lucy").id == "lucy"
+    assert resolve_persona(PERSONAS, "lily").id == "lily"
+    assert resolve_persona(PERSONAS, "Lily").id == "lily"
+    # retired teachers (a phone caller's last teacher, an old link)
+    assert resolve_persona(PERSONAS, "lucy").id == "grace"
+    assert resolve_persona(PERSONAS, "Kai").id == "frank"
+    assert resolve_persona(PERSONAS, "max").id == "leo"
     assert resolve_persona(PERSONAS, None).id == "frank"
     assert resolve_persona(PERSONAS, "nobody").id == "frank"
 
@@ -122,11 +126,11 @@ def test_a_returning_student_gets_a_catch_up_before_any_teaching() -> None:
 
 
 def test_practice_games_wait_for_the_practice_step() -> None:
-    kai = PERSONAS["kai"]
-    assert any("Speed round" in a for a in kai.activities)
-    assert not any("Speed round" in s for s in kai.starters)
-    text = build_instructions(kai, None, today=date(2026, 10, 15))
-    assert text.index("Speed round") > text.index("3. Only if they want")
+    leo = PERSONAS["leo"]
+    assert any("Mock interview" in a for a in leo.activities)
+    assert not any("Mock interview" in s for s in leo.starters)
+    text = build_instructions(leo, None, today=date(2026, 10, 15))
+    assert text.index("Mock interview") > text.index("3. Only if they want")
 
 
 def test_a_lesson_is_agreed_after_the_catch_up() -> None:

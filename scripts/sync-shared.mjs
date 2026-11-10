@@ -2,7 +2,7 @@
 // The agent's Docker build context is apps/agent, so it cannot reach
 // packages/shared at build time. apps/agent/tests/test_shared_data.py fails
 // when the copy drifts; run `pnpm shared:sync` after editing a persona card
-// or the sticker list.
+// the sticker list or the retired teachers.
 import { cpSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,4 +17,5 @@ for (const file of readdirSync(join(from, 'personas')).filter((f) => f.endsWith(
   cpSync(join(from, 'personas', file), join(to, 'personas', file));
 }
 cpSync(join(from, 'stickers.json'), join(to, 'stickers.json'));
+cpSync(join(from, 'retired-personas.json'), join(to, 'retired-personas.json'));
 console.log(`synced packages/shared -> apps/agent/shared`);

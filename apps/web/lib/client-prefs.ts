@@ -41,10 +41,27 @@ export function saveGuestKey(value: GuestKey | null) {
   write(GUEST_KEY, value ? JSON.stringify(value) : null);
 }
 
-export function loadPersonaId(known: string[], fallback: string): string {
+/** The teacher picked last time; a retired one (`retired`: id -> heir,
+ * RETIRED_PERSONAS) comes back as the teacher who took their place. */
+export function loadPersonaId(
+  known: string[],
+  fallback: string,
+  retired: Record<string, string> = {}
+): string {
   if (typeof window === 'undefined') return fallback;
-  const stored = (read(PERSONA) ?? read(LEGACY_PERSONA) ?? '').toLowerCase();
-  return known.includes(stored) ? stored : fallback;
+  return pickPersonaId(read(PERSONA) ?? read(LEGACY_PERSONA), known, fallback, retired);
+}
+
+export function pickPersonaId(
+  stored: string | null,
+  known: string[],
+  fallback: string,
+  retired: Record<string, string> = {}
+): string {
+  const id = (stored ?? '').trim().toLowerCase();
+  if (known.includes(id)) return id;
+  const heir = retired[id];
+  return heir && known.includes(heir) ? heir : fallback;
 }
 
 export function savePersonaId(id: string) {
