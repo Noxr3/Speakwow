@@ -117,4 +117,4 @@ Perform these delivery choices in the audio; never read out directions.
 
 OpenAI 专用指令加入好奇、鼓励、纠错、示范、卡壳和幽默对应的发声方式；Frank 的人格改为放松、好奇、轻松活泼，避免持续兴奋。语义判停使用 `eagerness=low`。提示词是引导，不能替代真实录音的听感验收。
 
-离线验证：154 项 Agent 测试、32 项 Web 测试、10 项脚本测试通过；Agent lint、Web lint 和生产构建通过（Web 保留已有警告）。发布前仍需配置生产 `OPENAI_API_KEY`，验证该账号的模型访问和真实音频输出。此处不宣称已经完成生产发布或主观听感验收。
+离线验证：154 项 Agent 测试、32 项 Web 测试、10 项脚本测试通过；Agent lint、Web lint 和生产构建通过（Web 保留已有警告）。已使用生产配置的 `OPENAI_API_KEY` 完成四组独立 Realtime 会话，`gpt-realtime-2.1` + `cedar` 均返回音频和转写（好奇、鼓励、纠错、卡壳安抚，约 9.7–16.4 秒）。这是接口与音频输出验证，不是主观听感验收；生产部署状态以对应 PR 的发布记录为准。
