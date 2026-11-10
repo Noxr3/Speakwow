@@ -26,3 +26,16 @@ list), and new courses in other subjects.
 pnpm courses:check     # check every course
 pnpm courses:index     # regenerate each course's unit list
 ```
+
+## Skill series
+
+Each series has four topic units and an independent assessment. Every topic contains learning, practice and review sessions.
+
+- [Everyday conversations](everyday-conversations/index.md)
+- [Picture conversations](picture-conversations/index.md)
+- [Pronunciation & rhythm](pronunciation-rhythm/index.md)
+- [Words in use](words-in-use/index.md)
+- [Listen & write](listen-and-write/index.md)
+- [Writing workshop](writing-workshop/index.md)
+- [Read & discover](read-and-discover/index.md)
+- [Storytelling](storytelling/index.md)

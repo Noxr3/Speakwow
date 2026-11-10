@@ -87,7 +87,18 @@ export async function ensureGuestSession(supabase: SupabaseClient | null) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (session) return;
+  if (session) {
+    const { data, error } = await supabase.auth.getUser();
+    if (data.user) return;
+    // A removed guest can leave a locally cached session. Only replace a
+    // rejected identity; a temporary network failure must not lose progress.
+    if (!error || ![401, 403, 404].includes(error.status ?? 0)) {
+      if (error) throw error;
+      return;
+    }
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
+    if (signOutError) throw signOutError;
+  }
   const { error } = await supabase.auth.signInAnonymously();
   if (error) console.info('This call will not be kept:', error.message);
 }

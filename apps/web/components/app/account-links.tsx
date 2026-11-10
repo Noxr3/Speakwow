@@ -14,7 +14,7 @@ export function AccountLinks() {
 
   return (
     <nav className="flex items-center gap-3.5 md:gap-5" aria-label="Account">
-      <Link href="/courses" className={link}>
+      <Link href="/#courses" className={link}>
         Courses
       </Link>
       {enabled && user && (

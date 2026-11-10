@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { checkCourse, courseDirs, loadCourse, parsePage, toRows, unitTable } from './courses.mjs';
+import { ROOT, checkCourse, courseDirs, loadCourse, parsePage, toRows, unitTable } from './courses.mjs';
 
 test('every course in courses/ passes the checks', () => {
   const dirs = courseDirs();
@@ -180,4 +180,14 @@ test('front matter is read and the body kept apart', () => {
   assert.equal(data.goals[0].id, 'u1-g1');
   assert.match(body, /^\n# Unit 1/);
   assert.equal(parsePage('no front matter').data, null);
+});
+
+test('teaching sessions survive import and reject unknown or duplicate IDs', () => {
+  const course = loadCourse(join(ROOT, 'everyday-conversations'));
+  assert.equal(toRows(course).units[0].content.sessions.length, 3);
+  course.units[0].data.sessions[1].id = course.units[0].data.sessions[0].id;
+  course.units[0].data.sessions[0].goal_ids = ['unknown-goal'];
+  const errors = checkCourse(course).join('\n');
+  assert.match(errors, /duplicate session id/);
+  assert.match(errors, /unknown goal/);
 });

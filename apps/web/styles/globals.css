@@ -195,3 +195,37 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* Course progress follows the existing glass palette. */
+.study-progress {
+  appearance: none;
+  height: 3px;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 10%);
+}
+.study-progress::-webkit-progress-bar {
+  background: rgb(255 255 255 / 10%);
+}
+.study-progress::-webkit-progress-value {
+  background: var(--primary);
+  border-radius: 999px;
+}
+.study-progress::-moz-progress-bar {
+  background: var(--primary);
+  border-radius: 999px;
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

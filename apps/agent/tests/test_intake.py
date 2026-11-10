@@ -265,10 +265,10 @@ async def test_saving_the_interview() -> None:
         for w in writes
     )
     enrol = json.loads(calls[-1].content)
-    assert (
-        enrol["course_id"] == "c1"
-        and enrol["current_unit_id"] == "u1"
-        and enrol["status"] == "active"
+    assert calls[-1].url.path.endswith("/rpc/select_student_course")
+    assert enrol == {"p_student": STUDENT, "p_course": "c1", "p_unit": None}
+    assert not any(
+        c.method == "PATCH" and c.url.path.endswith("/enrollments") for c in calls
     )
 
 

@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { useAgentErrors } from '@/hooks/useAgentErrors';
 import { useDebugMode } from '@/hooks/useDebug';
 import { loadPersonaId, savePersonaId } from '@/lib/client-prefs';
+import type { HomeLibrary } from '@/lib/study-plan';
 import { type CallChoice, type CallMode, getAgentTokenSource } from '@/lib/token-source';
 
 const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
@@ -22,25 +23,22 @@ function AppSetup() {
   return null;
 }
 
-/** Where the signed-in student is in their course, if they have one. */
-export interface CourseSpot {
-  title: string;
-  unitPosition: number;
-  unitTitle: string;
-}
-
 interface AppProps {
   appConfig: AppConfig;
   personas: PersonaSummary[];
-  course: CourseSpot | null;
+  library: HomeLibrary;
 }
 
-export function App({ appConfig, personas, course }: AppProps) {
+export function App({ appConfig, personas, library }: AppProps) {
   const ids = personas.map((p) => p.id);
   const [personaId, setPersonaIdState] = useState(ids[0]);
-  const [mode, setMode] = useState<CallMode>(course ? 'course' : 'free');
+  const [courseId, setCourseId] = useState(library.selectedId);
+  useEffect(() => {
+    setCourseId(library.selectedId);
+  }, [library.selectedId]);
+  const [mode, setMode] = useState<CallMode>(library.selectedId ? 'course' : 'free');
   const choiceRef = useRef<CallChoice>({ persona: personaId, mode });
-  choiceRef.current = { persona: personaId, mode };
+  choiceRef.current = { persona: personaId, mode, course_id: courseId };
 
   // Read the remembered teacher after mount so server and client render alike.
   useEffect(() => {
@@ -68,13 +66,14 @@ export function App({ appConfig, personas, course }: AppProps) {
   return (
     <AgentSessionProvider session={session}>
       <AppSetup />
-      <main className="grid h-svh grid-cols-1 place-content-center">
+      <main className="min-h-svh">
         <ViewController
           appConfig={appConfig}
           personas={personas}
           persona={persona}
           onSelectPersona={setPersonaId}
-          course={course}
+          library={library}
+          onSelectCourseId={setCourseId}
           mode={mode}
           onSelectMode={setMode}
         />

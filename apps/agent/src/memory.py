@@ -175,8 +175,7 @@ class SupabaseMemory:
         return saved
 
     async def enroll(self, student_id: str, slug: str) -> bool:
-        """Start the course (at its first unit) and pause any other: the same
-        rule as the web's "Start this course"."""
+        """Select a course atomically, preserving its existing place and progress."""
         res = await self._request(
             "GET",
             "/courses",
@@ -190,24 +189,10 @@ class SupabaseMemory:
         rows = res.json() if res is not None else None
         if not isinstance(rows, list) or not rows or not rows[0].get("course_units"):
             return False
-        course_id, unit_id = rows[0]["id"], rows[0]["course_units"][0]["id"]
-        now = datetime.now(UTC).isoformat()
-        await self._request(
-            "PATCH",
-            f"/enrollments?student_id=eq.{student_id}&status=eq.active&course_id=neq.{course_id}",
-            json={"status": "paused", "updated_at": now},
-        )
         done = await self._request(
             "POST",
-            "/enrollments?on_conflict=student_id,course_id",
-            headers={"Prefer": "resolution=merge-duplicates"},
-            json={
-                "student_id": student_id,
-                "course_id": course_id,
-                "current_unit_id": unit_id,
-                "status": "active",
-                "updated_at": now,
-            },
+            "/rpc/select_student_course",
+            json={"p_student": student_id, "p_course": rows[0]["id"], "p_unit": None},
         )
         return done is not None
 
@@ -401,6 +386,52 @@ class SupabaseMemory:
             )
             ok = ok and res is not None
         return ok
+
+    async def load_study_course(
+        self, student_id: str, course_id: str, unit_id: str
+    ) -> dict | None:
+        enrolled = await self._request(
+            "GET",
+            f"/enrollments?student_id=eq.{student_id}&course_id=eq.{course_id}&select=course_id,course:courses(title)",
+        )
+        units = await self._request(
+            "GET", f"/course_units?id=eq.{unit_id}&course_id=eq.{course_id}&select=id"
+        )
+        if enrolled is None or not enrolled.json() or units is None or not units.json():
+            return None
+        response = await self._request(
+            "POST", "/rpc/study_unit", json={"p_student": student_id, "p_unit": unit_id}
+        )
+        if response is None or not isinstance(response.json(), dict):
+            return None
+        return {
+            "id": course_id,
+            "title": enrolled.json()[0]["course"]["title"],
+            "current_unit": response.json(),
+        }
+
+    async def record_study_attempt(
+        self,
+        session_id: str,
+        unit_id: str,
+        step_id: str,
+        attempt_id: str,
+        reflection: Reflection,
+    ) -> dict | None:
+        response = await self._request(
+            "POST",
+            "/rpc/record_study_attempt",
+            json={
+                "p_session": session_id,
+                "p_unit": unit_id,
+                "p_step": step_id,
+                "p_attempt": attempt_id,
+                "p_scores": reflection.goal_scores,
+                "p_summary": reflection.summary,
+            },
+        )
+        result = response.json() if response is not None else None
+        return result if isinstance(result, dict) and result.get("id") else None
 
     async def _record_unit_progress(
         self, student_id: str, lesson: dict, scores: dict[str, float]

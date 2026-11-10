@@ -22,7 +22,7 @@ export default async function ProfilePage({
   const { supabase, user } = await getSessionUser();
   if (!supabase || !user) redirect('/login');
 
-  const [memories, weaknesses, sessions] = await Promise.all([
+  const [memories, weaknesses, sessions, attempts] = await Promise.all([
     supabase
       .from('user_memories')
       .select('id, content, updated_at')
@@ -40,13 +40,41 @@ export default async function ProfilePage({
       .not('summary', 'is', null)
       .order('started_at', { ascending: false })
       .limit(10),
+    supabase
+      .from('lesson_attempts')
+      .select('id, passed, summary, created_at, unit:course_units(title)')
+      .order('created_at', { ascending: false })
+      .limit(8),
   ]);
 
   if (memories.error) throw new Error('Could not load your memories. Please try again.');
   const summary = memorySummary(memories.data ?? []);
 
   return (
-    <PageShell title="Learning record" wide>
+    <PageShell title="Your progress" wide>
+      {attempts.data && attempts.data.length > 0 && (
+        <GlassPanel title="Recent learning">
+          <ul className="divide-border divide-y">
+            {attempts.data.map((attempt) => (
+              <li key={attempt.id} className="py-4 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="font-medium">
+                    {(attempt.unit as unknown as { title: string } | null)?.title ?? 'Lesson'}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {attempt.passed ? 'Completed' : 'Keep practising'}
+                  </span>
+                </div>
+                {attempt.summary && (
+                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                    {attempt.summary}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </GlassPanel>
+      )}
       <GlassPanel title="About you">
         <p className="text-foreground text-sm leading-relaxed break-words">
           {summary ||
