@@ -26,6 +26,13 @@ insert into public.sessions(id,student_id,persona_id,mode,unit_id) values
 ('ee110000-0000-4000-8000-000000000001','aa110000-0000-4000-8000-000000000001','frank','course','dd110000-0000-4000-8000-000000000001');
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
+-- A brand-new learner has no progress row; NULL must not bypass ordering.
+do $$ begin
+ begin
+   perform public.record_study_attempt(gen_random_uuid(),'ee110000-0000-4000-8000-000000000001','dd110000-0000-4000-8000-000000000001','check','{"u1-g1":1}');
+   raise exception 'new learner skipped teaching';
+ exception when raise_exception then if sqlerrm='new learner skipped teaching' then raise; end if; end;
+end $$;
 select public.record_study_attempt('ff110000-0000-4000-8000-000000000001','ee110000-0000-4000-8000-000000000001','dd110000-0000-4000-8000-000000000001','learn','{"u1-g1":1}');
 -- Replay of a committed response must not add another attempt.
 select public.record_study_attempt('ff110000-0000-4000-8000-000000000001','ee110000-0000-4000-8000-000000000001','dd110000-0000-4000-8000-000000000001','learn','{"u1-g1":1}');

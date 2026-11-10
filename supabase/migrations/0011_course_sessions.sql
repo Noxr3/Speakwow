@@ -104,7 +104,7 @@ begin
   v_session_progress := coalesce(v_progress.session_progress, '{}');
   select s->>'id' into v_expected from jsonb_array_elements(v_steps) s
     where coalesce(v_session_progress->(s->>'id')->>'status', '') <> 'mastered' limit 1;
-  v_review := v_progress.status = 'mastered' and (v_expected is null or v_session_progress = '{}');
+  v_review := coalesce(v_progress.status = 'mastered', false) and (v_expected is null or v_session_progress = '{}');
   if p_step is distinct from v_expected and not v_review then
     if v_session_progress->p_step->>'status' = 'mastered' then
       return public.study_unit(v_student, coalesce(v_place, p_unit));
