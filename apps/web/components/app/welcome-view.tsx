@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeftRight, Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import GlassSurface from '@/components/GlassSurface';
 import Magnet from '@/components/Magnet';
@@ -13,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LiquidGlass } from '@/components/ui/liquid-glass';
 import type { HomeLibrary } from '@/lib/study-plan';
 
 interface WelcomeViewProps {
@@ -79,15 +78,25 @@ export const WelcomeView = ({
         With {persona.display_name}
         <ChevronDown size={13} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="max-h-80 min-w-60 overflow-y-auto">
+      <DropdownMenuContent
+        align="center"
+        className="max-h-96 w-80 max-w-[calc(100vw-2rem)] overflow-y-auto"
+      >
         {personas.map((p) => (
           <DropdownMenuItem
             key={p.id}
             onSelect={() => onSelectPersona(p.id)}
-            className="min-h-11 justify-between"
+            className="min-h-11 items-start gap-3 px-3 py-3"
           >
-            <span>{p.display_name}</span>
-            {persona.id === p.id && <Check size={15} />}
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">{p.display_name}</span>
+              <span className="text-muted-foreground mt-1 block text-xs leading-relaxed">
+                {p.tagline_en}
+              </span>
+            </span>
+            {persona.id === p.id && (
+              <Check size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -99,23 +108,13 @@ export const WelcomeView = ({
       className="flex min-h-svh flex-col items-center justify-center overflow-x-clip px-5 pt-28 pb-20"
     >
       <div className="w-full max-w-sm space-y-4">
-        <section aria-label="Choose a course">
-          <LiquidGlass radius={24} tint={0.88}>
-            <div className="flex min-h-14 items-center justify-between gap-3 px-5 py-1.5">
-              <h1 className="text-sm leading-relaxed font-medium">
-                <span className="text-muted-foreground mr-2 font-normal">Course: </span>
-                {course?.title ?? 'Choose a course'}
-              </h1>
-              <Link
-                href="/courses"
-                aria-label={course ? `Change course, currently ${course.title}` : 'Choose a course'}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:text-white"
-              >
-                <ArrowLeftRight size={17} aria-hidden="true" />
-              </Link>
-            </div>
-          </LiquidGlass>
-        </section>
+        <h1 className="px-6 text-center text-sm leading-relaxed text-white/70">
+          {course?.title ?? (
+            <Link href="/courses" className="hover:text-white">
+              Choose a course
+            </Link>
+          )}
+        </h1>
         {library.error && (
           <p role="alert" className="text-muted-foreground text-center text-xs">
             {library.error}

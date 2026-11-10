@@ -1,13 +1,15 @@
 # Continuous courses and a home tutor
 
-The home screen separates the course and unit into two compact glass panels.
-A plain swap icon opens /courses for course selection, progress and syllabuses.
+The home screen centres the current unit beneath a quiet course title.
+Courses and Profile live in the top navigation (and the mobile navigation menu).
+Courses opens /courses for category selection, progress and syllabuses.
 The unit panel uses React Bits Depth Carousel: whole cards move along a depth rail,
 with one-lesson-per-flick dragging, horizontal trackpad and keyboard navigation (no autoplay or looping). Arrow buttons
-sit at the screen edges, centred vertically on the card; the unit counter stays below.
+sit at the screen edges, centred vertically on the card; the unit number sits above the title inside each card. A brief introduction
+comes from its learning objective, with a separate summary for assessment units.
 It opens at the saved unit, and starting a lesson saves the displayed unit before
 requesting the call token. The Speakwow logo and wordmark appear only at top left.
-Student progress, history and memories live under Learning profile. Small talk
+Student progress, history and memories live under Profile. Small talk
 is part of the tutor conversation, without a separate home-screen mode toggle.
 
 CommitMono typography, LiquidGlass panels and the DotGrid call background are
@@ -18,8 +20,9 @@ panels use an 88% dark tint. Refraction is a separate, paint-contained layer
 beneath the content and rim, with bounded displacement and a neutral centre.
 Only one resize observer updates each map. Buttons inside the panels do not
 apply a nested backdrop filter; Safari/Firefox retain the frosted fallback.
-Each Carousel slide is a complete liquid-glass card: title, start button and teacher
-move together. The active card has no filter or opacity compositing hints that
+Each Carousel slide is a complete liquid-glass card: unit number, title,
+introduction and start button move together. The teacher selector sits below
+the carousel and its menu shows each teacher's existing English tagline. The active card has no filter or opacity compositing hints that
 would isolate its glass from the page backdrop. Navigation locks
 while starting a lesson, and inactive slides are excluded from keyboard focus.
 Both React Bits components retain their source attribution and license in
@@ -113,7 +116,7 @@ navigation; existing slugs and grades supply membership metadata.
   transactions. Selection, foreign-unit rejection, RLS, failed exam, retry,
   idempotency and review preservation were exercised.
 - Browser: UI checked at desktop and phone sizes, including the separate course
-  page, returning home after selection, and the Learning profile navigation. Selected a course,
+  page, returning home after selection, and the Profile navigation. Selected a course,
   changed its unit, changed courses and reloaded; both places survived. A local
   agent-style score write advanced the visible session from Learn together to
   Make it your own and displayed 1/13. Course search and the plan dialog worked.

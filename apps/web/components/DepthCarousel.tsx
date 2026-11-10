@@ -459,7 +459,7 @@ const DepthCarousel = ({
     <div
       ref={rootRef}
       className={`relative w-full touch-pan-y outline-none select-none focus-visible:rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/50 ${className}`}
-      style={{ height: cardHeight + 56, perspective: `${perspective}px` }}
+      style={{ height: cardHeight + (showIndicators ? 56 : 0), perspective: `${perspective}px` }}
       role="region"
       aria-roledescription="carousel"
       aria-label="Choose a unit"

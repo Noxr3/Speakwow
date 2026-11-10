@@ -31,6 +31,7 @@ export function completedSessions(sessions: StudySession[], progress?: StudyProg
 export interface HomeUnit {
   id: string;
   title: string;
+  description?: string;
   position: number;
   sessions: StudySession[];
   progress?: StudyProgress;

@@ -6,7 +6,7 @@ import { memorySummary } from '@/lib/memory-summary';
 import { getSessionUser } from '@/lib/supabase/server';
 import { forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
 
-export const metadata = { title: 'Learning profile · Speakwow' };
+export const metadata = { title: 'Profile · Speakwow' };
 
 const field = 'field';
 
@@ -45,7 +45,7 @@ export default async function ProfilePage() {
   const summary = memorySummary(memories.data ?? []);
 
   return (
-    <PageShell title="Learning profile" wide>
+    <PageShell title="Profile" wide>
       {attempts.data && attempts.data.length > 0 && (
         <GlassPanel title="Recent learning">
           <ul className="divide-border divide-y">

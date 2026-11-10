@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-/** Top-right links: learning profile, settings, sign in / out. */
+/** Top-right links: courses, profile, settings, sign in / out. */
 export function AccountLinks() {
   const { enabled, user, guest, loading, signOut } = useAuth();
   // a guest (anonymous user) has a record to look at, but still signs in
@@ -29,15 +29,18 @@ export function AccountLinks() {
       <div className="sm:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Account menu"
+            aria-label="Navigation menu"
             className="flex h-11 w-11 items-center justify-center rounded-full text-white/70 hover:bg-white/10"
           >
             <Menu size={20} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-48">
+            <DropdownMenuItem asChild className="min-h-11">
+              <Link href="/courses">Courses</Link>
+            </DropdownMenuItem>
             {enabled && user && (
               <DropdownMenuItem asChild className="min-h-11">
-                <Link href="/profile">Learning profile</Link>
+                <Link href="/profile">Profile</Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild className="min-h-11">
@@ -56,10 +59,13 @@ export function AccountLinks() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <nav className="hidden items-center gap-3.5 sm:flex md:gap-5" aria-label="Account">
+      <nav className="hidden items-center gap-3.5 sm:flex md:gap-5" aria-label="Navigation">
+        <Link href="/courses" className={link}>
+          Courses
+        </Link>
         {enabled && user && (
           <Link href="/profile" className={link}>
-            Learning profile
+            Profile
           </Link>
         )}
         <Link href="/settings" className={link}>

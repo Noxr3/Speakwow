@@ -43,6 +43,10 @@ export async function homeCourses(): Promise<HomeLibrary> {
         .map((unit) => ({
           id: unit.id,
           title: unit.title,
+          description:
+            unit.content?.sessions?.length === 1 && unit.content.sessions[0].kind === 'exam'
+              ? 'Bring together what you have learned in an independent assessment.'
+              : (unit.goals?.[0]?.text ?? ''),
           position: unit.position,
           sessions: studySessions(unit.content, unit.goals),
           progress: progress.data?.find((p) => p.unit_id === unit.id),
