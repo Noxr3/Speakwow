@@ -8,8 +8,16 @@ It is a reconstruction, not a lossless recovery of the original design file.
 
 The reference's green–teal background and white symbol remain the identity.
 Compression noise and baked shadows are omitted so the mark stays clear at small
-sizes. The UI's existing green action color and restrained white navigation mark
-remain separate from the icon's background treatment.
+sizes. The App extends that identity with mint actions, deep forest surfaces and a
+restrained white navigation mark. Teal is an atmospheric accent, not a second
+primary action color; see the [UI palette](UI_DESIGN_SYSTEM.md#color-roles).
+
+## Product and repository media
+
+Use the [product gallery](media/README.md) for real interface screenshots and the
+[1200×630 social card](media/social-card.png) for link previews or project introductions.
+English and Chinese READMEs share the same captures. The files in `public/brand/`
+form the brand kit: editable SVG marks, a color tile and 192/512/1024px icon exports.
 
 ## Choose the right asset
 

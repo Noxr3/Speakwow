@@ -18,6 +18,32 @@ An open-source AI tutor with room for questions, tangents and a break.
 
 </div>
 
+## A look inside
+
+The running App: a focused lesson home, a browsable curriculum and an account menu that stays out of the way.
+
+[![Speakwow lesson home](docs/media/home.jpg)](https://speakwow.ai)
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/courses.jpg" alt="Course categories" /></td>
+<td width="50%"><img src="docs/media/syllabus.jpg" alt="Course syllabus with units" /></td>
+</tr>
+<tr><td align="center">Courses</td><td align="center">Syllabus</td></tr>
+</table>
+
+![Interactive vocabulary and quiz cards](docs/media/practice.jpg)
+
+<details>
+<summary>User menu and mobile</summary>
+
+<img src="docs/media/user-menu.jpg" alt="Avatar menu with Profile and Settings" width="640" />
+<img src="docs/media/mobile.jpg" alt="Speakwow on a phone-sized viewport" width="280" />
+
+</details>
+
+[Media and capture notes](docs/media/README.md) · [Brand kit](docs/BRAND.md) · [Roadmap](docs/ROADMAP.md)
+
 ## The experience
 
 Choose a course, pick up a unit, and talk with your teacher. Courses contain lessons,

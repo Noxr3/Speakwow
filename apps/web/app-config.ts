@@ -33,9 +33,9 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   isPreConnectBufferEnabled: true,
 
   logo: '/brand/mark-ink.svg',
-  accent: '#237c32',
+  accent: '#087c61',
   logoDark: '/brand/mark-white.svg',
-  accentDark: '#7cff67',
+  accentDark: '#52e0b0',
   startButtonText: 'Start Speaking',
 
   // agent dispatch configuration

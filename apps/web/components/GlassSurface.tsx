@@ -197,7 +197,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       return {
         ...baseStyles,
         background: isDarkMode
-          ? `hsl(0 0% 0% / ${backgroundOpacity})`
+          ? `rgb(var(--glass-tint, 0 0 0) / ${backgroundOpacity})`
           : `hsl(0 0% 100% / ${backgroundOpacity})`,
         backdropFilter: `url(#${filterId}) saturate(${saturation})`,
         boxShadow: isDarkMode
@@ -223,7 +223,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         if (!backdropFilterSupported || !refract) {
           return {
             ...baseStyles,
-            background: `rgba(0, 0, 0, ${Math.max(0.4, backgroundOpacity)})`,
+            background: `rgb(var(--glass-tint, 0 0 0) / ${Math.max(0.4, backgroundOpacity)})`,
             border: '1px solid rgba(255, 255, 255, 0.2)',
             boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
                         inset 0 -1px 0 0 rgba(255, 255, 255, 0.1)`,
@@ -233,7 +233,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             ...baseStyles,
             background:
               backgroundOpacity > 0
-                ? `rgba(0, 0, 0, ${backgroundOpacity})`
+                ? `rgb(var(--glass-tint, 0 0 0) / ${backgroundOpacity})`
                 : 'rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(12px) saturate(1.8) brightness(1.2)',
             WebkitBackdropFilter: 'blur(12px) saturate(1.8) brightness(1.2)',

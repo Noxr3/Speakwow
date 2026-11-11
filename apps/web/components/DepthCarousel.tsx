@@ -85,7 +85,7 @@ const DepthCarousel = ({
   cardWidth = 300,
   cardHeight = 380,
   radius = 18,
-  tint = '#05060a',
+  tint = 'var(--background)',
   depth = 220,
   spread = 90,
   tilt = 22,
@@ -537,7 +537,7 @@ const DepthCarousel = ({
         >
           <button
             type="button"
-            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-[#1d211c]/90 text-white/90 transition-colors hover:border-white/35 hover:bg-[#364030] hover:text-white disabled:opacity-25"
+            className="bg-card/90 hover:bg-secondary pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 text-white/90 transition-colors hover:border-white/35 hover:text-white disabled:opacity-25"
             aria-label="Previous unit"
             disabled={disabled || (!loop && active === 0)}
             onClick={() => navigateBy(-1)}
@@ -555,7 +555,7 @@ const DepthCarousel = ({
           </button>
           <button
             type="button"
-            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-[#1d211c]/90 text-white/90 transition-colors hover:border-white/35 hover:bg-[#364030] hover:text-white disabled:opacity-25"
+            className="bg-card/90 hover:bg-secondary pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-white/15 text-white/90 transition-colors hover:border-white/35 hover:text-white disabled:opacity-25"
             aria-label="Next unit"
             disabled={disabled || (!loop && active === count - 1)}
             onClick={() => navigateBy(1)}

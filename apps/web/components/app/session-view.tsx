@@ -137,8 +137,8 @@ export const SessionView = ({
         <DotGrid
           dotSize={5}
           gap={15}
-          baseColor="#20381f"
-          activeColor="#0c9215"
+          baseColor="#173e32"
+          activeColor="#00b98a"
           proximity={120}
           shockRadius={250}
           shockStrength={5}
@@ -152,9 +152,9 @@ export const SessionView = ({
       <div className="pointer-events-none absolute inset-x-0 top-20 z-20 flex justify-center">
         <LiquidGlass radius={999} width="auto">
           <div className="flex items-center gap-2.5 px-4 py-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgb(52_211_153)]" />
+            <span className="bg-success inline-block h-2 w-2 rounded-full shadow-[0_0_8px_var(--success)]" />
             <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
-            <span className="label-caption text-white/50">
+            <span className="label-caption text-muted-foreground">
               {mode === 'course' ? 'Lesson' : 'Free talk'}
             </span>
           </div>

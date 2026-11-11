@@ -28,7 +28,7 @@ interface CourseCatalogProps {
 }
 
 const pageLink =
-  'inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300';
+  'inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 export function CourseCatalog({
   courses,
@@ -84,7 +84,7 @@ export function CourseCatalog({
         </Button>
       </form>
       <div
-        className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/50"
+        className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 text-xs"
         aria-live="polite"
       >
         <p>
@@ -110,16 +110,11 @@ export function CourseCatalog({
             return (
               <article
                 key={course.id}
-                className="group flex min-w-0 flex-col overflow-hidden rounded-3xl border border-white/15 bg-white/[0.035] transition-colors hover:border-white/30 hover:bg-white/[0.055]"
+                className="group bg-card hover:bg-secondary flex min-w-0 flex-col overflow-hidden rounded-3xl border border-white/15 transition-colors hover:border-white/30"
               >
-                <div className="relative flex h-28 items-end justify-between overflow-hidden border-b border-white/10 bg-gradient-to-br from-cyan-400/15 via-blue-400/5 to-violet-400/10 p-5">
-                  <BookOpen
-                    size={32}
-                    strokeWidth={1.25}
-                    aria-hidden="true"
-                    className="text-cyan-100/65"
-                  />
-                  <span className="label-caption max-w-[70%] truncate rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[10px] text-white/70">
+                <div className="from-primary/15 via-primary/5 to-info/15 relative flex h-28 items-end justify-between overflow-hidden border-b border-white/10 bg-gradient-to-br p-5">
+                  <BookOpen size={32} strokeWidth={1.25} aria-hidden="true" className="text-info" />
+                  <span className="label-caption text-muted-foreground max-w-[70%] truncate rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[10px]">
                     {course.subject}
                   </span>
                 </div>
@@ -131,7 +126,7 @@ export function CourseCatalog({
                     {course.description ||
                       'Explore this course with your teacher, one conversation at a time.'}
                   </p>
-                  <p className="mt-auto pt-2 text-xs text-white/45">
+                  <p className="text-muted-foreground mt-auto pt-2 text-xs">
                     {units} {units === 1 ? 'unit' : 'units'}
                     {course.publisher && (
                       <span className="mt-1 block truncate">{course.publisher}</span>
@@ -140,7 +135,7 @@ export function CourseCatalog({
                   {active ? (
                     <Link
                       href={activeHref}
-                      className="text-primary flex h-10 items-center justify-between rounded-full border border-cyan-300/25 px-4 text-xs"
+                      className="text-primary border-primary/30 flex h-10 items-center justify-between rounded-full border px-4 text-xs"
                     >
                       Currently learning <ArrowRight size={14} aria-hidden="true" />
                     </Link>
@@ -167,7 +162,9 @@ export function CourseCatalog({
                       </Button>
                     </form>
                   ) : (
-                    <p className="flex h-10 items-center text-xs text-white/40">Coming soon</p>
+                    <p className="text-muted-foreground flex h-10 items-center text-xs">
+                      Coming soon
+                    </p>
                   )}
                 </div>
               </article>
@@ -176,7 +173,7 @@ export function CourseCatalog({
         </div>
       ) : (
         <div className="rounded-3xl border border-dashed border-white/20 px-6 py-12 text-center">
-          <BookOpen size={28} aria-hidden="true" className="mx-auto mb-4 text-white/40" />
+          <BookOpen size={28} aria-hidden="true" className="text-muted-foreground mx-auto mb-4" />
           <h3 className="text-foreground mb-2 text-lg">
             {query ? 'No courses found' : 'More to learn, coming soon'}
           </h3>
@@ -211,7 +208,7 @@ export function CourseCatalog({
           )}
           {catalogPages(page, pages).map((item, i) =>
             item === 'gap' ? (
-              <span key={`gap-${i}`} className="px-1 text-white/40">
+              <span key={`gap-${i}`} className="text-muted-foreground px-1">
                 …
               </span>
             ) : (
@@ -220,7 +217,7 @@ export function CourseCatalog({
                 href={catalogHref(query, item, basePath)}
                 aria-label={`Page ${item}`}
                 aria-current={item === page ? 'page' : undefined}
-                className={`${pageLink} ${item === page ? 'bg-cyan-300 text-black hover:bg-cyan-200' : 'text-white/65'}`}
+                className={`${pageLink} ${item === page ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground'}`}
               >
                 {item}
               </Link>
