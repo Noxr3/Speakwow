@@ -60,6 +60,14 @@ No service worker or public CDN HTML cache is introduced for authenticated pages
 If course visibility becomes private, change this cache contract before exposing
 those rows. Do not wrap `homeCourses` or profile queries in `unstable_cache`.
 
+## Deployment locality
+
+The baseline Vercel deployment was in `iad1` (US East), while the verified
+Supabase project is in `ap-northeast-1` (Tokyo). Each sequential auth/data request
+therefore crossed regions. `apps/web/vercel.json` pins functions to `hnd1` (Tokyo),
+near the database; static assets still use the global CDN. Confirm the deployed
+region along with the revision, rather than inferring it from the configuration.
+
 ## Database
 
 Production inspection showed about 79 course units, 14 sessions and two lesson
@@ -113,3 +121,5 @@ shell, so do not substitute it for time until all course content has arrived.
 - [web.dev INP](https://web.dev/articles/optimize-inp): give immediate interaction feedback and distinguish rendering/long tasks from network completion.
 - [Supabase query optimization](https://supabase.com/docs/guides/database/query-optimization): use EXPLAIN evidence and indexes matching filters/joins.
 - [Supabase server-side clients](https://supabase.com/docs/guides/auth/server-side/creating-a-client): preserve trusted server authentication while optimizing data access.
+
+- [Vercel function regions](https://vercel.com/docs/functions/configuring-functions/region): place functions near their data source.
