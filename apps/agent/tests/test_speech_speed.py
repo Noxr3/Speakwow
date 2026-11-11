@@ -150,6 +150,32 @@ def test_signed_job_metadata_contains_initial_speed_and_rpc_caller():
     assert job.speech_speed == 1 and job.adaptive_speed
 
 
+async def test_rpc_registration_connects_before_accessing_local_participant():
+    from speech_speed import register_speed_rpc
+
+    calls = []
+    connected = False
+
+    class Room:
+        @property
+        def local_participant(self):
+            assert connected, "cannot access local participant before connecting"
+            return SimpleNamespace(
+                register_rpc_method=lambda name, handler: calls.append(name)
+            )
+
+    async def connect():
+        nonlocal connected
+        await asyncio.sleep(0)
+        connected = True
+        calls.append("connected")
+
+    ctx = SimpleNamespace(room=Room(), connect=connect)
+    c, _sent = control()
+    await register_speed_rpc(ctx, c, "student")
+    assert calls == ["connected", "speakwow.set_speech"]
+
+
 async def test_tool_respects_auto_off_but_accepts_explicit_spoken_request():
     c, sent = control(adaptive=False)
     tool = make_speed_tool(c)
