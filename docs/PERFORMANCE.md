@@ -15,6 +15,10 @@ eager classroom bundle, not a large production database.
   PostgREST selects `content->sessions` rather than the entire content document.
 - Category/CEFR/grade filters use the data already loaded. Native history updates
   preserve shareable URLs, back/forward and modified clicks without RSC fetches.
+- Layout/metadata read request headers only when the optional remote configuration
+  endpoint is enabled. Ordinary Settings and Playground are static public shells;
+  user identity, keys and phone details still load through authenticated clients.
+  Home/Profile retain dynamic private reads. No account data is built into HTML.
 - Route `loading.tsx` boundaries show immediate feedback and allow partial Link
   prefetching. Course saves no longer reread the full library or issue an extra
   client refresh after navigation. The save action redirects directly to Home instead
@@ -122,6 +126,23 @@ Skeletons appeared immediately on route navigation. A direct deep link still loa
 its data normally. This is functional/per-network evidence, not a field INP score.
 Measure cold and warm complete responses separately: streamed TTFB measures the
 shell, so do not substitute it for time until all course content has arrived.
+
+
+Production follow-up at merge `050ef09`, same workstation, public cookie-free
+requests (three sequential samples, complete body consumed):
+
+| Route | New TTFB, seconds | New total, seconds |
+| --- | --- | --- |
+| `/` | 0.983 / 0.357 / 0.389 | 1.137 / 0.481 / 0.535 |
+| `/courses` | 0.468 / 0.520 / 0.476 | 0.668 / 0.769 / 0.520 |
+| `/courses?category=adult-english` | 0.471 / 0.466 / 0.465 | 0.523 / 0.512 / 0.520 |
+| `/settings` | 0.459 / 0.261 / 0.515 | 0.460 / 0.275 / 0.541 |
+
+These samples entered through `sfo1` and executed in `hnd1`; this is not a global
+latency guarantee. Home/course medians improved; the lightweight Settings route
+regressed in this sample. That finding prompted the static-shell follow-up above,
+removing its unnecessary function trip. Voice first-audio latency is not part of
+these HTTP measurements. Run `node scripts/benchmarks/http-loading.mjs` to repeat.
 
 ## Sources and decisions
 

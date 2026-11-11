@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
 import Link from 'next/link';
 import { AccountLinks } from '@/components/app/account-links';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { GuestMerge } from '@/components/auth/guest-merge';
-import { getAppConfig, getStyles } from '@/lib/utils';
+import { getServerAppConfig } from '@/lib/server-app-config';
+import { getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
 
 export const viewport: Viewport = { themeColor: '#0b1114' };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const appConfig = await getAppConfig(await headers());
+  const appConfig = await getServerAppConfig();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://speakwow.ai';
   return {
     metadataBase: new URL(siteUrl),
@@ -33,8 +33,7 @@ interface RootLayoutProps {
 }
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  const hdrs = await headers();
-  const appConfig = await getAppConfig(hdrs);
+  const appConfig = await getServerAppConfig();
   const styles = getStyles(appConfig);
   const logo = appConfig.logoDark || appConfig.logo;
 
