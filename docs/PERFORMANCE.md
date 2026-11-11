@@ -60,6 +60,16 @@ No service worker or public CDN HTML cache is introduced for authenticated pages
 If course visibility becomes private, change this cache contract before exposing
 those rows. Do not wrap `homeCourses` or profile queries in `unstable_cache`.
 
+## Voice worker startup
+
+Snapshot and recent-message reads run concurrently for each call. When the fresh
+student snapshot exactly matches the signed course/unit and includes session
+definitions, the worker reuses it instead of performing three more REST requests.
+A mismatch uses the validated enrollment/unit lookup; its two independent checks
+run concurrently before loading lesson material. Legacy units retain database
+session normalization. No private snapshot is cached across calls or students.
+The existing conversational opening pause and model behavior are unchanged.
+
 ## Deployment locality
 
 The baseline Vercel deployment was in `iad1` (US East), while the verified
@@ -123,3 +133,5 @@ shell, so do not substitute it for time until all course content has arrived.
 - [Supabase server-side clients](https://supabase.com/docs/guides/auth/server-side/creating-a-client): preserve trusted server authentication while optimizing data access.
 
 - [Vercel function regions](https://vercel.com/docs/functions/configuring-functions/region): place functions near their data source.
+
+- [LiveKit initial context](https://docs.livekit.io/agents/logic/external-data/): minimize blocking entrypoint data loads while keeping the agent ready before joining.

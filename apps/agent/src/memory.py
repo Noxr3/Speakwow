@@ -10,6 +10,7 @@ None on failure, so a database hiccup never breaks a live lesson.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import re
@@ -390,12 +391,14 @@ class SupabaseMemory:
     async def load_study_course(
         self, student_id: str, course_id: str, unit_id: str
     ) -> dict | None:
-        enrolled = await self._request(
-            "GET",
-            f"/enrollments?student_id=eq.{student_id}&course_id=eq.{course_id}&select=course_id,course:courses(title)",
-        )
-        units = await self._request(
-            "GET", f"/course_units?id=eq.{unit_id}&course_id=eq.{course_id}&select=id"
+        enrolled, units = await asyncio.gather(
+            self._request(
+                "GET",
+                f"/enrollments?student_id=eq.{student_id}&course_id=eq.{course_id}&select=course_id,course:courses(title)",
+            ),
+            self._request(
+                "GET", f"/course_units?id=eq.{unit_id}&course_id=eq.{course_id}&select=id"
+            ),
         )
         if enrolled is None or not enrolled.json() or units is None or not units.json():
             return None
