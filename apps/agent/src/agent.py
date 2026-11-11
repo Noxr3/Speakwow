@@ -86,7 +86,7 @@ from speech_speed import (  # noqa: E402
     SpeechSpeed,
     make_speed_tool,
     normalize_preferences,
-    speed_rpc,
+    register_speed_rpc,
 )
 from startup import load_startup_snapshot  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
@@ -516,9 +516,7 @@ async def entrypoint(ctx: JobContext) -> None:
     speech.on_change = speech_changed
     if speech.supported:
         await teacher.set_speech_note(speech.note())
-    ctx.room.local_participant.register_rpc_method(
-        SPEECH_RPC, speed_rpc(speech, job.participant_identity)
-    )
+    await register_speed_rpc(ctx, speech, job.participant_identity)
 
     async def close_speech():
         speech.on_change = lambda: None

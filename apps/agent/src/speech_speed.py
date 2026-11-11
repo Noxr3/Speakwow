@@ -228,3 +228,12 @@ def speed_rpc(control: SpeechSpeed, identity: str | None):
         return json.dumps(control.state())
 
     return handle
+
+
+async def register_speed_rpc(ctx, control: SpeechSpeed, identity: str | None):
+    # JobContext.connect is idempotent. Room.local_participant raises until
+    # the connection completes; AgentSession.start would normally connect later.
+    await ctx.connect()
+    ctx.room.local_participant.register_rpc_method(
+        RPC_METHOD, speed_rpc(control, identity)
+    )
