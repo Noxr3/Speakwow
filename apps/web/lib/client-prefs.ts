@@ -3,6 +3,8 @@
  * storage can be missing or throw (private mode, blocked site data), and the
  * app must work without it.
  */
+import { type SpeechPreferences, normalizeSpeechPreferences } from './speech-speed.ts';
+
 export type GuestKey = { provider: 'xai' | 'openai'; key: string };
 
 const GUEST_KEY = 'speakwow.byok';
@@ -60,4 +62,18 @@ export function loadVoicePreview(): boolean {
 
 export function saveVoicePreview(on: boolean) {
   write(VOICE_PREVIEW, on ? 'on' : 'off');
+}
+
+const SPEECH = 'speakwow.speech';
+
+export function loadSpeechPreferences(): SpeechPreferences {
+  try {
+    return normalizeSpeechPreferences(JSON.parse(read(SPEECH) ?? 'null'));
+  } catch {
+    return normalizeSpeechPreferences(null);
+  }
+}
+
+export function saveSpeechPreferences(value: SpeechPreferences) {
+  write(SPEECH, JSON.stringify(normalizeSpeechPreferences(value)));
 }

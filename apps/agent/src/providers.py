@@ -30,6 +30,7 @@ from openai.types.realtime.realtime_audio_input_turn_detection import (
 )
 
 from personas import Persona
+from speech_speed import SpeechRealtimeModel, SpeechSpeed
 from xai_realtime import RealtimeModel as XaiRealtimeModel
 
 PROVIDERS = ("xai", "openai")
@@ -69,6 +70,7 @@ def build_realtime_model(
     provider: str,
     api_key: str | None = None,
     beginner: bool = True,
+    speech_speed: SpeechSpeed | None = None,
 ):
     voice = voice_for(persona, provider)
     if provider == "openai":
@@ -82,8 +84,15 @@ def build_realtime_model(
             create_response=True,
             interrupt_response=True,
         )
-        return openai.realtime.RealtimeModel(
-            model=model_id, voice=voice, api_key=api_key, turn_detection=turn_detection
+        model_class = (
+            SpeechRealtimeModel if speech_speed else openai.realtime.RealtimeModel
+        )
+        return model_class(
+            **({"speech_speed": speech_speed} if speech_speed else {}),
+            model=model_id,
+            voice=voice,
+            api_key=api_key,
+            turn_detection=turn_detection,
         )
     model_id = os.getenv("XAI_REALTIME_MODEL") or XAI_MODEL
     model = XaiRealtimeModel(

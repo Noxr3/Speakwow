@@ -2,7 +2,7 @@
 
 import { TokenSource } from 'livekit-client';
 import { toast } from 'sonner';
-import { loadGuestKey } from '@/lib/client-prefs';
+import { loadGuestKey, loadSpeechPreferences } from '@/lib/client-prefs';
 
 export type CallMode = 'free' | 'course';
 
@@ -32,6 +32,7 @@ export function getAgentTokenSource(choiceRef: { current: CallChoice }) {
         byok: loadGuestKey() ?? undefined,
         // a new student's first call is an interview in their own language
         native_language: navigator.language,
+        speech: loadSpeechPreferences(),
       }),
     }).catch(() => null);
     if (!res?.ok) {

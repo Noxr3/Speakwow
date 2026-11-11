@@ -76,6 +76,18 @@ from phone import caller_verified, normalize_phone, phone_access  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
 from reactions import ReactionInbox  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
+from speech_speed import (  # noqa: E402
+    ATTRIBUTE as SPEECH_ATTRIBUTE,
+)
+from speech_speed import (  # noqa: E402
+    RPC_METHOD as SPEECH_RPC,
+)
+from speech_speed import (  # noqa: E402
+    SpeechSpeed,
+    make_speed_tool,
+    normalize_preferences,
+    speed_rpc,
+)
 from startup import load_startup_snapshot  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
 from teacher import (  # noqa: E402
@@ -151,6 +163,9 @@ class JobRequest:
     native_language: str | None = None
     course_id: str | None = None
     unit_id: str | None = None
+    speech_speed: float = 1.0
+    adaptive_speed: bool = True
+    participant_identity: str | None = None
 
 
 def parse_job_metadata(raw: str | None) -> JobRequest:
@@ -173,6 +188,7 @@ def parse_job_metadata(raw: str | None) -> JobRequest:
     mode = "course" if meta.get("mode") == "course" and student_id else "free"
     channel = "phone" if meta.get("channel") == "phone" else "web"
     persona_given = bool(meta.get("persona") or meta.get("agent"))
+    speed, adaptive = normalize_preferences(meta.get("speech"))
     return JobRequest(
         persona,
         student_id,
@@ -183,6 +199,11 @@ def parse_job_metadata(raw: str | None) -> JobRequest:
         language_tag(meta.get("native_language")),
         meta.get("course_id") if is_uuid(meta.get("course_id")) else None,
         meta.get("unit_id") if is_uuid(meta.get("unit_id")) else None,
+        speed,
+        adaptive,
+        meta.get("participant_identity")
+        if isinstance(meta.get("participant_identity"), str)
+        else (f"user_{student_id}" if student_id else None),
     )
 
 
@@ -295,12 +316,16 @@ async def entrypoint(ctx: JobContext) -> None:
         )
         logger.info("onboarding interview: language=%s signed_in=%s", tag, signed_in)
 
+    speech = SpeechSpeed(
+        job.speech_speed, job.adaptive_speed, supported=provider == "openai"
+    )
     session = AgentSession(
         llm=build_realtime_model(
             persona,
             provider,
             user_key.key if user_key else None,
             beginner=is_beginner(snapshot),
+            speech_speed=speech if speech.supported else None,
         ),
         min_interruption_duration=0.3,
     )
@@ -438,6 +463,8 @@ async def entrypoint(ctx: JobContext) -> None:
     )
     if intake:
         tools.append(make_profile_tool(intake, save_profile))
+    if speech.supported:
+        tools.append(make_speed_tool(speech))
 
     async def study_changed():
         await teacher.set_study_flow(study)
@@ -468,6 +495,40 @@ async def entrypoint(ctx: JobContext) -> None:
         warm_up_turns=None if intake or study else warm_up_turns(first_meeting),
         intake=intake,
     )
+    speech_tasks: set[asyncio.Task] = set()
+    speech_lock = asyncio.Lock()
+
+    async def sync_speech():
+        async with speech_lock:
+            if speech.supported:
+                await teacher.set_speech_note(speech.note())
+            if ctx.room.isconnected():
+                await ctx.room.local_participant.set_attributes(
+                    {SPEECH_ATTRIBUTE: json.dumps(speech.state())}
+                )
+
+    def speech_changed():
+        task = asyncio.create_task(sync_speech(), name="speech-settings")
+        speech_tasks.add(task)
+        task.add_done_callback(speech_tasks.discard)
+        task.add_done_callback(_report_failure)
+
+    speech.on_change = speech_changed
+    if speech.supported:
+        await teacher.set_speech_note(speech.note())
+    ctx.room.local_participant.register_rpc_method(
+        SPEECH_RPC, speed_rpc(speech, job.participant_identity)
+    )
+
+    async def close_speech():
+        speech.on_change = lambda: None
+        speech.close_timer()
+        ctx.room.local_participant.unregister_rpc_method(SPEECH_RPC)
+        for task in speech_tasks:
+            task.cancel()
+        await asyncio.gather(*speech_tasks, return_exceptions=True)
+
+    ctx.add_shutdown_callback(close_speech)
     if study:
         teacher.phase_note = study.note()
         await teacher.update_instructions(teacher._compose_instructions())
@@ -556,6 +617,7 @@ async def entrypoint(ctx: JobContext) -> None:
             ),
         ),
     )
+    await sync_speech()
     if study:
         await study_changed()
 
