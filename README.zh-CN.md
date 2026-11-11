@@ -13,6 +13,32 @@
 
 </div>
 
+## 产品预览
+
+真实 App 截图：聚焦当前课程与单元的首页、分层课程导航，以及统一的用户头像菜单。
+
+[![Speakwow lesson home](docs/media/home.jpg)](https://speakwow.ai)
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/courses.jpg" alt="Course categories" /></td>
+<td width="50%"><img src="docs/media/syllabus.jpg" alt="Course syllabus with units" /></td>
+</tr>
+<tr><td align="center">Courses</td><td align="center">Syllabus</td></tr>
+</table>
+
+![Interactive vocabulary and quiz cards](docs/media/practice.jpg)
+
+<details>
+<summary>用户菜单与手机界面</summary>
+
+<img src="docs/media/user-menu.jpg" alt="Avatar menu with Profile and Settings" width="640" />
+<img src="docs/media/mobile.jpg" alt="Speakwow on a phone-sized viewport" width="280" />
+
+</details>
+
+[截图与素材说明](docs/media/README.md) · [品牌素材](docs/BRAND.md) · [路线图](docs/ROADMAP.md)
+
 ## 学习体验
 
 选一门课，打开一个单元，与老师开始交流。课程包含讲解、练习、复习和独立检查，

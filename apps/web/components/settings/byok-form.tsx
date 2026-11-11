@@ -191,7 +191,7 @@ export function ByokForm() {
         )}
 
         {message && (
-          <p className={`text-sm ${message.ok ? 'text-emerald-300' : 'text-destructive'}`}>
+          <p className={`text-sm ${message.ok ? 'text-success' : 'text-destructive'}`}>
             {message.text}
           </p>
         )}

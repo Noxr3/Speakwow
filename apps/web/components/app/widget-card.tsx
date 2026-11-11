@@ -67,21 +67,25 @@ function Tile({
       className={cn(
         'flex min-h-11 items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition-colors',
         'border-white/12 bg-white/[0.04] shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] hover:bg-white/10 disabled:cursor-default',
-        mark === 'right' && 'border-emerald-400/70 bg-emerald-400/15',
-        mark === 'wrong' && 'border-rose-400/60 bg-rose-400/10 text-white/50',
+        mark === 'right' && 'border-success/70 bg-success/15',
+        mark === 'wrong' && 'border-destructive/60 bg-destructive/10 text-muted-foreground',
         mark === 'picked' && 'border-primary bg-primary/15',
         className
       )}
     >
       {letter && (
-        <span className="label-caption flex size-6 shrink-0 items-center justify-center rounded-md border border-white/20 text-white/70">
+        <span className="label-caption text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-md border border-white/20">
           {letter}
         </span>
       )}
       <span className="min-w-0 flex-1">{children}</span>
-      {mark === 'right' && <CheckCircleIcon weight="fill" className="shrink-0 text-emerald-300" />}
+      {mark === 'right' && <CheckCircleIcon weight="fill" className="text-success shrink-0" />}
       {mark === 'wrong' && (
-        <XCircleIcon weight="fill" aria-label="not this one" className="shrink-0 text-rose-300" />
+        <XCircleIcon
+          weight="fill"
+          aria-label="not this one"
+          className="text-destructive shrink-0"
+        />
       )}
     </button>
   );
@@ -156,25 +160,25 @@ function Feedback({ widget, state }: { widget: Widget; state: ReturnType<typeof 
   return (
     <div className="space-y-2">
       {hint && widget.hint && !finished && (
-        <p className="flex items-start gap-1.5 text-sm text-amber-200/90">
+        <p className="text-warning flex items-start gap-1.5 text-sm">
           <LightbulbIcon weight="fill" className="mt-0.5 shrink-0" /> {widget.hint}
         </p>
       )}
       {correct && (
-        <p className="flex items-center gap-1.5 text-sm text-emerald-300">
+        <p className="text-success flex items-center gap-1.5 text-sm">
           <CheckCircleIcon weight="fill" />{' '}
           {tries.length > 1 ? 'Got it on the second try!' : 'Nice! That’s right.'}
         </p>
       )}
       {!finished && tries.length > 0 && (
-        <p className="flex items-center gap-1.5 text-sm text-rose-300">
+        <p className="text-destructive flex items-center gap-1.5 text-sm">
           <XCircleIcon weight="fill" /> Not quite. Have another go.
         </p>
       )}
       {revealed && (
         <p className="text-sm">
           <span className="text-muted-foreground">The answer: </span>
-          <span className="font-medium text-emerald-300">{rightAnswer(widget)}</span>
+          <span className="text-success font-medium">{rightAnswer(widget)}</span>
         </p>
       )}
       {finished && widget.explain && (
@@ -186,7 +190,7 @@ function Feedback({ widget, state }: { widget: Widget; state: ReturnType<typeof 
             <button
               type="button"
               onClick={state.showHint}
-              className="text-amber-200/90 underline-offset-4 hover:underline"
+              className="text-warning underline-offset-4 hover:underline"
             >
               Hint
             </button>
@@ -307,7 +311,7 @@ function FillBlankBody({ widget, state }: { widget: Widget; state: ReturnType<ty
               <span
                 className={cn(
                   'mx-1 inline-block min-w-14 border-b-2 text-center',
-                  state.finished ? 'border-emerald-400 text-emerald-300' : 'border-primary'
+                  state.finished ? 'border-success text-success' : 'border-primary'
                 )}
               >
                 {shown || ' '}
@@ -378,7 +382,7 @@ function ReorderBody({ widget, state }: { widget: Widget; state: ReturnType<type
       <p
         className={cn(
           'min-h-11 rounded-xl border border-dashed px-3 py-2',
-          state.finished ? 'border-emerald-400/60 text-emerald-200' : 'border-white/20'
+          state.finished ? 'border-success/60 text-success' : 'border-white/20'
         )}
       >
         {sentence || <span className="text-muted-foreground">Tap the words in order…</span>}
@@ -490,7 +494,7 @@ function MatchBody({ widget, onEvent }: { widget: Widget; onEvent: WidgetCardPro
         </div>
       </div>
       {finished ? (
-        <p className="flex items-center gap-1.5 text-sm text-emerald-300">
+        <p className="text-success flex items-center gap-1.5 text-sm">
           <CheckCircleIcon weight="fill" /> All matched{misses ? '' : ', first time'}!
         </p>
       ) : (
@@ -543,8 +547,8 @@ function QuizBody({ widget, onEvent }: { widget: Widget; onEvent: WidgetCardProp
               'h-1.5 flex-1 rounded-full',
               i < answers.length
                 ? questions[i].answer.includes(answers[i])
-                  ? 'bg-emerald-400/80'
-                  : 'bg-rose-400/70'
+                  ? 'bg-success/80'
+                  : 'bg-destructive/70'
                 : i === step
                   ? 'bg-white/50'
                   : 'bg-white/15'
@@ -585,7 +589,7 @@ function QuizBody({ widget, onEvent }: { widget: Widget; onEvent: WidgetCardProp
       )}
       {finished && (
         <p className="text-sm">
-          <span className="font-medium text-emerald-300">
+          <span className="text-success font-medium">
             {score} / {questions.length}
           </span>{' '}
           <span className="text-muted-foreground">
@@ -651,10 +655,7 @@ export function WidgetCard({ widget, update, onEvent, onClose }: WidgetCardProps
               <li key={i} className="flex items-start gap-2 text-sm">
                 <CheckCircleIcon
                   weight={done ? 'fill' : 'regular'}
-                  className={cn(
-                    'mt-0.5 shrink-0',
-                    done ? 'text-emerald-400' : 'text-muted-foreground'
-                  )}
+                  className={cn('mt-0.5 shrink-0', done ? 'text-success' : 'text-muted-foreground')}
                 />
                 <span className={cn(done && 'text-muted-foreground line-through')}>{item}</span>
               </li>
@@ -666,10 +667,10 @@ export function WidgetCard({ widget, update, onEvent, onClose }: WidgetCardProps
   }
 
   return (
-    <LiquidGlass radius={28} tint={0.35}>
+    <LiquidGlass radius={28} tint={0.88}>
       <section aria-label={KIND_LABEL[widget.kind]} className="space-y-3 p-5">
         <header className="flex items-center gap-2">
-          <span className="label-caption text-white/60">
+          <span className="label-caption text-muted-foreground">
             {widget.title || KIND_LABEL[widget.kind]}
           </span>
           <button

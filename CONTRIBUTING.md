@@ -60,7 +60,9 @@ to `KINDS` in `apps/agent/src/widgets.py` and `WIDGET_KINDS` in
 
 Use the shared [brand assets](docs/BRAND.md). Edit `assets/brand/symbol.svg` and run
 `pnpm brand:generate`; do not hand-edit exported icons. Check light/dark backgrounds,
-16/32px favicons and the social preview. Preserve the App's existing layout and green accent.
+16/32px favicons and the social preview. Use the [semantic palette](docs/UI_DESIGN_SYSTEM.md#color-roles) for UI colors.
+When changing visible UI, refresh the [product screenshots](docs/media/README.md)
+in both READMEs using a production build and public/demo content.
 
 Keep English and Chinese READMEs aligned. Document current behavior, distinguish
 optional integrations from defaults, and avoid claiming that prompt tests prove
