@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { unstable_rethrow, useRouter } from 'next/navigation';
 import {
   BookOpen,
   Check,
@@ -10,9 +9,11 @@ import {
   ChevronRight,
   Globe2,
   GraduationCap,
+  LoaderCircle,
   Search,
 } from 'lucide-react';
 import { chooseCourse } from '@/app/courses/actions';
+import { CourseFilterLink as Link } from '@/components/app/course-filter-link';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -72,18 +73,26 @@ export function CoursePicker({
   })).filter((item) => item.id !== 'more-english' || item.courses.length > 0);
   const selectCourse = async (courseId: string, unitId?: string) => {
     if (busy) return;
+    if (!unitId && courseId === library.selectedId) {
+      router.push('/');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
-      await ensureGuestSession(createClient());
-      const result = await chooseCourse(courseId, unitId);
+      const client = createClient();
+      await ensureGuestSession(client, { verifyExisting: false });
+      let result = await chooseCourse(courseId, unitId);
+      if (result.code === 'auth_required') {
+        await ensureGuestSession(client);
+        result = await chooseCourse(courseId, unitId);
+      }
       if (result.error) {
         setError(result.error);
         return;
       }
-      router.push('/');
-      router.refresh();
-    } catch {
+    } catch (error) {
+      unstable_rethrow(error);
       setError('Your course could not be saved. Please try again.');
     } finally {
       setBusy(false);
@@ -91,6 +100,15 @@ export function CoursePicker({
   };
   return (
     <>
+      {busy && (
+        <div
+          role="status"
+          className="bg-popover text-foreground fixed inset-x-5 bottom-6 z-50 mx-auto flex w-fit items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm shadow-xl"
+        >
+          <LoaderCircle size={16} className="motion-safe:animate-spin" aria-hidden="true" />
+          Opening your course…
+        </div>
+      )}
       <div className="relative max-w-xl">
         <Search
           size={20}

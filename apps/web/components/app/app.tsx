@@ -1,94 +1,97 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSession } from '@livekit/components-react';
-import { WarningIcon } from '@phosphor-icons/react/dist/ssr';
+import { useEffect, useState } from 'react';
 import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
-import { AgentSessionProvider } from '@/components/agents-ui/agent-session-provider';
-import { StartAudioButton } from '@/components/agents-ui/start-audio-button';
-import { ViewController } from '@/components/app/view-controller';
-import { Toaster } from '@/components/ui/sonner';
-import { useAgentErrors } from '@/hooks/useAgentErrors';
-import { useDebugMode } from '@/hooks/useDebug';
+import { WelcomeView } from '@/components/app/welcome-view';
 import { loadPersonaId, savePersonaId } from '@/lib/client-prefs';
 import type { HomeLibrary } from '@/lib/study-plan';
-import { type CallChoice, type CallMode, getAgentTokenSource } from '@/lib/token-source';
 
-const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
-
-function AppSetup() {
-  useDebugMode({ enabled: IN_DEVELOPMENT });
-  useAgentErrors();
-  return null;
+type Runtime = typeof import('./call-app');
+let runtime: Promise<Runtime> | undefined;
+function loadRuntime() {
+  return (runtime ??= import('./call-app').catch((error) => {
+    runtime = undefined;
+    throw error;
+  }));
 }
 
-interface AppProps {
+/** Browsing lessons should not download or initialize the RTC/classroom stack. */
+export function App({
+  appConfig,
+  personas,
+  library,
+}: {
   appConfig: AppConfig;
   personas: PersonaSummary[];
   library: HomeLibrary;
-}
-
-export function App({ appConfig, personas, library }: AppProps) {
-  const ids = personas.map((p) => p.id);
-  const [personaId, setPersonaIdState] = useState(ids[0]);
-  const [courseId, setCourseId] = useState(library.selectedId);
+}) {
+  const [personaId, setPersonaId] = useState(personas[0].id);
+  const [call, setCall] = useState<{
+    Component: Runtime['CallApp'];
+    startup: { unitId?: string };
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   useEffect(() => {
-    setCourseId(library.selectedId);
-  }, [library.selectedId]);
-  const mode: CallMode = courseId ? 'course' : 'free';
-  const choiceRef = useRef<CallChoice>({ persona: personaId, mode });
-  choiceRef.current = { persona: personaId, mode, course_id: courseId };
-
-  // Read the remembered teacher after mount so server and client render alike.
-  useEffect(() => {
-    setPersonaIdState(loadPersonaId(ids, ids[0]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const setPersonaId = (id: string) => {
-    setPersonaIdState(id);
-    savePersonaId(id);
-  };
-
-  // The token source reads the ref at call time; no need to recreate it.
-  const tokenSource = useMemo(() => getAgentTokenSource(choiceRef), []);
-  const session = useSession(tokenSource);
+    setPersonaId(
+      loadPersonaId(
+        personas.map((p) => p.id),
+        personas[0].id
+      )
+    );
+  }, [personas]);
   const persona = personas.find((p) => p.id === personaId) ?? personas[0];
-
-  // useSession never hangs up by itself: leaving this page mid-call (the
-  // header's Settings or Sign in) kept the call and the microphone running,
-  // with no screen left to end it from.
-  const endCall = useRef(session.end);
-  endCall.current = session.end;
-  useEffect(() => () => void endCall.current(), []);
-
-  return (
-    <AgentSessionProvider session={session}>
-      <AppSetup />
-      <div className="min-h-svh">
-        <ViewController
-          appConfig={appConfig}
-          personas={personas}
-          persona={persona}
-          onSelectPersona={setPersonaId}
-          library={library}
-          mode={mode}
-        />
-      </div>
-      <StartAudioButton label="Start Audio" />
-      <Toaster
-        icons={{ warning: <WarningIcon weight="bold" /> }}
-        position="top-center"
-        className="toaster group"
-        style={
-          {
-            '--normal-bg': 'var(--popover)',
-            '--normal-text': 'var(--popover-foreground)',
-            '--normal-border': 'var(--border)',
-          } as React.CSSProperties
-        }
+  if (call)
+    return (
+      <call.Component
+        appConfig={appConfig}
+        personas={personas}
+        library={library}
+        initialPersonaId={personaId}
+        startup={call.startup}
       />
-    </AgentSessionProvider>
+    );
+  return (
+    <>
+      <WelcomeView
+        personas={personas}
+        persona={persona}
+        library={library}
+        busy={busy}
+        onSelectPersona={(id) => {
+          setPersonaId(id);
+          savePersonaId(id);
+        }}
+        onPrepareCall={() => {
+          void loadRuntime().catch(() => undefined);
+        }}
+        onStartCall={async (unitId) => {
+          if (busy) return;
+          setBusy(true);
+          setError('');
+          try {
+            const [{ CallApp }] = await Promise.all([
+              loadRuntime(),
+              Promise.all([import('@/lib/guest'), import('@/lib/supabase/client')]).then(
+                ([{ ensureGuestSession }, { createClient }]) => ensureGuestSession(createClient())
+              ),
+            ]);
+            setCall({ Component: CallApp, startup: { unitId } });
+          } catch {
+            setError('Could not start the lesson. Please try again.');
+            setBusy(false);
+          }
+        }}
+      />
+      {error && (
+        <p
+          role="alert"
+          className="bg-popover text-destructive fixed inset-x-6 bottom-6 mx-auto max-w-xl rounded-2xl border p-4 text-sm"
+        >
+          {error}
+        </p>
+      )}
+    </>
   );
 }

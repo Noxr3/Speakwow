@@ -68,3 +68,42 @@ test('a temporary auth outage never replaces the saved identity', async () => {
   };
   await assert.rejects(ensureGuestSession(client as never), (error) => error === outage);
 });
+
+test('course selection can defer existing-session verification to its server action', async () => {
+  const { ensureGuestSession } = await import('./guest.ts');
+  let verified = 0;
+  const client = {
+    auth: {
+      getSession: async () => ({ data: { session: { user: { id: 'student' } } } }),
+      getUser: async () => {
+        verified++;
+        return { data: { user: { id: 'student' } }, error: null };
+      },
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+  await ensureGuestSession(client, { verifyExisting: false });
+  assert.equal(verified, 0);
+  await ensureGuestSession(client);
+  assert.equal(verified, 1);
+});
+
+test('a transient auth failure never replaces an existing learner with a guest', async () => {
+  const { ensureGuestSession } = await import('./guest.ts');
+  let replaced = false;
+  const client = {
+    auth: {
+      getSession: async () => ({ data: { session: { user: { id: 'student' } } } }),
+      getUser: async () => ({ data: { user: null }, error: { status: 503 } }),
+      signOut: async () => {
+        replaced = true;
+        return {};
+      },
+      signInAnonymously: async () => {
+        replaced = true;
+        return {};
+      },
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+  await assert.rejects(() => ensureGuestSession(client));
+  assert.equal(replaced, false);
+});

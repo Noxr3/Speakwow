@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from './config';
@@ -26,11 +27,11 @@ export async function createClient() {
 }
 
 /** The signed-in user and a client acting as them, or nulls for a guest. */
-export async function getSessionUser() {
+export const getSessionUser = cache(async () => {
   const supabase = await createClient();
   if (!supabase) return { supabase: null, user: null };
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return { supabase, user };
-}
+});

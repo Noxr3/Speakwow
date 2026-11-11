@@ -35,7 +35,7 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   logo: '/brand/mark-ink.svg',
   accent: '#087c61',
   logoDark: '/brand/mark-white.svg',
-  accentDark: '#52e0b0',
+  accentDark: '#24e5a4',
   startButtonText: 'Start Speaking',
 
   // agent dispatch configuration

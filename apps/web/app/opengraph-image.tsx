@@ -20,9 +20,9 @@ export default async function Image() {
           width: '100%',
           height: '100%',
           padding: '64px 72px',
-          color: '#f0f7f4',
-          backgroundColor: '#0c1715',
-          backgroundImage: 'radial-gradient(ellipse at 100% 100%, #174e3d 0%, #0c1715 65%)',
+          color: '#f3f8f7',
+          backgroundColor: '#0b1114',
+          backgroundImage: 'radial-gradient(ellipse at 100% 100%, #086849 0%, #0b1114 65%)',
           fontFamily: 'sans-serif',
         }}
       >
@@ -57,13 +57,13 @@ export default async function Image() {
             <span>A voice teacher</span>
             <span>who remembers you.</span>
           </div>
-          <div style={{ fontSize: 28, color: '#adc2b9' }}>
+          <div style={{ fontSize: 28, color: '#b4c3c5' }}>
             Real conversation. A course of your own.
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 20, color: '#adc2b9' }}>Open-source AI tutoring</span>
-          <span style={{ fontSize: 20, color: '#52e0b0' }}>speakwow.ai</span>
+          <span style={{ fontSize: 20, color: '#b4c3c5' }}>Open-source AI tutoring</span>
+          <span style={{ fontSize: 20, color: '#24e5a4' }}>speakwow.ai</span>
         </div>
       </div>
     ),

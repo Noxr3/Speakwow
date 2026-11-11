@@ -1,0 +1,12 @@
+{
+  "frank": { "hairVariant": "fluffy", "moodVariant": "superHappy", "hairColor": "#51352c", "skinColor": "#ffd6c0", "backgroundColor": "#5ce3b0" },
+  "lucy": { "hairVariant": "roundBob", "moodVariant": "happy", "hairColor": "#302d39", "skinColor": "#f4c4ad", "backgroundColor": "#aac6e2" },
+  "lily": { "hairVariant": "buns", "moodVariant": "hopeful", "hairColor": "#292b32", "skinColor": "#edbd9f", "backgroundColor": "#efc4aa" },
+  "leo": { "hairVariant": "parting", "moodVariant": "happy", "hairColor": "#4e3b32", "skinColor": "#cb8d70", "backgroundColor": "#accbb8", "facialHairProbability": 100 },
+  "kai": { "hairVariant": "spiky", "moodVariant": "superHappy", "hairColor": "#263a3c", "skinColor": "#c78f70", "backgroundColor": "#b5aedc" },
+  "grace": { "hairVariant": "plain", "moodVariant": "happy", "hairColor": "#e6e4df", "skinColor": "#efbea8", "backgroundColor": "#c1cba5" },
+  "diego": { "hairVariant": "shortCurls", "moodVariant": "superHappy", "hairColor": "#382a28", "skinColor": "#c88866", "backgroundColor": "#efb079", "facialHairProbability": 100 },
+  "priya": { "hairVariant": "longCurls", "moodVariant": "hopeful", "hairColor": "#2d2835", "skinColor": "#bd8065", "backgroundColor": "#c5b4df" },
+  "nora": { "hairVariant": "wavy", "moodVariant": "happy", "hairColor": "#aa4e32", "skinColor": "#ffd6c0", "backgroundColor": "#efb8bd" },
+  "max": { "hairVariant": "shaggy", "moodVariant": "superHappy", "hairColor": "#e3ba70", "skinColor": "#dda17b", "backgroundColor": "#8dd4ce" }
+}

@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
 import { useSessionContext } from '@livekit/components-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
-import { chooseCourse } from '@/app/courses/actions';
 import { SessionView } from '@/components/app/session-view';
 import { WelcomeView } from '@/components/app/welcome-view';
 import { ensureGuestSession } from '@/lib/guest';
@@ -31,12 +30,14 @@ const VIEW_MOTION_PROPS = {
   animate: 'visible',
   exit: 'hidden',
   transition: {
-    duration: 0.5,
+    duration: 0.15,
     ease: 'linear',
   },
 };
 
 interface ViewControllerProps {
+  startup?: { unitId?: string };
+  onStartSession: (unitId?: string) => Promise<void>;
   appConfig: AppConfig;
   personas: PersonaSummary[];
   persona: PersonaSummary;
@@ -46,6 +47,8 @@ interface ViewControllerProps {
 }
 
 export function ViewController({
+  startup,
+  onStartSession,
   appConfig,
   personas,
   persona,
@@ -53,7 +56,7 @@ export function ViewController({
   library,
   mode,
 }: ViewControllerProps) {
-  const { isConnected, start } = useSessionContext();
+  const { isConnected } = useSessionContext();
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const wasConnected = useRef(false);
@@ -70,33 +73,34 @@ export function ViewController({
   }, [isConnected, router]);
 
   // A visitor becomes a guest when they start a call, not when the page
-  // loads (the page fetches a token early to connect faster), so the call
+  // loads, so the call
   // is kept and can join their account later (lib/guest.ts).
-  const startCall = async (unitId?: string) => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      if (unitId && library.selectedId) {
-        await ensureGuestSession(createClient());
-        const result = await chooseCourse(library.selectedId, unitId);
-        if (result.error) {
-          toast.error(result.error);
-          return;
-        }
-        router.refresh();
-      } else {
-        await ensureGuestSession(createClient()).catch(() => undefined);
+  const startCall = useCallback(
+    async (unitId?: string, guestReady = false) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        if (!guestReady) await ensureGuestSession(createClient());
+        await onStartSession(unitId);
+      } catch {
+        toast.error('Could not start the lesson. Please try again.');
+      } finally {
+        setBusy(false);
       }
-      await start();
-    } catch {
-      toast.error('Could not start the lesson. Please try again.');
-    } finally {
-      setBusy(false);
+    },
+    [busy, onStartSession]
+  );
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (startup && !started.current) {
+      started.current = true;
+      void startCall(startup.unitId, true);
     }
-  };
+  }, [startup, startCall]);
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={false}>
       {/* Welcome view */}
       {!isConnected && (
         <MotionWelcomeView

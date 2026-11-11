@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import { AppBackdrop } from '@/components/app/app-backdrop';
+import { TeacherAvatar } from '@/components/app/teacher-avatar';
 import { UnitCarousel } from '@/components/app/unit-carousel';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ interface WelcomeViewProps {
   library: HomeLibrary;
   busy: boolean;
   onStartCall: (unitId?: string) => void;
+  onPrepareCall?: () => void;
 }
 
 export const WelcomeView = ({
@@ -39,6 +41,7 @@ export const WelcomeView = ({
   library,
   busy,
   onStartCall,
+  onPrepareCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   const course = library.courses.find((c) => c.id === library.selectedId);
@@ -49,6 +52,8 @@ export const WelcomeView = ({
       disabled={busy}
       aria-busy={busy}
       onClick={() => onStartCall(unitId)}
+      onPointerEnter={onPrepareCall}
+      onFocus={onPrepareCall}
       className="w-full disabled:cursor-wait"
     >
       {!busy &&
@@ -73,9 +78,7 @@ export const WelcomeView = ({
         className="teacher-trigger"
         aria-label={'Choose a teacher, currently ' + persona.display_name}
       >
-        <span className="teacher-monogram" aria-hidden="true">
-          {persona.display_name[0]}
-        </span>
+        <TeacherAvatar id={persona.id} className="size-8" />
         With {persona.display_name}
         <ChevronDown size={16} className="text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -89,9 +92,7 @@ export const WelcomeView = ({
             onSelect={() => onSelectPersona(p.id)}
             className="items-start gap-3 px-3 py-3"
           >
-            <span className="teacher-monogram mt-0.5" aria-hidden="true">
-              {p.display_name[0]}
-            </span>
+            <TeacherAvatar id={p.id} className="mt-0.5" />
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">{p.display_name}</span>
               <span className="text-muted-foreground mt-1 block text-sm leading-relaxed">

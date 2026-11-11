@@ -11,11 +11,12 @@ private memories, API keys or learner transcripts.
 | [Syllabus](syllabus.jpg) | A course series and its units |
 | [User menu](user-menu.jpg) | Shared avatar menu in guest state; signed-in users see Sign out |
 | [Practice cards](practice.jpg) | Real vocabulary and quiz components in `/playground`, using bundled sample data |
+| [Teachers](teachers.jpg) | Ten individually configured Dylan portraits from the real playground |
 | [Mobile](mobile.jpg) | Home and navigation at the phone breakpoint |
 | [Social card](social-card.png) | The App's generated 1200×630 sharing card |
 
 Captured from the production build of the 2026-11-11 theme update, before deployment.
-The practice capture is cropped to the two components; all other images show
+The practice and teacher gallery captures are cropped to their components; other images show
 the complete page or viewport. Course availability and a student's progress may differ from the captures.
 The guest menu is shown deliberately; screenshots do not imply a real person's identity.
 
