@@ -5,11 +5,11 @@ requests are the easiest to review and merge.
 
 ## Setting up
 
-Follow the quick start in the [README](README.md). Then:
+Follow the quick start in the [README](README.md). Then run from the repository root:
 
 ```bash
 # agent
-cd apps/agent && uv run ruff check && uv run pytest -m "not live"
+(cd apps/agent && uv run ruff check && uv run pytest -m "not live")
 # web
 pnpm --filter @speakwow/web lint && pnpm --filter @speakwow/web test && pnpm --filter @speakwow/web build
 # scripts
@@ -32,12 +32,14 @@ Migrations and `supabase/tests/*.sql` run in CI against a fresh Postgres.
    `look.motif`, the animated voiceprint (`bars`, `wave`, `rings`, `dots`,
    `pixels`, `radial`, `flame`, `orbit`, `strings`, `ripple`, or add a new one in
    `apps/web/lib/teacher-card.ts`). Check it on `/playground`.
-4. Write a `sample_line` and generate their voice: `pnpm voices:generate --only <id>`.
+4. Write a `sample_line` and optionally generate a TTS preview: `pnpm voices:generate --provider openai --only <id>`.
+   Preview audio is separate from live Realtime; check a real call as well.
 5. Register the card in `packages/shared/index.ts` (`PERSONA_CARDS`).
 6. Run `pnpm shared:sync` (the agent's Docker image carries a copy) and the tests.
 
 Personas set the voice and the flavour. They cannot change the shared teacher
 layer (`apps/agent/src/teacher.py`): the red lines apply to every teacher.
+OpenAI is the default voice provider; preserve the persona's explicit voice mapping.
 
 ### Add or improve a course
 
@@ -53,6 +55,16 @@ The teacher's cards are typed components, not model-written HTML. Add the kind
 to `KINDS` in `apps/agent/src/widgets.py` and `WIDGET_KINDS` in
 `apps/web/lib/widgets.ts` (a test checks they match), render it in
 `apps/web/components/app/widget-card.tsx`, and look at it on `/playground`.
+
+### Brand assets and documentation
+
+Use the shared [brand assets](docs/BRAND.md). Edit `assets/brand/symbol.svg` and run
+`pnpm brand:generate`; do not hand-edit exported icons. Check light/dark backgrounds,
+16/32px favicons and the social preview. Preserve the App's existing layout and green accent.
+
+Keep English and Chinese READMEs aligned. Document current behavior, distinguish
+optional integrations from defaults, and avoid claiming that prompt tests prove
+teaching quality. Use repository-relative links, not private workspace document URLs.
 
 ## Pull requests
 

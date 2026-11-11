@@ -1,34 +1,41 @@
-# Roadmap
+# Speakwow roadmap
 
-What is shipped, what is next, and where help is most welcome. Items marked
-**help wanted** are good for a first or second contribution.
+Current implementation and areas that still need work. This is not a delivery
+schedule; a feature's code existing does not establish teaching quality.
 
-## Shipped
+## Available
 
-- Real-time voice teacher on LiveKit, Grok Voice by default, OpenAI Realtime optional
-- Learner-friendly turn-taking (longer silence on xAI, semantic VAD on OpenAI)
-- Ten teachers with lives that move forward over time, picked on a 3D ring of animated voiceprint cards
-- Shared teacher layer: pedagogy, red lines, language policy
-- Long-term memory: summaries, facts, weaknesses, estimated CEFR level, all erasable
-- Coaching sidecar (Jev decision model) that steers the teacher without latency
-- Courses and a learning record; lesson mode scores unit goals and advances units
-- Teaching cards (word, choice, fill-the-gap, sentence builder, say-it, goals) and stickers
-- Bring your own key, sealed with AES-256-GCM end to end
-- Course import from a JSON file or a Dokki table
+- OpenAI Realtime by default, with contextual vocal-delivery guidance and per-teacher voices.
+- Optional xAI and encrypted personal API keys; patient turn-taking on both providers.
+- Ten teachers with distinct personalities, introductions and changing life stories.
+- Separate course catalogue with categories, CEFR filters, search and unit navigation.
+- Course-specific enrollment progress; lessons, practice, review and independent checks.
+- Eight language-skill series, four Yilin volumes and a venture-fundraising outline.
+- Typed teaching cards, pictures, writing, dictation, story games and animated stickers.
+- Profile memories with user edits and forgetting, separate from lesson history.
+- Optional background coaching and post-call reflection.
+- Phone and SMS integration code, requiring separate Twilio/LiveKit setup.
+- Versioned Markdown courses, validation and progress-preserving imports.
+- Shared vector branding, light/dark marks, browser/install icons and social previews.
 
 ## Next
 
-- **Demo you can try without an account** (hosted, BYOK required)
-- **Pronunciation scoring** for say-it cards (Azure Speech or an open model) — help wanted
-- **Text mode** for when you cannot speak out loud — help wanted
-- **More teachers**: a Chinese tutor for foreign learners, a Japanese tutor — help wanted
-- **More courses**: Yilin 7B onward, PEP, IELTS speaking topics — help wanted
-- **Docker Compose** for a fully self-hosted stack (LiveKit + Supabase + agent + web) — help wanted
-- **Spaced review**: weaknesses and words come back on a schedule
-- **Parent / teacher view** of a student's learning record (with consent)
-- **Sandboxed custom cards**: model-written HTML in an isolated frame, beyond the typed cards
-- **Evaluation suite**: replay real (consented) lessons and score teaching quality
+- **Lesson endings and transitions:** make completion, remediation and the next-session
+  invitation consistently clear in real calls. Never treat a long conversation as completion.
+- **Voice evaluation:** compare recordings for naturalness, emotional fit, clarity,
+  interruptions and continuity across multiple turns, including Chinese/English transitions.
+- **Course quality:** check textbook outlines against primary sources, review level
+  placement and evaluate independent tasks with learners.
+- **Pronunciation feedback:** measured acoustic feedback; avoid invented pronunciation scores.
+- **More curricula:** IELTS/TOEFL, additional textbooks and languages. A catalogue category
+  alone does not mean those courses are already available.
+- **Spaced review:** revisit weak goals and vocabulary over time.
+- **Deployment guide:** a reproducible self-hosted stack with explicit external model requirements.
+- **Consent-based evaluation and sharing:** assess teaching quality and explore parent/teacher
+  views without making learner records public by default.
 
-## Not planned
+## Contribute
 
-- Ads, selling data, or training models on students' conversations.
+See [CONTRIBUTING](../CONTRIBUTING.md), [course rules](../courses/AGENTS.md),
+[course design review](COURSE_DESIGN_REVIEW.md) and [voice research](VOICE_EXPRESSION_REVIEW.md).
+Small improvements with clear evidence are welcome.

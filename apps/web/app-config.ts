@@ -24,16 +24,17 @@ export interface AppConfig {
 export const APP_CONFIG_DEFAULTS: AppConfig = {
   companyName: 'Speakwow',
   pageTitle: 'Speakwow',
-  pageDescription: 'Your AI English speaking coach — practice conversation anytime, anywhere.',
+  pageDescription:
+    'A voice teacher who remembers you. Learn through conversation and guided courses.',
 
   supportsChatInput: true,
   supportsVideoInput: true,
   supportsScreenShare: true,
   isPreConnectBufferEnabled: true,
 
-  logo: '/wow5-logo-white.png',
+  logo: '/brand/mark-ink.svg',
   accent: '#237c32',
-  logoDark: '/wow5-logo-white.png',
+  logoDark: '/brand/mark-white.svg',
   accentDark: '#7cff67',
   startButtonText: 'Start Speaking',
 

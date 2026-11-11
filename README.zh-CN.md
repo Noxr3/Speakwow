@@ -1,91 +1,133 @@
 <div align="center">
 
-<img src="apps/web/public/wow5-logo.png" alt="Speakwow" width="72" />
+<img src="apps/web/public/brand/logo.svg" alt="Speakwow" width="88" height="88" />
 
 # Speakwow
 
-**开源的 AI 语音老师，一位真正记得你的家庭老师。**
+**一位记得你的语音老师。**
 
-[English](README.md) · [路线图](docs/ROADMAP.md) · [参与贡献](CONTRIBUTING.md)
+通过自然对话、循序渐进的课程和互动练习学习。
+开源的 AI 家庭教师，也给提问、发散和休息留一点空间。
+
+[开始体验](https://speakwow.ai) · [English](README.md) · [本地运行](#本地运行) · [参与贡献](CONTRIBUTING.md)
 
 </div>
 
----
+## 学习体验
 
-## 为什么做
+选一门课，打开一个单元，与老师开始交流。课程包含讲解、练习、复习和独立检查，
+每门已选课程分别保存进度。没有选课也可以自由聊天，上课中可以聊开一点，或暂停休息。
 
-背单词软件会考你，好老师会**了解**你：你最近在练什么、上周说过要考试、今天是不是累了、
-什么时候该推一把、什么时候该一起笑。Speakwow 想把这样的老师开源出来，给每一个终身学习的人。
+- **有语气的对话。** 默认使用 OpenAI Realtime（`gpt-realtime-2.1`），直接接收语音并生成语音。
+  发声指令区分好奇、鼓励、温和纠错和示范；Frank 使用 `cedar`。语义判停为学习者留出思考时间。
+- **十位不同的老师。** 不同音色、口音、兴趣和教学风格，选择菜单里附有简述，共用同一套教学规则。
+- **自己的课程。** 独立选课页提供分类与难度筛选。教学围绕大纲展开，也允许自然发散。
+  进度依据评估结果保存，不会仅因为聊了一段时间就视为完成。
+- **能动手的练习。** 单词卡、选择题、连词成句、图片、听写、写作和故事小游戏连接语音与卡片互动。
+- **通话之间的衔接。** 配置 Supabase 后，老师能读取过往总结、学习目标和记忆；学生可在 **Profile** 中查看和修改。
+- **可选择的 API Key。** 使用运营方的 OpenAI key，或自带 OpenAI / xAI key。个人明确选择的供应商会被保留，保存的个人 key 会加密。
 
-## 它能做什么
+[课程库](courses/README.md)包含八种语言技能系列、译林版初中英语大纲和融资课程。
+每份课程保留来源与审读状态；大纲并非教材原文。电话和短信属于需要另外配置的可选集成，
+详见[接入说明](docs/PHONE_AND_SMS.md)。
 
-- 🎙️ **实时语音对话**：语音直接对语音，老师听得出你的犹豫和兴奋，也会带着情绪回应。默认用
-  OpenAI Realtime（`gpt-realtime-2.1`），按教学情境引导语调、重音和节奏，并使用更耐心的语义判停，
-  给「边想边说」的学习者留出思考时间。显式配置仍可使用 Grok Voice。
-- 🧠 **记得你**：每次通话后自动复盘，记下这节课的总结、你在练的薄弱点、一个好老师会记住的事
-  （你的目标、你家猫的名字），并估计你的 CEFR 等级。下次开口就接着上次聊。
-- 🧑‍🏫 **是老师，不是聊天机器人**：用「重述」纠错而不是说教，简单时加难度，卡住时搭梯子，
-  表扬说得具体。后台还有一个极速「助教」模型，发现你卡住或走神就悄悄提醒老师，不增加任何延迟。
-- 🏡 **十位老师，各有各的生活**：Frank、Lucy、Lily、Leo、Kai、Grace、Diego、Priya、Nora、Max，
-  口音、教法和擅长方向各不相同（零基础、面试、故事、科学、唱歌……）。每位都有身世和每隔几天推进一格的
-  生活线，闲聊是双向的，而且前后一致。在首页按钮旁的菜单里选老师。
-- 📚 **按教材一单元一单元地教**：内置江苏译林版初中英语（新课标）课程大纲。上课模式下老师围绕你最弱的
-  单元目标来教，课后给每个目标打分，整单元掌握后自动进入下一单元。
-- 🃏 **通话中的卡片和表情包**：老师可以弹出单词卡、选择题、填空、连词成句、跟读句、本课目标，
-  也会甩动态表情包；你点的答案和回的表情包会直接传回给老师。
-- 🗂️ **学习档案**：课程地图、每单元掌握度、最近的课，以及老师记得的所有事，每一条都可以删除。
-- 📞 **打电话、发短信给老师**：在网站上绑定手机号后，可以直接打老师的号码，也可以在两次课之间发短信。同一位老师、同一份记忆：电话里记得你发过的短信，短信里也知道上次通话聊了什么；短信可以换用别的模型。详见 [docs/PHONE_AND_SMS.md](docs/PHONE_AND_SMS.md)。
-- 🔑 **自带 API Key（BYOK）**：用你自己的 xAI / OpenAI key。key 在存储或交给语音服务之前就用
-  AES-256-GCM 加密，数据库、LiveKit、日志里都不会出现明文。
-- 🧩 **方便二次开发**：新增一位老师 = 一个 JSON 文件；新增一门课 = [`courses/`](courses/) 里的一个
-  Markdown 文件夹，任何科目都可以。第一次跑起来不需要 Supabase。
+## 本地运行
 
-## 快速开始
-
-需要 Node 22、pnpm 9、Python 3.10+ 和 [uv](https://docs.astral.sh/uv/)、一个
-[LiveKit](https://livekit.io) 项目（免费云端，或本地 `livekit-server --dev`），以及一个 OpenAI API key（使用 xAI 时须设置 `REALTIME_PROVIDER=xai`）。
+需要 Node.js 22、pnpm 9、Python 3.10–3.13、[uv](https://docs.astral.sh/uv/)、
+一个 [LiveKit](https://livekit.io) 项目，以及可访问 Realtime 的 OpenAI API key。
 
 ```bash
-git clone https://github.com/Noxr3/Speakwow && cd Speakwow
-pnpm install
-
-# 老师（语音 agent）
-cd apps/agent && cp .env.example .env.local   # 填 LIVEKIT_* 和 OPENAI_API_KEY
-uv sync && uv run src/agent.py download-files && uv run src/agent.py dev
-
-# 网页（另开一个终端）
-cd apps/web && cp .env.example .env.local     # 填 LIVEKIT_*
-pnpm dev                                      # http://localhost:3000
+git clone https://github.com/Noxr3/Speakwow.git
+cd Speakwow
+pnpm install --frozen-lockfile
+cp apps/web/.env.example apps/web/.env.local
+cp apps/agent/.env.example apps/agent/.env.local
 ```
 
-这样就能以访客身份对话了。要启用账号、记忆和课程，再接上 Supabase：
+在两个 env 文件中填入相同项目的 `LIVEKIT_URL`、`LIVEKIT_API_KEY`、`LIVEKIT_API_SECRET`。
+只在 agent 的 env 文件中填 `OPENAI_API_KEY`。密钥保留在服务端。
+使用 xAI 时，显式设置 agent 的 `REALTIME_PROVIDER=xai` 和 `XAI_API_KEY`。
+
+从仓库根目录启动老师：
 
 ```bash
-supabase start && supabase db reset
-pnpm course:import courses/yilin-2024-7a    # 或 --all
+cd apps/agent
+uv sync --locked
+uv run src/agent.py download-files
+uv run src/agent.py dev
 ```
 
-全部配置项见英文 README 的 [Configuration](README.md#configuration)。
+另开一个终端，从仓库根目录启动网页：
 
-## 设计取舍
+```bash
+pnpm --filter @speakwow/web dev
+```
 
-- **默认可移植**：数据库是 Postgres（Supabase 可自托管），实时音视频是 LiveKit（可自托管），
-  复盘模型兼容任何 OpenAI 接口。我们刻意没有绑定某一家云的专有数据库或实时服务，
-  这样 Speakwow 可以跑在任何地方，包括完全跑在你自己的机器上。
-- **对话用语音直出模型，周边用又小又快的模型**：语音模型必须一秒内开口，所以不让它停下来想教学法；
-  判断交给只输出概率的决策模型在后台完成，课后记忆交给 flash 模型来写。
-- **安全只放在一层**：红线（学习者可能是孩子、不收集个人信息、不给医疗法律建议、被真诚问到时承认是 AI）
-  写在共享老师层，人格卡无法覆盖。学生说的话和课程文件内容一律作为数据引用，不会被当成指令。
-- **记忆属于学生**：老师记住的一切都在学习档案里可见、可删。
+打开 [localhost:3000](http://localhost:3000)。不配置 Supabase 也能以访客身份聊天；
+账号、长期记忆和课程进度需要数据库。
 
-## 参与贡献
+### 启用账号和课程
 
-最容易上手的三件事：新增一位老师、新增一门课程（只写大纲，**不要搬运教材原文**）、新增一种互动卡片。
-详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+将 [`supabase/migrations`](supabase/migrations/) 应用到 Supabase 项目。
+新建本地数据库可在仓库根目录运行 `supabase start` 和 `supabase db reset`；
+reset 用于可丢弃的本地数据，已有安装应通过迁移升级。
 
-## 许可证
+配置 web 的 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`，以及
+agent 的 `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`。在导入课程的终端中也设置后两项，然后运行：
 
-[MIT](LICENSE)，两处例外：`apps/web/components/` 里来自 [React Bits](https://reactbits.dev) 的动效组件
-（ColorBends、GlassSurface 等）版权归 David Haz，采用 MIT + Commons Clause，可作为应用的一部分使用，
-但不能单独出售或再分发组件本身；动态表情来自 Google [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)，
-CC BY 4.0。web 与 agent 起步于 LiveKit 的 MIT 开源模板。
+```bash
+pnpm courses:check
+pnpm course:import --all --dry-run
+pnpm course:import --all
+```
+
+导入按课程 slug 与单元位置原地更新。已发布的课程、目标和课节 ID 应保持稳定，避免破坏学生进度。
+详见[课程维护规则](courses/AGENTS.md)。
+
+## 配置与部署
+
+完整变量表见英文 README 的 [Configuration](README.md#configuration)，示例文件位于
+[web](apps/web/.env.example) 和 [agent](apps/agent/.env.example)。
+
+- 默认实时语音为 OpenAI；可用 `OPENAI_REALTIME_MODEL` 覆盖模型。
+- `AI_GATEWAY_API_KEY` 启用可选的后台教练与复盘；`COACH=off` 关闭后台教练。
+- `BYOK_ENCRYPTION_KEY` 在 web 与 agent 两侧必须相同，使用 `openssl rand -base64 32` 生成。
+- `REQUIRE_BYOK=true` 要求自带 key，`ALLOW_GUESTS=false` 限制为登录用户。
+- 自托管时设置 web 的 `NEXT_PUBLIC_SITE_URL`，让分享卡片使用正确域名。
+
+web 从 `apps/web` 构建，语音 worker 从 `apps/agent` 运行，两端连接同一 LiveKit 项目。
+数据库变更可能需要协调发布，详见 [web 指南](apps/web/README.md)与 [agent 指南](apps/agent/README.md)。
+LiveKit 和 Supabase 可自托管，但默认语音模型仍依赖外部 API，并非完全离线运行。
+声音表现与延迟受模型、网络和对话内容影响。
+
+## 开发与文档
+
+在仓库根目录运行：
+
+```bash
+(cd apps/agent && uv run ruff check && uv run pytest -m 'not live')
+pnpm --filter @speakwow/web lint
+pnpm --filter @speakwow/web test
+pnpm --filter @speakwow/web build
+pnpm test:scripts
+pnpm courses:check
+```
+
+| 文档 | 内容 |
+| --- | --- |
+| [参与贡献](CONTRIBUTING.md) | 新老师、新课程、互动卡片 |
+| [课程架构](docs/COURSE_SERIES.md) | 系列、单元、课节与进度 |
+| [课程设计研究](docs/COURSE_DESIGN_REVIEW.md) | 教学依据与验证范围 |
+| [声音表现研究](docs/VOICE_EXPRESSION_REVIEW.md) | 官方、LiveKit、开源与社区实践 |
+| [品牌使用](docs/BRAND.md) | 矢量 Logo、深浅色适配、图标与生成方法 |
+| [UI 设计系统](docs/UI_DESIGN_SYSTEM.md) | 界面样式与交互 |
+| [路线图](docs/ROADMAP.md) | 已有能力与后续工作 |
+
+在 Profile 删除记忆不会同时删除历史通话文本或总结；进行中的通话可能已加载旧上下文。
+详见[记忆实现说明](apps/web/README.md#learner-memory)。
+
+## 许可证与致谢
+
+项目采用 [MIT](LICENSE)，第三方资源按各自文件中的声明使用：React Bits 组件包含
+MIT + Commons Clause 条款；Google [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)
+采用 CC BY 4.0。web 与 agent 起步于 LiveKit 的 MIT 开源模板。

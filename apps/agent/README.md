@@ -1,27 +1,55 @@
 # Speakwow voice agent
 
-The teacher: a [LiveKit Agents](https://github.com/livekit/agents) worker that
-joins each call, speaks through a speech-to-speech model, and remembers the
-student between calls. See the [root README](../../README.md) for setup.
+A [LiveKit Agents](https://github.com/livekit/agents) worker that joins each call,
+teaches through speech and on-screen tools, and reads/writes learning progress.
+The default is OpenAI Realtime (`gpt-realtime-2.1`); Frank uses `cedar`. Explicit
+xAI configuration and personal provider choices remain supported.
 
-| File | What it does |
-|---|---|
-| `src/agent.py` | Entrypoint: reads the signed job metadata, loads memory, starts the session |
-| `src/teacher.py` | The shared teacher layer: pedagogy, red lines, memory block, openings |
-| `src/personas.py`, `src/life.py` | Persona cards and the teacher's own life |
-| `src/lesson.py` | Lesson mode: the unit plan in the prompt, goal scores, mastery |
-| `src/memory.py`, `src/reflect.py` | Snapshot in, transcript + reflection out (Supabase REST) |
-| `src/coach.py` | The coaching sidecar (Jev decision model) |
-| `src/stickers.py`, `src/widgets.py` | Tools that put stickers and cards on the student's screen |
-| `src/providers.py`, `src/byok.py` | Voice model choice and turn-taking; opening a student's sealed key |
-| `shared/` | Vendored copy of `packages/shared` for the Docker image (`pnpm shared:sync`) |
+See the [root setup guide](../../README.md#run-locally). Commands below run from `apps/agent`:
 
 ```bash
-uv sync
-uv run src/agent.py download-files   # VAD / noise-cancellation models
-uv run src/agent.py console          # talk to it in your terminal
-uv run src/agent.py dev              # connect to LiveKit for the web app
-uv run ruff check && uv run pytest -m "not live"
+cp .env.example .env.local   # configure LIVEKIT_* and OPENAI_API_KEY
+uv sync --locked
+uv run src/agent.py download-files
+uv run src/agent.py dev     # local worker connected to LiveKit
 ```
 
-Started from LiveKit's MIT-licensed agent starter (see `LICENSE` in this folder).
+`uv run src/agent.py console` provides terminal audio. Production uses
+`uv run src/agent.py start`. The [Dockerfile](Dockerfile) uses this entrypoint;
+the build context is `apps/agent`. Keep provider and database keys server-side.
+
+## Code map
+
+| File | Responsibility |
+| --- | --- |
+| `src/agent.py` | Signed dispatch metadata, learner snapshot, tools and call lifecycle |
+| `src/providers.py` | Provider/model/voice selection and turn detection |
+| `src/teacher.py` | Shared teaching rules, vocal delivery, persona, memory and phase instructions |
+| `src/personas.py`, `src/life.py` | Teacher data and ongoing life stories |
+| `src/intake.py` | First-call interview and learning profile collection |
+| `src/curriculum.py`, `src/lesson.py` | Session workflow, goals, assessment and progress |
+| `src/memory.py`, `src/reflect.py`, `src/user_memory.py` | Persistence, post-call reflection and memory operations |
+| `src/coach.py`, `src/pacing.py` | Optional coaching, silence and breaks |
+| `src/widgets.py`, `src/materials.py`, `src/stickers.py` | Structured cards, learning materials and reactions |
+| `src/byok.py` | Decrypt the student's sealed provider key |
+| `src/sms_server.py` | Optional SMS process; see [Phone and SMS](../../docs/PHONE_AND_SMS.md) |
+| `shared/` | Generated copy of persona JSON and stickers used by the agent build |
+
+Edit shared data in `packages/shared`, then run `pnpm shared:sync` from the root.
+Do not edit the generated JSON copies. Course definitions live in `courses/` and
+are imported separately; they are not baked into the voice model.
+
+## Checks and limits
+
+```bash
+uv run ruff check
+uv run pytest -m 'not live'
+```
+
+Live tests require external model access and may incur API usage. Offline checks
+validate code and prompt contracts; they do not measure how a voice sounds. Before
+changing a voice model, verify real audio, tool calls, interruptions and lesson
+transitions. See [voice research](../../docs/VOICE_EXPRESSION_REVIEW.md) and
+[course architecture](../../docs/COURSE_SERIES.md).
+
+The worker began with LiveKit's MIT-licensed starter; see [LICENSE](LICENSE).
