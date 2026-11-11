@@ -1,159 +1,184 @@
 <div align="center">
 
-<img src="apps/web/public/wow5-logo.png" alt="Speakwow" width="72" />
+<img src="apps/web/public/brand/logo.svg" alt="Speakwow" width="88" height="88" />
 
 # Speakwow
 
-**An open-source AI voice teacher who remembers you.**
+**A voice teacher who remembers you.**
 
-Talk to a teacher with a personality and a life of their own. They hear how you sound,
-remember what you told them last week, teach your school textbook unit by unit,
-and slide a card or a sticker across the screen when it helps.
+Learn through real conversation, guided courses and small moments of discovery.
+An open-source AI tutor with room for questions, tangents and a break.
 
-[中文说明](README.zh-CN.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Try Speakwow](https://speakwow.ai) · [中文](README.zh-CN.md) · [Get started](#run-locally) · [Contribute](CONTRIBUTING.md)
 
-[![web](https://github.com/Noxr3/Speakwow/actions/workflows/web.yml/badge.svg)](https://github.com/Noxr3/Speakwow/actions/workflows/web.yml)
-[![agent](https://github.com/Noxr3/Speakwow/actions/workflows/agent.yml/badge.svg)](https://github.com/Noxr3/Speakwow/actions/workflows/agent.yml)
-[![supabase](https://github.com/Noxr3/Speakwow/actions/workflows/supabase.yml/badge.svg)](https://github.com/Noxr3/Speakwow/actions/workflows/supabase.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Web checks](https://github.com/Noxr3/Speakwow/actions/workflows/web.yml/badge.svg)](https://github.com/Noxr3/Speakwow/actions/workflows/web.yml)
+[![Agent checks](https://github.com/Noxr3/Speakwow/actions/workflows/agent.yml/badge.svg)](https://github.com/Noxr3/Speakwow/actions/workflows/agent.yml)
+[![Database checks](https://github.com/Noxr3/Speakwow/actions/workflows/supabase.yml/badge.svg)](https://github.com/Noxr3/Speakwow/actions/workflows/supabase.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-167d57.svg)](LICENSE)
 
 </div>
 
----
+## The experience
 
-## Why
+Choose a course, pick up a unit, and talk with your teacher. Courses contain lessons,
+practice, review and independent checks. Each enrollment keeps its own place. You
+can also start with free conversation, explore another topic or take a break.
 
-Language apps quiz you. A good teacher *knows* you: what you are working on, what
-you said about your exam, when you are tired, when to push and when to laugh.
-Speakwow is an attempt to build that teacher, in the open, for everyone who is
-learning for life.
+- **A conversation with a voice.** OpenAI Realtime is the default (`gpt-realtime-2.1`).
+  Teachers hear speech directly; delivery instructions guide curiosity, encouragement,
+  gentle correction and clear demonstrations. Frank uses `cedar`. Semantic turn
+  detection gives learners more time to finish a thought.
+- **Ten distinct teachers.** Different voices, accents, interests and teaching styles,
+  with short introductions in the teacher menu. Their shared teaching rules stay consistent.
+- **A course of your own.** A separate catalogue with categories and difficulty filters;
+  lessons follow a syllabus while leaving room for conversation. Progress is saved from
+  assessed work, rather than inferred from how long someone has talked.
+- **Practice you can touch.** Word cards, quizzes, sentence building, picture prompts,
+  dictation, writing and story games connect spoken practice with on-screen interaction.
+- **Continuity between calls.** With Supabase configured, the teacher can use earlier
+  summaries, learning goals and memories. Students review and edit these in **Profile**.
+- **Your choice of key.** Use the operator's OpenAI key or bring an OpenAI/xAI key.
+  Explicit personal provider choices are preserved; stored personal keys are encrypted.
 
-## What it does
+The [course library](courses/README.md) includes eight language-skill series, Yilin
+junior-high English outlines and a venture-fundraising course. Course review status is
+recorded in its source; an outline is not a licensed copy of a textbook.
+Phone and SMS are optional integrations that need their own configuration; see
+[Phone and SMS](docs/PHONE_AND_SMS.md).
 
-| | |
-|---|---|
-| 🎙️ **Real-time voice** | OpenAI Realtime (`gpt-realtime-2.1`) hears the learner directly and speaks with context-sensitive emotion, emphasis and pacing. Each teacher keeps their own voice; semantic turn detection gives learners time to find a word. |
-| 🧠 **Remembers you** | After every call the lesson is reflected on: a summary, what you are working on, things a teacher would remember (your goals, your cat's name), and an estimated CEFR level. Next time, the teacher picks up where you left off. |
-| 🧑‍🏫 **A teacher, not a chatbot** | Recasts mistakes instead of lecturing, stretches you when it is easy, scaffolds when you are stuck, and praises specifically. A fast background "coach" model notices when you are stuck or bored and quietly tells the teacher, without adding any delay. |
-| 🏡 **Ten teachers, each with a life** | Frank, Lucy, Lily, Leo, Kai, Grace, Diego, Priya, Nora and Max: different accents, teaching styles and specialities (beginners, interviews, stories, science, songs…). Each has a backstory and storylines that move forward every few days, so small talk is two-way and consistent. Pick one from the menu beside the start button. |
-| 📚 **Your textbook, unit by unit** | Courses are data: units with goals, vocabulary, grammar and speaking tasks. In lesson mode the teacher works on your weakest goals, scores them after the call, and moves you on when a unit is mastered. Ships with the Jiangsu Yilin junior-high English course. |
-| 🃏 **Cards and stickers mid-call** | The teacher can put a word card, quick quiz, fill-the-gap, sentence builder or "say it out loud" card on screen, and react with animated stickers. Your taps and stickers go straight back to the teacher. |
-| 🗂️ **Your learning record** | One page with your course map, every unit's mastery, recent lessons, and everything the teacher remembers, each item erasable. |
-| 📞 **Call or text your teacher** | Link your phone and call the teacher's number, or text it between lessons. Same teacher, same memory: a call knows what you texted, a text knows your last call. Texts can use a different model. See [docs/PHONE_AND_SMS.md](docs/PHONE_AND_SMS.md). |
-| 🔑 **Bring your own key** | Use your own xAI or OpenAI key. It is encrypted (AES-256-GCM) before it is stored or handed to the voice service, and never appears in clear text in the database, LiveKit or logs. |
-| 🧩 **Built to be forked** | A new teacher is one JSON file. A new course is a folder of Markdown pages in [`courses/`](courses/), in any subject. Supabase is optional for a first run. |
+## Run locally
 
-## How it works
-
-```mermaid
-flowchart LR
-  B[Browser<br/>Next.js] -- token with signed metadata --> W[/api/connection-details/]
-  B <-- WebRTC audio, cards, stickers --> L[(LiveKit)]
-  L <--> A[Voice agent<br/>LiveKit Agents, Python]
-  A <-- speech to speech --> M[OpenAI Realtime / optional Grok Voice]
-  A -. after each student turn .-> C[Coach: Jev decision model]
-  A -- snapshot / lesson record --> S[(Supabase<br/>Postgres + RLS)]
-  A -. after the call .-> R[Reflection: flash model]
-  D[(courses/<br/>Markdown wiki)] -- pnpm course:import --> S
-```
-
-- `apps/web` — Next.js 15: the call UI, login, learning record, settings (BYOK).
-- `apps/agent` — the teacher: persona + shared teacher layer + memory + lessons + tools.
-- `packages/shared` — persona cards and the sticker set, read by both apps.
-- `supabase/migrations` — schema with row-level security on every table; `supabase/tests` runs in CI.
-
-## Quick start
-
-You need Node 22, pnpm 9, Python 3.10+ with [uv](https://docs.astral.sh/uv/), a
-[LiveKit](https://livekit.io) project (the free cloud tier, or
-`livekit-server --dev` locally), and an OpenAI API key (or xAI with `REALTIME_PROVIDER=xai`).
+You need Node.js 22, pnpm 9, Python 3.10–3.13, [uv](https://docs.astral.sh/uv/),
+a [LiveKit](https://livekit.io) project and an OpenAI API key with Realtime access.
 
 ```bash
-git clone https://github.com/Noxr3/Speakwow && cd Speakwow
-pnpm install
-
-# the teacher
-cd apps/agent && cp .env.example .env.local   # LIVEKIT_* and OPENAI_API_KEY
-uv sync && uv run src/agent.py download-files && uv run src/agent.py dev
-
-# the web app (another terminal)
-cd apps/web && cp .env.example .env.local     # LIVEKIT_*
-pnpm dev                                      # http://localhost:3000
+git clone https://github.com/Noxr3/Speakwow.git
+cd Speakwow
+pnpm install --frozen-lockfile
+cp apps/web/.env.example apps/web/.env.local
+cp apps/agent/.env.example apps/agent/.env.local
 ```
 
-That is enough to talk as a guest. To turn on accounts, memory and courses, add
-Supabase:
+Fill `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` in **both** env files.
+Set `OPENAI_API_KEY` in the **agent's** env file. Credentials stay on the server.
+To choose xAI explicitly, set `REALTIME_PROVIDER=xai` and `XAI_API_KEY` on the agent.
+
+Start the teacher in one terminal, from the repository root:
 
 ```bash
-supabase start && supabase db reset           # local Postgres with the schema
-pnpm course:import courses/yilin-2024-7a    # or --all
+cd apps/agent
+uv sync --locked
+uv run src/agent.py download-files
+uv run src/agent.py dev
 ```
 
-then set `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the web
-and `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` for the agent.
+Start the web app in another terminal, from the repository root:
+
+```bash
+pnpm --filter @speakwow/web dev
+```
+
+Open [localhost:3000](http://localhost:3000). Without Supabase, guest conversation works;
+accounts, persistent memories and enrolled course progress need the database.
+
+### Add accounts and courses
+
+Apply [`supabase/migrations`](supabase/migrations/) to your Supabase project. For a new
+local database, use `supabase start` followed by `supabase db reset` from the repository
+root. Reset is for disposable local data; existing installations should apply migrations.
+
+Set the web's `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and the
+agent's `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`. To import the checked course files,
+set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the importing shell, then run:
+
+```bash
+pnpm courses:check
+pnpm course:import --all --dry-run
+pnpm course:import --all
+```
+
+Imports update by course slug and unit position. Keep published course, goal and session
+IDs stable so students keep their place. See [course rules](courses/AGENTS.md).
 
 ## Configuration
 
-| Variable | Where | What it does |
-|---|---|---|
-| `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | web, agent | Your LiveKit project |
-| `XAI_API_KEY` / `OPENAI_API_KEY` | agent | The operator's voice-model key (not needed if every user brings their own) |
-| `REALTIME_PROVIDER` | agent | `openai` (default) or `xai`; a student's explicitly configured personal key selects its own provider |
-| `XAI_REALTIME_MODEL` / `OPENAI_REALTIME_MODEL` | agent | Default `grok-voice-3.0` (pinned, so a teacher's voice never changes overnight) / `gpt-realtime-2.1` |
-| `TURN_SILENCE_MS` | agent | Silence that ends a student's turn on xAI (default 1100 ms for beginners and school students, 750 ms for B1+ adults) |
-| `AI_GATEWAY_API_KEY` | agent | Turns on the coaching sidecar (Jev) and flash-model reflection via the Vercel AI Gateway |
-| `MEMORY_LLM_API_KEY`, `MEMORY_LLM_BASE_URL`, `MEMORY_LLM_MODEL` | agent | Any OpenAI-compatible model for post-call reflection (e.g. a local Ollama) |
-| `COACH=off` | agent | Turns the coaching sidecar off |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | web | Accounts, learning record, courses |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | agent, web | Reading and writing memory; on the web, linking phone numbers (server-side only) |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`, `SPEAKWOW_PHONE_NUMBER` | web | Linking a phone with a texted code; the teacher line shown in Settings |
-| `TWILIO_AUTH_TOKEN`, `SMS_WEBHOOK_URL`, `SMS_MODEL` / `SMS_LLM_*`, `SMS_DAILY_LIMIT` | sms server | Text messages with the teacher ([docs/PHONE_AND_SMS.md](docs/PHONE_AND_SMS.md)) |
-| `BYOK_ENCRYPTION_KEY` | web, agent | 32 random bytes, base64 (`openssl rand -base64 32`). Enables bring-your-own-key |
-| `REQUIRE_BYOK=true` | web | Every call must bring its own key (public demos that should not spend your credits) |
-| `ALLOW_GUESTS=false` | web | Only signed-in students can start a call |
-| `XAI_API_KEY` / `OPENAI_API_KEY` | scripts | `pnpm voices:generate` writes each teacher's voice sample to `apps/web/public/voices/` |
+Start from [web env](apps/web/.env.example) and [agent env](apps/agent/.env.example).
+Optional integrations are off until configured.
 
-## Design choices
+| Configuration | Location | Purpose |
+| --- | --- | --- |
+| `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Web + agent | Same LiveKit project for media and dispatch |
+| `OPENAI_API_KEY` | Agent | Default Realtime voice service |
+| `REALTIME_PROVIDER`, `OPENAI_REALTIME_MODEL`, `XAI_REALTIME_MODEL` | Agent | Defaults: `openai`, `gpt-realtime-2.1`, `grok-voice-3.0` |
+| `XAI_API_KEY`, `TURN_SILENCE_MS` | Agent | Optional xAI voice and silence-based turn detection |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Web | Accounts, Profile and enrolled courses |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Agent | Server-side learning memory and progress |
+| `AI_GATEWAY_API_KEY` | Agent | Optional coaching and post-call reflection |
+| `MEMORY_LLM_API_KEY`, `MEMORY_LLM_BASE_URL`, `MEMORY_LLM_MODEL` | Agent | Alternative OpenAI-compatible reflection model |
+| `COACH=off` | Agent | Disable background coaching |
+| `BYOK_ENCRYPTION_KEY` | Web + agent | Same 32-byte base64 secret for personal keys (`openssl rand -base64 32`) |
+| `REQUIRE_BYOK=true`, `ALLOW_GUESTS=false` | Web | Optional operator access policies |
+| `NEXT_PUBLIC_SITE_URL` | Web | Public origin for social previews; default `https://speakwow.ai` |
 
-- **Portable by default.** Every dependency is open source or swappable: Postgres
-  (Supabase is self-hostable), LiveKit (self-hostable), any OpenAI-compatible model
-  for reflection. We deliberately did not build on one cloud's proprietary
-  database or realtime service, so you can run Speakwow anywhere, including fully
-  on your own machines.
-- **Speech-to-speech for the conversation, small fast models around it.** The voice
-  model must answer within a second, so it is never asked to stop and think about
-  pedagogy. A decision model (probabilities only, no text) judges each turn in the
-  background, and a flash model writes the memory after the call.
-- **Safety lives in one layer.** Red lines (learners may be children, no personal
-  data, no medical or legal advice, honest about being an AI) sit in the shared
-  teacher layer, and personas cannot override them. Text from students and course
-  files is quoted as data, never as instructions.
-- **Students own their memory.** Everything the teacher remembers is visible on the
-  learning record and can be erased.
+Twilio, phone verification and SMS variables are documented in [Phone and SMS](docs/PHONE_AND_SMS.md).
+For deployment, the web app builds from `apps/web`; the voice worker runs from `apps/agent`.
+Configure both against the same LiveKit project. Database changes may require coordinated
+web and agent releases. See the [web guide](apps/web/README.md) and [agent guide](apps/agent/README.md).
 
-## Contributing
+## Architecture
 
-The easiest ways in:
+```mermaid
+flowchart LR
+  Browser[Web app] --> Token[Signed connection token]
+  Browser <-->|Voice and cards| LiveKit[LiveKit]
+  LiveKit <--> Teacher[Python teacher]
+  Teacher <-->|Speech to speech| Realtime[OpenAI Realtime]
+  Teacher --> Memory[(Supabase)]
+  Teacher -.-> Coach[Optional coach and reflection]
+  Courses[Course Markdown] --> Import[Checked course import]
+  Import --> Memory
+```
 
-- **Add a teacher** — one JSON file in `packages/shared/personas/` (personality,
-  voices, openings, a life with storylines, two colours and a voiceprint motif for
-  the card, a one-line voice sample). See [CONTRIBUTING.md](CONTRIBUTING.md).
-- **Add a course** — a folder of Markdown pages in `courses/`, in any subject; the rules are in [`courses/AGENTS.md`](courses/AGENTS.md).
-  Curriculum outlines only; never copy textbook passages.
-- **Add a card type** — `apps/agent/src/widgets.py` + `apps/web/components/app/widget-card.tsx`;
-  try it on `/playground` without a call.
+| Directory | Responsibility |
+| --- | --- |
+| [`apps/web`](apps/web/) | Next.js app, course selection, call UI, Profile and settings |
+| [`apps/agent`](apps/agent/) | Realtime teacher, course workflow, assessment, memory and tools |
+| [`packages/shared`](packages/shared/) | Persona cards, sticker data and shared contracts |
+| [`courses`](courses/) | Versioned, reviewable curriculum outlines |
+| [`supabase`](supabase/) | Database migrations and SQL checks |
+| [`assets/brand`](assets/brand/) | Vector master and supplied logo reference |
+| [`scripts`](scripts/) | Course imports, shared-data sync and brand exports |
 
-Good first issues are labelled [`good first issue`](https://github.com/Noxr3/Speakwow/labels/good%20first%20issue).
+LiveKit and Supabase can be self-hosted. The default speech model still requires an
+external API; the application is not a fully offline tutor. Voice latency and expression
+vary with the model, network and conversation.
 
-## License
+## Development and documentation
 
-[MIT](LICENSE), with two exceptions noted in the files themselves:
+Run checks from the repository root:
 
-- The animated components in `apps/web/components/` taken from [React Bits](https://reactbits.dev)
-  (`ColorBends`, `GlassSurface`, `DotGrid`, `Magnet`, `Plasma`,
-  `LiquidEther`) are © David Haz under MIT + Commons Clause: use them as part of an
-  app, but do not sell or redistribute the components on their own.
-- Animated stickers are [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)
-  by Google, CC BY 4.0.
+```bash
+(cd apps/agent && uv run ruff check && uv run pytest -m 'not live')
+pnpm --filter @speakwow/web lint
+pnpm --filter @speakwow/web test
+pnpm --filter @speakwow/web build
+pnpm test:scripts
+pnpm courses:check
+```
 
-The web and agent apps started from LiveKit's MIT-licensed starter templates.
+- [Contributing](CONTRIBUTING.md): add teachers, courses and interactive cards.
+- [Course architecture](docs/COURSE_SERIES.md) and [course design review](docs/COURSE_DESIGN_REVIEW.md).
+- [Voice expression research](docs/VOICE_EXPRESSION_REVIEW.md): capabilities, tradeoffs and validation limits.
+- [Brand assets](docs/BRAND.md): logos, dark/light use, icons and export commands.
+- [UI design system](docs/UI_DESIGN_SYSTEM.md) and [roadmap](docs/ROADMAP.md).
+
+Profile memory edits do not erase existing call transcripts or summaries. A running call
+may retain the context it already loaded; see the [memory implementation notes](apps/web/README.md#learner-memory).
+
+## License and attribution
+
+[MIT](LICENSE), with third-party exceptions recorded alongside the assets:
+
+- React Bits components include MIT + Commons Clause notices; retain each component's license.
+- Animated stickers use Google's [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/), CC BY 4.0.
+- The web and agent apps began with LiveKit's MIT-licensed starter templates.

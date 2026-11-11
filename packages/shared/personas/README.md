@@ -1,9 +1,24 @@
-# personas/
+# Teacher personas
 
-人格卡 = 纯数据。字段契约见 `../types/index.ts` 的 `PersonaCard` 与
-[apps/agent 审读与设计草案](/w/df95afc8-29f3-413c-b0c4-3e1255d055ed/r/3653c652-5b4b-4281-a249-f19ef69514a8) §2.2。
+Persona cards describe who a teacher is and how they sound. The public contract
+is [`PersonaCard`](../types/index.ts); the browser receives the summaries built in
+[`index.ts`](../index.ts). Pedagogy, learner memory, tools and safety rules belong
+to the shared [teacher layer](../../../apps/agent/src/teacher.py).
 
-- 人格卡只回答「这个人是谁、怎么说话」；学生数据读写、弱点发现、会话摘要、红线注入全部在 agent 共享老师能力层。
-- 新增人设 = 在本目录加一个 JSON 文件 + agent 侧注册。
-- 文案来源：[Frank/Lucy 人格卡 v0 草案](/w/df95afc8-29f3-413c-b0c4-3e1255d055ed/r/e5758c20-b88a-4dfa-949e-3b917b42b93a)（Content Designer）。
-- `voice` 字段为候选值，C2 实测定稿。
+To add a teacher:
+
+1. Copy `frank.json` to a stable lowercase `<id>.json`.
+2. Set the name, descriptions, accent, personality, tone examples and teaching style.
+3. Choose valid `voices.openai` and `voices.xai` values. The legacy `voice` field is
+   not the current provider selector. `voice_note` guides delivery; it does not change
+   the underlying voice identity.
+4. Add greetings, welcome-backs, guidance, interests and life-story beats. Check
+   voice behavior in real conversation rather than only reading the prompt.
+5. Supply `look.colors`, `look.motif`, `specialty_en` and a short `sample_line`.
+6. Register the card in `PERSONA_CARDS` in `packages/shared/index.ts`.
+7. Run `pnpm shared:sync` from the repository root, then the shared-data and Agent checks.
+
+The agent discovers persona JSON files under its generated `shared/personas/`.
+Never edit those copies independently. See [Contributing](../../../CONTRIBUTING.md)
+for validation and [voice research](../../../docs/VOICE_EXPRESSION_REVIEW.md) for
+expression guidance. Static TTS samples use a separate endpoint from live Realtime audio.
