@@ -1,12 +1,11 @@
-import { headers } from 'next/headers';
 import { personaSummaries } from '@speakwow/shared';
 import { App } from '@/components/app/app';
 import { homeCourses } from '@/lib/home-courses';
-import { getAppConfig } from '@/lib/utils';
+import { getServerAppConfig } from '@/lib/server-app-config';
 
 export default async function Page() {
   const [appConfig, library] = await Promise.all([
-    getAppConfig(await headers()),
+    getServerAppConfig(),
     homeCourses({ selectedOnly: true }).catch(() => ({
       courses: [],
       selectedId: null,
