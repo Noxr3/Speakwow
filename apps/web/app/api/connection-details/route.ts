@@ -7,6 +7,7 @@ import { PERSONA_CARDS, resolvePersonaId } from '@speakwow/shared';
 import { byokSecret, isByokProvider, looksLikeApiKey, sealUserKey } from '@/lib/byok';
 import { resolveCallCourse } from '@/lib/call-course';
 import { isSameOriginJson } from '@/lib/request-origin';
+import { normalizeSpeechPreferences } from '@/lib/speech-speed';
 import { getSessionUser } from '@/lib/supabase/server';
 
 type ConnectionDetails = {
@@ -100,6 +101,7 @@ export async function POST(req: Request) {
       user?.email?.split('@')[0] ||
       'Guest';
     const roomName = `speakwow_${randomUUID()}`;
+    const participantIdentity = user ? `user_${user.id}` : `guest_${randomUUID()}`;
     const metadata = {
       persona: persona.id,
       agent: persona.display_name, // read by agents older than persona ids
@@ -109,10 +111,12 @@ export async function POST(req: Request) {
       unit_id: course?.unitId,
       byok: sealedKey,
       native_language: languageTag(body.native_language),
+      speech: normalizeSpeechPreferences(body.speech),
+      participant_identity: participantIdentity,
     };
 
     const participantToken = await createParticipantToken(
-      { identity: user ? `user_${user.id}` : `guest_${randomUUID()}`, name: participantName },
+      { identity: participantIdentity, name: participantName },
       roomName,
       JSON.stringify(metadata)
     );

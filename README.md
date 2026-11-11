@@ -54,6 +54,9 @@ can also start with free conversation, explore another topic or take a break.
   Teachers hear speech directly; delivery instructions guide curiosity, encouragement,
   gentle correction and clear demonstrations. Frank uses `cedar`. Semantic turn
   detection gives learners more time to finish a thought.
+- **A pace you control.** Set 0.5×–1.5× in Settings or during a call, or ask your teacher
+  to slow down. Optional teacher adaptation changes the pace for the current lesson.
+  [How speech speed works](docs/SPEECH_SPEED.md).
 - **Ten distinct teachers.** Different voices, accents, interests and teaching styles,
   with short introductions in the teacher menu. Their shared teaching rules stay consistent.
 - **A course of your own.** A separate catalogue with categories and difficulty filters;

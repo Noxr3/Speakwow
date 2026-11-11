@@ -12,6 +12,7 @@ import {
 } from '@/components/agents-ui/agent-control-bar';
 import { ChatTranscript } from '@/components/app/chat-transcript';
 import { LiveOverlays } from '@/components/app/live-overlays';
+import { SpeechSpeedMenu } from '@/components/app/speech-speed-menu';
 import { StudySurface } from '@/components/app/study-surface';
 import { TeacherAvatar } from '@/components/app/teacher-avatar';
 import { TileLayout } from '@/components/app/tile-layout';
@@ -158,6 +159,7 @@ export const SessionView = ({
             <span className="label-caption text-muted-foreground">
               {mode === 'course' ? 'Lesson' : 'Free talk'}
             </span>
+            <SpeechSpeedMenu />
           </div>
         </LiquidGlass>
       </div>

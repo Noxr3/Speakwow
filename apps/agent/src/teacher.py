@@ -590,6 +590,7 @@ class Teacher(Agent):
         self.intake = intake
         self.phase_note = warm_up_note(0, warm_up_turns) if warm_up_turns else None
         self.coaching_note: str | None = None
+        self.speech_note: str | None = None
         super().__init__(instructions=self._compose_instructions(), tools=tools or [])
         self.persona = persona
         self.snapshot = snapshot
@@ -597,6 +598,8 @@ class Teacher(Agent):
 
     def _compose_instructions(self) -> str:
         text = self.base_instructions
+        if self.speech_note:
+            text += f"\n\n## Speaking pace\n{self.speech_note}"
         if self.phase_note:
             text += f"\n\n## Where you are in this call\n{self.phase_note}"
         if self.coaching_note:
@@ -626,6 +629,11 @@ class Teacher(Agent):
             return
         self.coaching_note = note
         await self.update_instructions(self._compose_instructions())
+
+    async def set_speech_note(self, note: str) -> None:
+        if note != self.speech_note:
+            self.speech_note = note
+            await self.update_instructions(self._compose_instructions())
 
     async def set_study_flow(self, flow) -> None:
         if self.snapshot and self.snapshot.get("current_course"):
