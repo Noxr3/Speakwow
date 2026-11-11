@@ -1,9 +1,12 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { AccessToken, type AccessTokenOptions, type VideoGrant } from 'livekit-server-sdk';
 import { randomUUID } from 'node:crypto';
 import { RoomAgentDispatch, RoomConfiguration } from '@livekit/protocol';
 import { PERSONA_CARDS, resolvePersonaId } from '@speakwow/shared';
 import { byokSecret, isByokProvider, looksLikeApiKey, sealUserKey } from '@/lib/byok';
+import { resolveCallCourse } from '@/lib/call-course';
+import { isSameOriginJson } from '@/lib/request-origin';
 import { getSessionUser } from '@/lib/supabase/server';
 
 type ConnectionDetails = {
@@ -44,6 +47,7 @@ function languageTag(value: unknown): string | undefined {
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginJson(req)) return refuse(403, 'invalid_request', 'Invalid request.');
     if (LIVEKIT_URL === undefined) throw new Error('LIVEKIT_URL is not defined');
     if (API_KEY === undefined) throw new Error('LIVEKIT_API_KEY is not defined');
     if (API_SECRET === undefined) throw new Error('LIVEKIT_API_SECRET is not defined');
@@ -57,39 +61,38 @@ export async function POST(req: Request) {
       return refuse(401, 'sign_in_required', 'Please sign in to talk to your teacher.');
     }
 
-    let sealedKey: string | undefined;
+    if (body.mode === 'course' && (!supabase || !user)) {
+      return refuse(401, 'sign_in_required', 'Sign in to save your course and progress.');
+    }
+    const mode = body.mode === 'course' ? 'course' : 'free';
     const secret = byokSecret();
-    if (secret) {
-      const offered = body.byok;
-      if (isByokProvider(offered?.provider) && looksLikeApiKey(offered?.key)) {
-        sealedKey = sealUserKey({ provider: offered.provider, key: offered.key }, secret);
-      } else if (supabase && user) {
+    const [sealedKey, course] = await Promise.all([
+      (async () => {
+        if (!secret) return undefined;
+        const offered = body.byok;
+        if (isByokProvider(offered?.provider) && looksLikeApiKey(offered?.key))
+          return sealUserKey({ provider: offered.provider, key: offered.key }, secret);
+        if (!supabase || !user) return undefined;
         const { data } = await supabase
           .from('user_api_keys')
           .select('sealed_key')
           .eq('user_id', user.id)
           .maybeSingle();
-        sealedKey = data?.sealed_key ?? undefined;
-      }
-    }
+        return data?.sealed_key ?? undefined;
+      })(),
+      mode === 'course' && supabase && user
+        ? resolveCallCourse(supabase, user.id, body)
+        : Promise.resolve(null),
+    ]);
     if (!sealedKey && process.env.REQUIRE_BYOK === 'true') {
       return refuse(402, 'api_key_required', 'Add your own API key in Settings to start a call.');
     }
-
-    const mode = body.mode === 'course' && user ? 'course' : 'free';
-    let courseId: string | undefined;
-    let unitId: string | undefined;
-    if (mode === 'course' && supabase && user) {
-      const { data, error } = await supabase
-        .from('enrollments')
-        .select('course_id,current_unit_id')
-        .eq('student_id', user.id)
-        .eq('course_id', typeof body.course_id === 'string' ? body.course_id : '')
-        .maybeSingle();
-      if (error || !data?.current_unit_id)
-        return refuse(409, 'course_unavailable', 'Choose your course again before starting.');
-      courseId = data.course_id;
-      unitId = data.current_unit_id;
+    if (mode === 'course' && !course)
+      return refuse(409, 'course_unavailable', 'Choose your course again before starting.');
+    if (course && body.unit_id !== undefined) {
+      revalidatePath('/');
+      revalidatePath('/profile');
+      revalidatePath('/courses');
     }
     // || not ??: a guest (anonymous user) has an empty email, not none
     const participantName =
@@ -102,8 +105,8 @@ export async function POST(req: Request) {
       agent: persona.display_name, // read by agents older than persona ids
       student_id: user?.id,
       mode,
-      course_id: courseId,
-      unit_id: unitId,
+      course_id: course?.courseId,
+      unit_id: course?.unitId,
       byok: sealedKey,
       native_language: languageTag(body.native_language),
     };

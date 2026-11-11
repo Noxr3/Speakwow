@@ -10,6 +10,7 @@ export interface CallChoice {
   persona: string;
   mode: CallMode;
   course_id?: string | null;
+  unit_id?: string;
 }
 
 /**

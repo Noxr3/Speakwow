@@ -157,3 +157,10 @@ pnpm courses:check
 项目采用 [MIT](LICENSE)，第三方资源按各自文件中的声明使用：React Bits 组件包含
 MIT + Commons Clause 条款；Google [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/)
 采用 CC BY 4.0。web 与 agent 起步于 LiveKit 的 MIT 开源模板。
+
+### 老师头像与加载性能
+
+![Speakwow 的十位老师](docs/media/teachers.jpg)
+
+老师头像采用 [DiceBear Dylan](https://www.dicebear.com/styles/dylan/)，基于 Natalia Spivak 的作品，按 CC BY 4.0 授权。
+[署名与重新生成](apps/web/licenses/dylan.md) · [加载架构、缓存边界与实测结果](docs/PERFORMANCE.md)。

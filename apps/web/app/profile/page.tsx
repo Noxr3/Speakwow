@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { LearningCourses } from '@/components/app/learning-courses';
 import { GlassPanel, PageShell } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
+import { homeCourses } from '@/lib/home-courses';
 import { memorySummary } from '@/lib/memory-summary';
 import { getSessionUser } from '@/lib/supabase/server';
 import { forgetMemory, forgetWeakness, saveMemory, setCurrentUnit } from './actions';
@@ -16,6 +18,7 @@ export default async function ProfilePage() {
   const { supabase, user } = await getSessionUser();
   if (!supabase || !user) redirect('/login');
 
+  const library = homeCourses({ selectedOnly: true });
   const [memories, weaknesses, sessions, attempts] = await Promise.all([
     supabase
       .from('user_memories')
@@ -26,17 +29,22 @@ export default async function ProfilePage() {
     supabase
       .from('weaknesses')
       .select('id, item, created_at')
+      .eq('student_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10),
     supabase
       .from('sessions')
       .select('id, persona_id, mode, started_at, summary')
+      .eq('student_id', user.id)
       .not('summary', 'is', null)
       .order('started_at', { ascending: false })
       .limit(10),
     supabase
       .from('lesson_attempts')
-      .select('id, passed, summary, created_at, unit:course_units(title)')
+      .select(
+        'id, passed, summary, created_at, unit:course_units(title), session:sessions!inner(student_id)'
+      )
+      .eq('session.student_id', user.id)
       .order('created_at', { ascending: false })
       .limit(8),
   ]);
@@ -142,7 +150,15 @@ export default async function ProfilePage() {
           </details>
         </GlassPanel>
 
-        <LearningCourses supabase={supabase} userId={user.id} setCurrentUnit={setCurrentUnit} />
+        <Suspense
+          fallback={
+            <GlassPanel title="Continue learning">
+              <p role="status">Loading your progress…</p>
+            </GlassPanel>
+          }
+        >
+          <LearningCourses library={library} setCurrentUnit={setCurrentUnit} />
+        </Suspense>
 
         {weaknesses.data?.length ? (
           <GlassPanel title="What you are practising">

@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { GlassPanel } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
+import type { HomeLibrary } from '@/lib/study-plan';
 
 const STATUS_LABEL: Record<string, string> = {
   learning: 'Learning',
@@ -10,48 +10,18 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export async function LearningCourses({
-  supabase,
-  userId,
+  library,
   setCurrentUnit,
 }: {
-  supabase: SupabaseClient;
-  userId: string;
+  library: Promise<HomeLibrary>;
   setCurrentUnit: (form: FormData) => Promise<void>;
 }) {
-  const enrollment = await supabase
-    .from('enrollments')
-    .select('course_id, current_unit_id, course:courses(title)')
-    .eq('student_id', userId)
-    .eq('status', 'active')
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (enrollment.error) throw new Error('Could not load your course. Please try again.');
-  const active = enrollment.data;
-  const course = active?.course as unknown as { title: string } | null;
-  const unitsResult = active
-    ? await supabase
-        .from('course_units')
-        .select('id, position, title, topic')
-        .eq('course_id', active.course_id)
-        .order('position')
-    : null;
-  if (unitsResult?.error) throw new Error('Could not load the current course. Please try again.');
-  const units = unitsResult?.data ?? [];
-  const progressResult = units.length
-    ? await supabase
-        .from('unit_progress')
-        .select('unit_id, status, mastery')
-        .eq('student_id', userId)
-        .in(
-          'unit_id',
-          units.map((u) => u.id)
-        )
-    : null;
-  if (progressResult?.error) throw new Error('Could not load course progress. Please try again.');
-  const byUnit = new Map((progressResult?.data ?? []).map((p) => [p.unit_id, p]));
-  const current = units.find((u) => u.id === active?.current_unit_id);
-  const mastered = (progressResult?.data ?? []).filter((p) => p.status === 'mastered').length;
+  const data = await library;
+  const course = data.courses.find((c) => c.id === data.selectedId);
+  const active = course ? { course_id: course.id, current_unit_id: course.currentUnitId } : null;
+  const units = course?.units ?? [];
+  const current = units.find((u) => u.id === course?.currentUnitId);
+  const mastered = units.filter((u) => u.progress?.status === 'mastered').length;
 
   return (
     <div className="space-y-8">
@@ -78,7 +48,7 @@ export async function LearningCourses({
               </summary>
               <ol className="mt-4 space-y-2">
                 {units.map((u) => {
-                  const progress = byUnit.get(u.id);
+                  const progress = u.progress;
                   const isCurrent = u.id === active.current_unit_id;
                   return (
                     <li
@@ -91,7 +61,7 @@ export async function LearningCourses({
                       <span className="text-foreground min-w-0 flex-1 break-words">{u.title}</span>
                       <span className="text-muted-foreground text-xs">
                         {progress
-                          ? `${STATUS_LABEL[progress.status] ?? progress.status} · ${Math.round(Number(progress.mastery) * 100)}%`
+                          ? `${STATUS_LABEL[progress.status ?? ''] ?? progress.status} · ${Math.round(Number(progress.mastery) * 100)}%`
                           : isCurrent
                             ? 'Up next'
                             : ''}

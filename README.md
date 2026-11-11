@@ -208,3 +208,11 @@ may retain the context it already loaded; see the [memory implementation notes](
 - React Bits components include MIT + Commons Clause notices; retain each component's license.
 - Animated stickers use Google's [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/), CC BY 4.0.
 - The web and agent apps began with LiveKit's MIT-licensed starter templates.
+
+### Teacher artwork and loading performance
+
+![Ten Speakwow teachers](docs/media/teachers.jpg)
+
+Teacher portraits use [DiceBear Dylan](https://www.dicebear.com/styles/dylan/),
+a remix of Natalia Spivak's artwork under CC BY 4.0.
+[Attribution and regeneration](apps/web/licenses/dylan.md) · [Loading architecture and measurements](docs/PERFORMANCE.md).

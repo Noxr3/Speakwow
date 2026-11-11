@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@dicebear/core':
+        specifier: 10.6.0
+        version: 10.6.0
+      '@dicebear/styles':
+        specifier: 10.6.0
+        version: 10.6.0
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -300,6 +306,13 @@ packages:
 
   '@chevrotain/utils@11.0.3':
     resolution: {integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==}
+
+  '@dicebear/core@10.6.0':
+    resolution: {integrity: sha512-XZtNSGq3LZCWPa9wx+HZOWQsKnixFkxBTKjjd+fDXcQ3mRWsjZDjoGcOA2rTRpX0TXM/+8CJOsBgGOytGBBXZg==}
+    engines: {node: '>=22.0.0'}
+
+  '@dicebear/styles@10.6.0':
+    resolution: {integrity: sha512-KhxbEVI+z8TaenX58+ZhIRFBt7adggu/F+8g6ZYLu43H2/lgLuWA3Kg8vHBrCVWdfTTTt1p2wUhQomIkkypTuQ==}
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
@@ -4233,6 +4246,10 @@ snapshots:
   '@chevrotain/types@11.0.3': {}
 
   '@chevrotain/utils@11.0.3': {}
+
+  '@dicebear/core@10.6.0': {}
+
+  '@dicebear/styles@10.6.0': {}
 
   '@dimforge/rapier3d-compat@0.12.0': {}
 

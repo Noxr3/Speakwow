@@ -82,12 +82,18 @@ export function clearGuestStash() {
  * call is remembered. If the server has anonymous sign-ins off, the call
  * goes ahead as before and simply is not kept.
  */
-export async function ensureGuestSession(supabase: SupabaseClient | null) {
+export async function ensureGuestSession(
+  supabase: SupabaseClient | null,
+  { verifyExisting = true }: { verifyExisting?: boolean } = {}
+) {
   if (!supabase) return;
   const {
     data: { session },
   } = await supabase.auth.getSession();
   if (session) {
+    // A subsequent authenticated server mutation remains the authority. Callers
+    // using this fast path must repair/retry only on an explicit auth rejection.
+    if (!verifyExisting) return;
     const { data, error } = await supabase.auth.getUser();
     if (data.user) return;
     // A removed guest can leave a locally cached session. Only replace a

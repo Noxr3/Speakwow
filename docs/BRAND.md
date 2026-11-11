@@ -8,7 +8,7 @@ It is a reconstruction, not a lossless recovery of the original design file.
 
 The reference's green–teal background and white symbol remain the identity.
 Compression noise and baked shadows are omitted so the mark stays clear at small
-sizes. The App extends that identity with mint actions, deep forest surfaces and a
+sizes. The App extends that identity with vivid jade actions, neutral ink surfaces and a
 restrained white navigation mark. Teal is an atmospheric accent, not a second
 primary action color; see the [UI palette](UI_DESIGN_SYSTEM.md#color-roles).
 
@@ -76,3 +76,16 @@ Visit `/opengraph-image` and inspect the page's icon, manifest and social metada
 
 Set `NEXT_PUBLIC_SITE_URL` when self-hosting. Share images read the bundled icon
 rather than fetching a protected preview URL or a third-party font.
+
+## Teacher portraits
+
+All ten teachers use individually art-directed [Dylan portraits](media/teachers.jpg).
+Frank's buoyant curls and mint background, Lucy's neat bob, Lily's soft buns,
+Leo's side part and stubble, Kai's spikes, Grace's silver hair, Diego's curls,
+Priya's long curls, Nora's copper waves and Max's sandy shag make the chooser
+recognizable at 32–40px. The 96px gallery uses the same vector assets.
+
+Run `pnpm avatars:generate` after editing `assets/teachers/dylan.json`. Artwork is
+bundled locally; no DiceBear API call or generation library is loaded by the app.
+The versioned URL has a one-year immutable cache, so bump its version for changes.
+Retain [Natalia Spivak / DiceBear attribution](../apps/web/licenses/dylan.md).

@@ -9,7 +9,7 @@
   --warning: #84550d;
   --info: #176e74;
   --destructive-foreground: #30120f;
-  --glass-tint: 12 23 21;
+  --glass-tint: 13 21 24;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -46,40 +46,40 @@
 
 .dark {
   color-scheme: dark;
-  --success: #8bd5ac;
-  --warning: #edc583;
-  --info: #79cfc9;
-  --background: #0c1715;
-  --foreground: #f0f7f4;
-  --card: #172824;
-  --card-foreground: #f0f7f4;
-  --popover: #203630;
-  --popover-foreground: #f0f7f4;
-  --primary: #52e0b0;
-  --primary-foreground: #08251c;
-  --secondary: #263e36;
-  --secondary-foreground: #f0f7f4;
-  --muted: #203630;
-  --muted-foreground: #adc2b9;
-  --accent: #304d42;
+  --success: #84dfae;
+  --warning: #f2cd88;
+  --info: #8cddd5;
+  --background: #0b1114;
+  --foreground: #f3f8f7;
+  --card: #182226;
+  --card-foreground: #f3f8f7;
+  --popover: #202e32;
+  --popover-foreground: #f3f8f7;
+  --primary: #24e5a4;
+  --primary-foreground: #05291e;
+  --secondary: #29383d;
+  --secondary-foreground: #f3f8f7;
+  --muted: #202e32;
+  --muted-foreground: #b4c3c5;
+  --accent: #35464b;
   --accent-foreground: #ffffff;
-  --destructive: #ffaaa3;
+  --destructive: #ffaaa5;
   --border: rgb(255 255 255 / 12%);
   --input: rgb(255 255 255 / 18%);
-  --ring: #52e0b0;
-  --chart-1: #52e0b0;
-  --chart-2: #79cfc9;
-  --chart-3: #edc583;
+  --ring: #24e5a4;
+  --chart-1: #24e5a4;
+  --chart-2: #8cddd5;
+  --chart-3: #f2cd88;
   --chart-4: #b4bdd7;
   --chart-5: #e6ada6;
-  --sidebar: #172824;
-  --sidebar-foreground: #f0f7f4;
-  --sidebar-primary: #52e0b0;
-  --sidebar-primary-foreground: #08251c;
-  --sidebar-accent: #263e36;
-  --sidebar-accent-foreground: #f0f7f4;
+  --sidebar: #182226;
+  --sidebar-foreground: #f3f8f7;
+  --sidebar-primary: #24e5a4;
+  --sidebar-primary-foreground: #05291e;
+  --sidebar-accent: #29383d;
+  --sidebar-accent-foreground: #f3f8f7;
   --sidebar-border: rgb(255 255 255 / 12%);
-  --sidebar-ring: #52e0b0;
+  --sidebar-ring: #24e5a4;
 }
 
 @theme inline {
@@ -135,7 +135,7 @@
 @utility glass {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(180deg, rgb(42 69 59 / 88%), rgb(23 40 36 / 90%));
+  background: linear-gradient(180deg, rgb(40 56 61 / 88%), rgb(24 34 38 / 90%));
   -webkit-backdrop-filter: blur(22px) saturate(170%);
   backdrop-filter: blur(22px) saturate(170%);
   border: 1px solid rgb(255 255 255 / 0.13);
@@ -156,7 +156,7 @@
 
 @utility glass-strong {
   @apply glass;
-  background: linear-gradient(180deg, rgb(48 77 66 / 94%), rgb(23 40 36 / 96%));
+  background: linear-gradient(180deg, rgb(47 65 70 / 94%), rgb(24 34 38 / 96%));
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   backdrop-filter: blur(30px) saturate(180%);
 }
@@ -166,7 +166,7 @@
   width: 100%;
   border-radius: 0.875rem;
   border: 1px solid rgb(255 255 255 / 0.12);
-  background: rgb(12 23 21 / 0.65);
+  background: rgb(11 17 20 / 0.65);
   padding: 0.75rem 1rem;
   min-height: 3rem;
   font-size: 1rem;
@@ -255,7 +255,7 @@
   inset: 0 0 auto;
   z-index: 50;
   padding: max(16px, env(safe-area-inset-top)) 24px 16px;
-  background: linear-gradient(#0c1715 20%, rgb(12 23 21 / 90%) 70%, transparent);
+  background: linear-gradient(#0b1114 20%, rgb(11 17 20 / 90%) 70%, transparent);
 }
 .app-header-inner {
   max-width: 1120px;
@@ -352,7 +352,7 @@
   height: 100%;
   border-radius: 32px;
   border: 1px solid rgb(255 255 255 / 16%);
-  background: linear-gradient(145deg, rgb(67 116 96 / 18%), rgb(23 40 36 / 8%) 75%);
+  background: linear-gradient(145deg, rgb(107 149 155 / 12%), rgb(24 34 38 / 8%) 75%);
   box-shadow:
     inset 0 1px rgb(255 255 255 / 7%),
     0 24px 80px rgb(0 0 0 / 24%);
@@ -388,11 +388,11 @@
   padding: 8px 16px;
   color: var(--foreground);
   font-size: 0.9375rem;
-  background: rgb(12 23 21 / 72%);
+  background: rgb(11 17 20 / 72%);
   border: 1px solid rgb(255 255 255 / 10%);
 }
 .teacher-trigger:hover {
-  background: #203630;
+  background: #202e32;
 }
 .teacher-monogram {
   display: grid;
@@ -414,13 +414,13 @@
   padding: 8px 16px;
   border-radius: 999px;
   color: var(--muted-foreground);
-  background: #172824;
+  background: #182226;
   border: 1px solid var(--border);
   font-size: 0.9375rem;
 }
 .filter-chip:hover {
   color: var(--foreground);
-  background: #263e36;
+  background: #29383d;
 }
 .filter-chip[aria-current='page'] {
   color: var(--primary-foreground);
@@ -535,17 +535,17 @@
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .app-header {
-    background: #0c1715;
+    background: #0b1114;
   }
   .content-panel,
   .course-tile,
   .category-tile,
   [data-slot='dropdown-menu-content'] {
-    background: #172824;
+    background: #182226;
     backdrop-filter: none;
   }
   .teacher-trigger {
-    background: #172824;
+    background: #182226;
   }
 }
 @media (prefers-contrast: more) {
@@ -569,7 +569,7 @@
 
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .glass-surface-backdrop {
-    background: #172824 !important;
+    background: #182226 !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
@@ -627,4 +627,23 @@
     background: var(--popover);
     backdrop-filter: none;
   }
+}
+
+/* A small tonal highlight gives the main action depth without tinting every control. */
+[data-slot='button'][data-variant='default'] {
+  background-image: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--primary), white 12%),
+    var(--primary) 65%,
+    color-mix(in srgb, var(--primary), black 5%)
+  );
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 28%),
+    0 4px 20px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+[data-slot='button'][data-variant='default']:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+[data-slot='button'][data-variant='default']:disabled {
+  box-shadow: none;
 }

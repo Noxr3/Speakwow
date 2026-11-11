@@ -76,6 +76,7 @@ from phone import caller_verified, normalize_phone, phone_access  # noqa: E402
 from providers import PROVIDERS, build_realtime_model, default_provider  # noqa: E402
 from reactions import ReactionInbox  # noqa: E402
 from reflect import Reflector, Turn  # noqa: E402
+from startup import load_startup_snapshot  # noqa: E402
 from stickers import load_stickers, make_sticker_tool  # noqa: E402
 from teacher import (  # noqa: E402
     Teacher,
@@ -245,16 +246,12 @@ async def entrypoint(ctx: JobContext) -> None:
 
     snapshot = session_id = None
     if memory and student_id:
-        snapshot = await memory.load_snapshot(student_id)
-        if snapshot is not None and (texts := await memory.recent_texts(student_id)):
-            snapshot["recent_texts"] = texts
-    if job.mode == "course" and job.course_id and job.unit_id and memory and student_id:
-        selected = await memory.load_study_course(
-            student_id, job.course_id, job.unit_id
+        selected_course = job.course_id if job.mode == "course" else None
+        selected_unit = job.unit_id if job.mode == "course" else None
+        snapshot, course_available = await load_startup_snapshot(
+            memory, student_id, selected_course, selected_unit
         )
-        if selected:
-            snapshot = {**(snapshot or {}), "current_course": selected}
-        else:
+        if not course_available:
             ctx.shutdown(reason="selected course could not be loaded")
             return
     unit = current_unit(snapshot) if job.mode == "course" else None

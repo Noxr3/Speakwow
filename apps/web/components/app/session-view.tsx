@@ -13,6 +13,7 @@ import {
 import { ChatTranscript } from '@/components/app/chat-transcript';
 import { LiveOverlays } from '@/components/app/live-overlays';
 import { StudySurface } from '@/components/app/study-surface';
+import { TeacherAvatar } from '@/components/app/teacher-avatar';
 import { TileLayout } from '@/components/app/tile-layout';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/shadcn/utils';
@@ -137,8 +138,8 @@ export const SessionView = ({
         <DotGrid
           dotSize={5}
           gap={15}
-          baseColor="#173e32"
-          activeColor="#00b98a"
+          baseColor="#163c36"
+          activeColor="#00d997"
           proximity={120}
           shockRadius={250}
           shockStrength={5}
@@ -152,7 +153,7 @@ export const SessionView = ({
       <div className="pointer-events-none absolute inset-x-0 top-20 z-20 flex justify-center">
         <LiquidGlass radius={999} width="auto">
           <div className="flex items-center gap-2.5 px-4 py-1.5">
-            <span className="bg-success inline-block h-2 w-2 rounded-full shadow-[0_0_8px_var(--success)]" />
+            <TeacherAvatar id={persona.id} className="size-8" />
             <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
             <span className="label-caption text-muted-foreground">
               {mode === 'course' ? 'Lesson' : 'Free talk'}

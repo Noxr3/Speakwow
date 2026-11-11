@@ -12,9 +12,12 @@
     "courses:index": "node scripts/courses.mjs index",
     "test:scripts": "node --test scripts/*.test.mjs",
     "voices:generate": "node scripts/voice-samples.mjs",
-    "brand:generate": "node scripts/brand-assets.mjs"
+    "brand:generate": "node scripts/brand-assets.mjs",
+    "avatars:generate": "node scripts/teacher-avatars.mjs"
   },
   "devDependencies": {
+    "@dicebear/core": "10.6.0",
+    "@dicebear/styles": "10.6.0",
     "ajv": "^8.20.0",
     "sharp": "0.34.5",
     "yaml": "^2.9.1"

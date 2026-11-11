@@ -7,7 +7,7 @@ import { GuestMerge } from '@/components/auth/guest-merge';
 import { getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
 
-export const viewport: Viewport = { themeColor: '#0c1715' };
+export const viewport: Viewport = { themeColor: '#0b1114' };
 
 export async function generateMetadata(): Promise<Metadata> {
   const appConfig = await getAppConfig(await headers());

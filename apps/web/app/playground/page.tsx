@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { STICKERS, personaSummaries, stickerImageUrl } from '@speakwow/shared';
+import { TeacherAvatar } from '@/components/app/teacher-avatar';
 import { WidgetCard } from '@/components/app/widget-card';
-import { teacherCardUrl } from '@/lib/teacher-card';
 import { type CardUpdate, type Widget, parseWidget } from '@/lib/widgets';
 
 /**
@@ -120,13 +120,13 @@ export default function Playground() {
         data-testid="teacher-cards"
       >
         {personaSummaries().map((p) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <figure
             key={p.id}
-            src={teacherCardUrl(p)}
-            alt={p.display_name}
-            className="w-full rounded-2xl"
-          />
+            className="glass-surface flex flex-col items-center gap-3 rounded-2xl p-5"
+          >
+            <TeacherAvatar id={p.id} className="size-24" />
+            <figcaption className="text-sm font-semibold">{p.display_name}</figcaption>
+          </figure>
         ))}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
