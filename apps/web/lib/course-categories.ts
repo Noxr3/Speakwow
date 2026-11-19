@@ -15,21 +15,6 @@ export const COURSE_CATEGORIES = [
     title: 'School English',
     description: 'Textbook courses by grade and term.',
   },
-  {
-    id: 'business',
-    title: 'Entrepreneurship',
-    description: 'Customer discovery, fundraising and founder decisions.',
-  },
-  {
-    id: 'statistics',
-    title: 'Statistics',
-    description: 'Data, experiments and decisions under uncertainty.',
-  },
-  {
-    id: 'other-subjects',
-    title: 'Other subjects',
-    description: 'Explore more subjects with your teacher.',
-  },
   { id: 'more-english', title: 'More English', description: 'Explore other English courses.' },
 ] as const;
 export type CourseCategoryId = (typeof COURSE_CATEGORIES)[number]['id'];
@@ -49,9 +34,6 @@ export function courseCategory(course: {
   grade?: string | null;
   subject?: string | null;
 }): CourseCategoryId {
-  if (course.subject === 'statistics') return 'statistics';
-  if (['entrepreneurship', 'venture-fundraising'].includes(course.subject ?? '')) return 'business';
-  if (course.subject && course.subject !== 'english') return 'other-subjects';
   if (/^ai-founder-english-(b1|b2|c1|c2)$/.test(course.slug ?? '')) return 'adult-english';
   if (/^(ielts|toefl)(-|$)/.test(course.slug ?? '')) return 'ielts-toefl';
   if (course.grade?.trim()) return 'school-english';
@@ -116,7 +98,6 @@ export function courseLevelLabel(course: {
   course_level?: string | null;
   subject?: string | null;
 }) {
-  if (course.subject && course.subject !== 'english') return course.course_level || course.subject;
   const range = courseLevels(course);
   return range
     ? range[0] === range[1]

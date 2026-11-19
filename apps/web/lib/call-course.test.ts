@@ -62,6 +62,7 @@ test('legacy calls read only the authenticated student and requested course', as
     unitId: unit,
   });
   assert.deepEqual(filters, [
+    ['courses.subject', 'english'],
     ['student_id', 'student'],
     ['course_id', course],
   ]);
