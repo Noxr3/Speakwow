@@ -11,6 +11,7 @@ import {
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
 import { ChatTranscript } from '@/components/app/chat-transcript';
+import { LessonControls } from '@/components/app/lesson-controls';
 import { LiveOverlays } from '@/components/app/live-overlays';
 import { SpeechSpeedMenu } from '@/components/app/speech-speed-menu';
 import { StudySurface } from '@/components/app/study-surface';
@@ -156,14 +157,14 @@ export const SessionView = ({
           <div className="flex items-center gap-2.5 px-4 py-1.5">
             <TeacherAvatar id={persona.id} className="size-8" />
             <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
-            <span className="label-caption text-muted-foreground">
-              {mode === 'course' ? 'Lesson' : 'Free talk'}
-            </span>
+            {mode !== 'course' && (
+              <span className="label-caption text-muted-foreground">Free talk</span>
+            )}
             <SpeechSpeedMenu />
           </div>
         </LiquidGlass>
       </div>
-      <StudySurface courseMode={mode === 'course'} />
+      <StudySurface />
       {/* transcript */}
       <ChatTranscript
         hidden={!chatOpen}
@@ -203,7 +204,9 @@ export const SessionView = ({
             isConnected={session.isConnected}
             onDisconnect={session.end}
             onIsChatOpenChange={setChatOpen}
-          />
+          >
+            {mode === 'course' && <LessonControls connected={session.isConnected} />}
+          </AgentControlBar>
         </div>
       </MotionBottom>
     </section>
