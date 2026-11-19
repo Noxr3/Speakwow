@@ -4,6 +4,7 @@ import {
   COURSE_CATEGORIES,
   categoryHref,
   courseCategory,
+  courseLevelLabel,
   findCourseCategory,
 } from './course-categories.ts';
 
@@ -47,7 +48,7 @@ test('category URLs round-trip and malformed categories fall back to the categor
 });
 
 test('CEFR filters include range endpoints and never infer CEFR from school grade', async () => {
-  const { matchesCourseLevel, courseLevelLabel, courseLevelHref, findCefrLevel } = await import(
+  const { matchesCourseLevel, courseLevelHref, findCefrLevel } = await import(
     './course-categories.ts'
   );
   assert.equal(matchesCourseLevel({ slug: 'listen-and-write' }, 'A1'), true);
@@ -62,4 +63,14 @@ test('CEFR filters include range endpoints and never infer CEFR from school grad
   assert.equal(findCefrLevel('B3'), null);
   assert.equal(courseLevelHref('adult-english', 'A2'), '/courses?category=adult-english&level=A2');
   assert.equal(courseLevelHref(null, null), '/courses');
+});
+
+test('domain overrides school grade and a language label stays scoped to English', () => {
+  assert.equal(courseCategory({ subject: 'statistics', grade: '9' }), 'statistics');
+  assert.equal(courseCategory({ subject: 'venture-fundraising' }), 'business');
+  assert.equal(
+    courseLevelLabel({ subject: 'statistics', course_level: 'Percentages' }),
+    'Percentages'
+  );
+  assert.equal(courseLevelLabel({ slug: 'ai-founder-english-c2' }), 'C2');
 });

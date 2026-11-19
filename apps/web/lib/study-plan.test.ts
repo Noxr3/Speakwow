@@ -61,3 +61,30 @@ test('dictation hides answers and pictures only use bundled scenes', () => {
     'park'
   );
 });
+
+test('experiment counts are bounded and cannot exceed sample size', () => {
+  const card = {
+    type: 'material',
+    kind: 'experiment',
+    title: 'A/B',
+    exercise: 'abcdef12',
+    groups: [
+      [50, 10],
+      [100, 12],
+    ],
+  };
+  const encode = (obj: unknown) => new TextEncoder().encode(JSON.stringify(obj));
+  assert.deepEqual(parseMaterial(encode(card))?.groups, card.groups);
+  assert.equal(
+    parseMaterial(
+      encode({
+        ...card,
+        groups: [
+          [0, 0],
+          [2, 3],
+        ],
+      })
+    ),
+    null
+  );
+});

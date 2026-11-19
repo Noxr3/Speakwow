@@ -191,3 +191,31 @@ async def test_writing_goal_in_another_session_does_not_block_speaking():
     flow.observe(Turn("user", "Tea please."))
     await flow.change("finish")
     assert len(calls) == 1
+
+
+def test_numeric_check_accepts_only_a_typed_answer_for_current_experiment():
+    flow = StudyFlow(
+        {
+            "id": "u",
+            "content": {
+                "sessions": [
+                    {
+                        "id": "check",
+                        "kind": "exam",
+                        "activity": "experiment",
+                        "goal_ids": [],
+                    }
+                ]
+            },
+        }
+    )
+    flow.phase = "teaching"
+    flow.set_experiment("abc", 5.0)
+    flow.record_written("A/B [old]: 5 pp")
+    assert not flow.experiment_passed
+    flow.record_written("A/B [abc]: 50 pp")
+    assert not flow.experiment_passed
+    flow.record_written("A/B [abc]: 5 pp")
+    assert flow.experiment_passed
+    flow.set_experiment("new", -1.0)
+    assert not flow.experiment_passed

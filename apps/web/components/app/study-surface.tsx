@@ -10,6 +10,7 @@ import { type StudyMaterial, parseMaterial } from '@/lib/study-material';
 export function StudySurface({ courseMode }: { courseMode: boolean }) {
   const [material, setMaterial] = useState<StudyMaterial | null>(null);
   const [draft, setDraft] = useState('');
+  const [showChart, setShowChart] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [phase, setPhase] = useState('welcome');
@@ -20,6 +21,7 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
     const next = parseMaterial(message.payload);
     if (next) {
       setMaterial(next);
+      setShowChart(false);
       setDraft('');
       setSubmitted(false);
     }
@@ -103,6 +105,90 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
               alt={`Illustrated ${material.scene} scene for discussion`}
               className="mb-4 w-full rounded-2xl"
             />
+          )}
+          {material.exercise && (
+            <form
+              className="order-last flex flex-wrap items-end gap-3"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!draft.trim() || sending) return;
+                setSending(true);
+                try {
+                  await send(`A/B [${material.exercise}]: ${Number(draft)} pp`);
+                  setSubmitted(true);
+                } catch {
+                  toast.error('Could not send your answer. Try again.');
+                } finally {
+                  setSending(false);
+                }
+              }}
+            >
+              <label>
+                转化率差 B − A（百分点）
+                <input
+                  type="number"
+                  step="0.01"
+                  min="-100"
+                  max="100"
+                  required
+                  className="field mt-2"
+                  value={draft}
+                  onChange={(e) => {
+                    setDraft(e.target.value);
+                    setSubmitted(false);
+                  }}
+                />
+              </label>
+              <button className="text-primary min-h-11 px-3" disabled={sending || submitted}>
+                {submitted ? '已提交' : '提交'}
+              </button>
+            </form>
+          )}
+          {material.groups && (
+            <table className="mb-5 w-full text-left tabular-nums">
+              <caption className="sr-only">Experiment results</caption>
+              <thead>
+                <tr>
+                  <th>分组</th>
+                  <th>人数</th>
+                  <th>转化数</th>
+                </tr>
+              </thead>
+              <tbody>
+                {material.groups.map(([total, success], i) => (
+                  <tr key={i}>
+                    <th scope="row">{i === 0 ? 'A' : 'B'}</th>
+                    <td>{total}</td>
+                    <td>{success}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {material.groups && (
+            <div className="mb-4">
+              <button
+                type="button"
+                aria-expanded={showChart}
+                className="text-primary min-h-11 text-sm"
+                onClick={() => setShowChart(!showChart)}
+              >
+                {showChart ? '收起图表' : '比较转化率'}
+              </button>
+              {showChart &&
+                material.groups.map(([total, success], i) => (
+                  <div key={i} className="my-2 flex items-center gap-3">
+                    <span>{i === 0 ? 'A' : 'B'}</span>
+                    <meter
+                      aria-label={i === 0 ? 'A 组转化率' : 'B 组转化率'}
+                      min={0}
+                      max={total}
+                      value={success}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+            </div>
           )}
           {material.text && (
             <p className="mb-5 text-base leading-relaxed whitespace-pre-wrap">{material.text}</p>

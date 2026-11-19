@@ -302,3 +302,17 @@ def test_every_turn_hands_off_for_beginners_and_mostly_for_freer_talkers() -> No
     assert "every turn ends with exactly one hand-off" in beginner
     assert "never two in a row" not in beginner
     assert "never two in a row" in build_instructions(FRANK, at("B2"))
+
+
+def test_subject_course_uses_its_language_and_assesses_the_subject():
+    snapshot = {
+        "current_course": {
+            "title": "实验判断",
+            "subject": "statistics",
+            "teaching_language": "zh",
+            "current_unit": {"id": "u1", "title": "转化率"},
+        }
+    }
+    prompt = build_instructions(FRANK, snapshot, mode="course")
+    assert "Teach in zh" in prompt and "转化率" in prompt
+    assert "this student's English teacher" not in prompt

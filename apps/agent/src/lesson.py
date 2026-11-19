@@ -75,6 +75,13 @@ def lesson_section(snapshot: dict | None) -> str | None:
         )
         if text
     ]
+    sources = [
+        str(s["title"])
+        for s in content.get("sources", [])
+        if isinstance(s, dict) and s.get("title")
+    ]
+    if sources:
+        material.append("Course references: " + "; ".join(sources[:4]))
     header = f'Unit {unit.get("position")} "{unit.get("title")}"'
     if unit.get("theme") or unit.get("topic"):
         header += (

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import math
+import re
 import uuid
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
@@ -22,6 +24,7 @@ ACTIVITIES = {
     "write": "Show a writing surface. Agree on audience and purpose, plan briefly, wait for a typed draft, give one useful revision, then invite independent writing. Do not score writing from spoken answers.",
     "reading": "Show a short original passage with show_material. Give silent reading time. Check gist, evidence and inference, then ask for a retelling. Do not read the whole passage aloud first.",
     "story": "Build characters, a setting and a small problem together. Model a connective, let the student develop events, then invite an independent ending and retelling.",
+    "experiment": "Show fresh counts with show_experiment. Let the student submit B minus A in percentage points on the card and explain their reasoning. Wait for both before finishing.",
     "mixed": "Choose a short activity that demonstrates the goals, model it, practise together, then check transfer.",
 }
 Action = Literal["start", "pause", "chat", "resume", "finish"]
@@ -93,15 +96,31 @@ class StudyFlow:
         self.save = save
         self.attempt_id = str(uuid.uuid4())
         self.lock = asyncio.Lock()
+        self.experiment: tuple[str, float] | None = None
+        self.experiment_passed = False
         self.feedback = ""
 
     @property
     def quiet(self) -> bool:
         return self.phase in ("break", "assessing")
 
+    def set_experiment(self, key: str, difference: float) -> None:
+        self.experiment = (key, difference)
+        self.experiment_passed = False
+
     def record_written(self, text: str) -> None:
         if self.phase == "teaching":
             self.written.add(text.strip())
+            if self.experiment:
+                key, expected = self.experiment
+                answer = re.fullmatch(
+                    r"A/B \[" + re.escape(key) + r"\]: (-?\d{1,3}(?:\.\d{1,4})?) pp",
+                    text.strip(),
+                )
+                if answer:
+                    self.experiment_passed = math.isclose(
+                        float(answer[1]), expected, abs_tol=0.005001
+                    )
 
     def observe(self, turn: Turn) -> None:
         if self.phase == "teaching":
@@ -160,6 +179,11 @@ class StudyFlow:
                     for t in self.turns
                 ):
                     return "Wait for a typed response before assessing writing or spelling. Spoken answers are not written evidence."
+                if (
+                    self.step.get("activity") == "experiment"
+                    and not self.experiment_passed
+                ):
+                    return "The numerical check is incomplete or incorrect. Revisit the task and request a fresh independent submission before finishing."
                 if not self.save:
                     return "Progress could not be checked. Keep this session open and do not claim completion."
                 self.phase = "assessing"
@@ -191,6 +215,8 @@ class StudyFlow:
                 )
                 self.turns = []
                 self.written.clear()
+                self.experiment = None
+                self.experiment_passed = False
                 self.attempt_id = str(uuid.uuid4())
             return self.note()
 

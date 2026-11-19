@@ -15,6 +15,21 @@ export const COURSE_CATEGORIES = [
     title: 'School English',
     description: 'Textbook courses by grade and term.',
   },
+  {
+    id: 'business',
+    title: 'Entrepreneurship',
+    description: 'Customer discovery, fundraising and founder decisions.',
+  },
+  {
+    id: 'statistics',
+    title: 'Statistics',
+    description: 'Data, experiments and decisions under uncertainty.',
+  },
+  {
+    id: 'other-subjects',
+    title: 'Other subjects',
+    description: 'Explore more subjects with your teacher.',
+  },
   { id: 'more-english', title: 'More English', description: 'Explore other English courses.' },
 ] as const;
 export type CourseCategoryId = (typeof COURSE_CATEGORIES)[number]['id'];
@@ -32,12 +47,21 @@ const ADULT_COURSES = new Set([
 export function courseCategory(course: {
   slug?: string | null;
   grade?: string | null;
+  subject?: string | null;
 }): CourseCategoryId {
+  if (course.subject === 'statistics') return 'statistics';
+  if (['entrepreneurship', 'venture-fundraising'].includes(course.subject ?? '')) return 'business';
+  if (course.subject && course.subject !== 'english') return 'other-subjects';
+  if (/^ai-founder-english-(b1|b2|c1|c2)$/.test(course.slug ?? '')) return 'adult-english';
   if (/^(ielts|toefl)(-|$)/.test(course.slug ?? '')) return 'ielts-toefl';
   if (course.grade?.trim()) return 'school-english';
   if (ADULT_COURSES.has(course.slug ?? '')) return 'adult-english';
   // New courses stay discoverable until their audience is explicitly classified.
   return 'more-english';
+}
+
+export function hasCefrFilter(category?: CourseCategoryId | null) {
+  return !!category && ['adult-english', 'ielts-toefl', 'more-english'].includes(category);
 }
 
 export function findCourseCategory(value?: string | string[]) {
@@ -67,6 +91,10 @@ export const CEFR_SOURCE =
  * are deliberately not converted into CEFR without a curriculum alignment review.
  */
 const COURSE_LEVELS: Record<string, readonly [CefrLevel, CefrLevel]> = {
+  'ai-founder-english-b1': ['B1', 'B1'],
+  'ai-founder-english-b2': ['B2', 'B2'],
+  'ai-founder-english-c1': ['C1', 'C1'],
+  'ai-founder-english-c2': ['C2', 'C2'],
   'listen-and-write': ['A1', 'A2'],
   'pronunciation-rhythm': ['A1', 'A2'],
   'everyday-conversations': ['A2', 'B1'],
@@ -82,7 +110,13 @@ export function findCefrLevel(value?: string | string[]) {
 export function courseLevels(course: { slug?: string | null }) {
   return COURSE_LEVELS[course.slug ?? ''] ?? null;
 }
-export function courseLevelLabel(course: { slug?: string | null; grade?: string | null }) {
+export function courseLevelLabel(course: {
+  slug?: string | null;
+  grade?: string | null;
+  course_level?: string | null;
+  subject?: string | null;
+}) {
+  if (course.subject && course.subject !== 'english') return course.course_level || course.subject;
   const range = courseLevels(course);
   return range
     ? range[0] === range[1]

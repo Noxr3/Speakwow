@@ -1,6 +1,4 @@
 export const COURSES_PER_PAGE = 6;
-/** Speakwow focuses on language learning for now: other subjects stay out of the catalog. */
-export const OFFERED_SUBJECTS = ['english'];
 export type CatalogParams = { q?: string | string[]; page?: string | string[] };
 
 /** URL state is shareable and survives reload/back; searches always start at page 1. */
