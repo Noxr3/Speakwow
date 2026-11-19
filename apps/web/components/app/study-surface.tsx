@@ -2,21 +2,18 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { MessageCircle, Pause, Play, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useChat, useDataChannel } from '@livekit/components-react';
 import { type StudyMaterial, parseMaterial } from '@/lib/study-material';
 
-export function StudySurface({ courseMode }: { courseMode: boolean }) {
+export function StudySurface() {
   const [material, setMaterial] = useState<StudyMaterial | null>(null);
   const [draft, setDraft] = useState('');
   const [showChart, setShowChart] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [phase, setPhase] = useState('welcome');
-  const [sessionTitle, setSessionTitle] = useState('');
   const { send } = useChat();
-  const { send: sendAction } = useDataChannel('speakwow.study.action');
   useDataChannel('speakwow.material', (message) => {
     const next = parseMaterial(message.payload);
     if (next) {
@@ -26,62 +23,8 @@ export function StudySurface({ courseMode }: { courseMode: boolean }) {
       setSubmitted(false);
     }
   });
-  useDataChannel('speakwow.study', (message) => {
-    try {
-      const data = JSON.parse(new TextDecoder().decode(message.payload));
-      if (['welcome', 'teaching', 'chat', 'break', 'between', 'complete'].includes(data.phase)) {
-        setPhase(data.phase);
-        setSessionTitle(String(data.session ?? '').slice(0, 100));
-      }
-    } catch {
-      /* Ignore malformed events. */
-    }
-  });
-  const change = async (action: string) => {
-    try {
-      await sendAction(new TextEncoder().encode(JSON.stringify({ action })), { reliable: true });
-    } catch {
-      toast.error('Could not reach your teacher. Please try again.');
-    }
-  };
   return (
     <>
-      {courseMode && (
-        <div className="absolute inset-x-4 top-32 z-20 flex flex-col items-center gap-2">
-          <p className="text-muted-foreground text-xs" aria-live="polite">
-            {phase === 'break' ? 'Take your time. Your place is kept.' : sessionTitle}
-          </p>
-          <div className="border-border bg-card flex rounded-full border p-1">
-            {phase !== 'teaching' && phase !== 'complete' && (
-              <button
-                onClick={() => change(phase === 'welcome' ? 'start' : 'resume')}
-                className="text-primary inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm"
-              >
-                <Play size={14} />
-                {phase === 'welcome' ? 'Begin lesson' : 'Continue lesson'}
-              </button>
-            )}
-            {phase === 'teaching' && (
-              <button
-                onClick={() => change('pause')}
-                className="text-muted-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm"
-              >
-                <Pause size={14} />
-                Take a break
-              </button>
-            )}
-            {phase !== 'chat' && (
-              <button
-                onClick={() => change('chat')}
-                className="text-muted-foreground inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm"
-              >
-                <MessageCircle size={14} />
-                Just chat
-              </button>
-            )}
-          </div>
-        </div>
-      )}
       {material && (
         <section
           aria-label="Lesson material"

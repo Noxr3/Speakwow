@@ -235,6 +235,7 @@ export function AgentControlBar({
   onDeviceError,
   onIsChatOpenChange,
   className,
+  children,
   ...props
 }: AgentControlBarProps & ComponentProps<'div'>) {
   const { send } = useChat();
@@ -370,6 +371,7 @@ export function AgentControlBar({
               <MessageSquareTextIcon />
             </Toggle>
           )}
+          {children}
         </div>
 
         {/* Disconnect */}
