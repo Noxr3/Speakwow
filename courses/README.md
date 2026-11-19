@@ -7,10 +7,6 @@ part of a session or several sessions; time spent chatting is not evidence of ma
 课程以可审读的 Markdown 大纲维护，每门课包含有序单元、稳定目标和课节。
 一次通话与一节课并不是同一个概念；闲聊时长不代表掌握程度。
 
-## 中文创始人课程
-
-[客户访谈与需求判断](founder-customer-discovery/index.md) 与 [产品实验与统计判断](founder-product-experiments/index.md) 各含四个教学单元和一次独立综合考核。每门共 13 节，按学科目标评估。统计课的计算题在 A/B 数据卡提交，课堂继续讨论推理和决策。
-
 ## English for AI Founders · AI 创始人英语
 
 Original task-based drafts for founders speaking with international customers,
@@ -32,7 +28,7 @@ CEFR labels describe intended task difficulty; learner testing and scoring
 calibration remain pending. The [level alignment review](../docs/AI_FOUNDER_LEVEL_ALIGNMENT.md)
 defines task conditions, audits every B1/B2 unit and distinguishes language
 performance from business reasoning. Micro-drills alone do not establish the
-course's target level. These files have not been imported into production.
+course's target level.
 
 ## Language-skill series · 语言技能系列
 
@@ -64,12 +60,6 @@ These are teaching outlines, not copies of textbook passages or exercises. Check
 `review.status` and `review.notes` before relying on exact textbook alignment.
 `draft` means unchecked; `cross-checked` is not the same as checked against the
 textbook itself. The [7A game guide](yilin-2024-7a/GAMES.md) describes short voice-and-card activities.
-
-## Other subjects · 其他科目
-
-[Raising venture capital](venture-fundraising-a16z/index.md): seven units based on
-cited public a16z advice, expressed in original outlines. The course format supports
-subjects beyond language learning.
 
 ## Maintain and import · 维护与导入
 

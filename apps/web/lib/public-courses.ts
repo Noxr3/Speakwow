@@ -16,11 +16,12 @@ export const publicCourses = unstable_cache(
       .select(
         'id,slug,subject,course_level,grade,title,description,units:course_units(id,title,position,sessions:content->sessions,goals)'
       )
+      .eq('subject', 'english')
       .order('title')
       .limit(100);
     if (error) throw new Error('Courses could not be loaded. Please try again.');
     return (data as unknown as CatalogCourse[]).map(publicCourse);
   },
-  ['public-course-navigation-v2', SUPABASE_URL ?? 'unconfigured'],
+  ['public-english-courses-v1', SUPABASE_URL ?? 'unconfigured'],
   { revalidate: 60, tags: ['public-courses'] }
 );

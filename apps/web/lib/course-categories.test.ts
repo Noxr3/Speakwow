@@ -65,12 +65,9 @@ test('CEFR filters include range endpoints and never infer CEFR from school grad
   assert.equal(courseLevelHref(null, null), '/courses');
 });
 
-test('domain overrides school grade and a language label stays scoped to English', () => {
-  assert.equal(courseCategory({ subject: 'statistics', grade: '9' }), 'statistics');
-  assert.equal(courseCategory({ subject: 'venture-fundraising' }), 'business');
-  assert.equal(
-    courseLevelLabel({ subject: 'statistics', course_level: 'Percentages' }),
-    'Percentages'
-  );
+test('catalog offers language categories and includes founder English in Adult English', () => {
+  assert.equal(findCourseCategory('business'), null);
+  assert.equal(findCourseCategory('statistics'), null);
+  assert.equal(courseCategory({ slug: 'ai-founder-english-c2' }), 'adult-english');
   assert.equal(courseLevelLabel({ slug: 'ai-founder-english-c2' }), 'C2');
 });

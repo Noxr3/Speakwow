@@ -22,7 +22,8 @@ export async function resolveCallCourse(
   // Older clients omit unit_id; read their saved place instead of guessing it.
   const { data, error } = await client
     .from('enrollments')
-    .select('course_id,current_unit_id')
+    .select('course_id,current_unit_id,courses!inner(subject)')
+    .eq('courses.subject', 'english')
     .eq('student_id', studentId)
     .eq('course_id', choice.course_id)
     .maybeSingle();
