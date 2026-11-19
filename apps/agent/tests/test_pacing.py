@@ -200,3 +200,31 @@ def test_a_goodbye_ends_the_nudging() -> None:
     assert said_goodbye("OK, bye!") and said_goodbye("Goodbye, Ming.")
     assert said_goodbye("拜拜") and said_goodbye("See you next time")
     assert not said_goodbye("I bought a new bike") and not said_goodbye(None)
+
+
+async def test_course_silence_does_not_inject_a_student_turn_or_restart_a_drill():
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+
+    from agent import attach_pacing
+    from curriculum import StudyFlow
+    from personas import load_personas
+
+    handlers = {}
+
+    def on(event, handler=None):
+        if handler:
+            handlers[event] = handler
+        return lambda fn: handlers.setdefault(event, fn)
+
+    ctx = Mock()
+    session = SimpleNamespace(on=on, history=SimpleNamespace(items=[]))
+    attach_pacing(
+        ctx,
+        session,
+        SimpleNamespace(persona=load_personas()["lucy"]),
+        False,
+        study=StudyFlow({"id": "buyer"}, selected=True),
+    )
+    await ctx.add_shutdown_callback.call_args.args[0]()
+    assert "agent_state_changed" not in handlers

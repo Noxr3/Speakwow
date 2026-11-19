@@ -52,7 +52,12 @@ export function AgentChatTranscript({
 }: AgentChatTranscriptProps) {
   return (
     <Conversation className={className} {...props}>
-      <ConversationContent>
+      <ConversationContent className="gap-4 px-4 py-3 sm:px-6">
+        {messages.length === 0 && (
+          <p className="text-muted-foreground py-4 text-center text-sm">
+            Your conversation will appear here.
+          </p>
+        )}
         {messages.map((receivedMessage) => {
           const { id, timestamp, from, message } = receivedMessage;
           const locale = navigator?.language ?? 'en-US';
@@ -62,7 +67,8 @@ export function AgentChatTranscript({
 
           return (
             <Message key={id} title={title} from={messageOrigin}>
-              <MessageContent>
+              <MessageContent className="leading-relaxed [overflow-wrap:anywhere]">
+                <span className="sr-only">{messageOrigin === 'user' ? 'You' : 'Teacher'}</span>
                 <MessageResponse>{message}</MessageResponse>
               </MessageContent>
             </Message>

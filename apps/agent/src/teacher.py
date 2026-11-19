@@ -87,6 +87,20 @@ teacher with a textbook.
 All that matters here is that they enjoy talking to you.
 """.strip()
 
+COURSE_TURNS = """
+## When the learner takes the floor
+Before a diagnostic or role-play, explain in everyday language what they will
+be able to do, who plays whom, and why this first task helps. Keep it brief.
+A question about the plan, a word, or what you just said pauses the exercise:
+answer in this turn. For "What's the plan? Why ask me that?", use the actual
+unit sequence: give the goal, what you are doing now and why, then what follows.
+If you offer an explanation or a demonstration, give it immediately. If they
+ask again, repair the misunderstanding in different words and let them respond.
+No grammar correction, forced choice or invitation to repeat during the repair.
+When role-playing a customer, answer a usable discovery question in character
+before discussing its wording. Ask for another try only when it adds something.
+""".strip()
+
 HOW_YOU_TEACH = """
 ## How you teach
 You teach by conversation. What matters is how much the student gets to say,
@@ -94,8 +108,7 @@ so keep your turns short and leave them room.
 
 - React first: start by responding to what they actually said, in your own
   words. Echoing one key word is fine; don't repeat their whole sentence back.
-- One hand-off per turn, said last (above): never two questions, never a
-  question in the middle of a turn.
+- If you ask for practice, give just one task and leave room for an answer.
 - Once you are practising, ask open questions that start with what, how or
   why ("How do you feel about it?", "What happened?"), so they get to say a
   whole sentence; a choice between two things is then for when they are
@@ -160,9 +173,8 @@ CRITICAL = """
 ## Critical
 - When the student wants to stop, say one warm goodbye and stop. Never ask
   them to stay, and never make them feel bad for leaving.
-- Except during a requested silent break or goodbye, end every turn with one hand-off: one question, choice or invitation, and nothing after it.
 - During independent exams, wait until submission before correcting or hinting.
-- Otherwise, once you are practising, correct mistakes even when the student is sad or
+- During a practice attempt, correct mistakes even when the student is sad or
   tired: briefly and kindly, but always. Before that, only use the right form
   in your own reply.
 """.strip()
@@ -260,7 +272,7 @@ def conversation_flow(
         return """## How the conversation goes
 Be a home tutor with a clear syllabus and room for the person.
 1. Catch up briefly. Follow their mood; if they want to start, start immediately.
-2. Agree on the current session's goal. Call lesson_step(start) before teaching.
+2. Agree on the current session's goal. In the teaching phase the student has already chosen the lesson; get straight into practice. In the welcome phase, ask if they are ready and call lesson_step(start) when they agree.
 3. Teach in small steps: model, guided practice, independent application.
 4. Let them explore a related thought. Call lesson_step(chat) on a tangent;
    after two or three exchanges offer a natural bridge back. Respect a request
@@ -493,7 +505,9 @@ def build_instructions(
         intake_flow(intake)
         if intake
         else conversation_flow(persona, mode, today, first_meeting),
-        HAND_OFF + ("\n\n" + FREER_TALK if not is_beginner(snapshot) else ""),
+        COURSE_TURNS
+        if lesson
+        else HAND_OFF + ("\n\n" + FREER_TALK if not is_beginner(snapshot) else ""),
         HOW_YOU_TEACH,
     ]
     if persona.language_policy:
@@ -683,7 +697,13 @@ class Teacher(Agent):
             else opening_instructions(self.persona, self.snapshot)
         )
         course = (self.snapshot or {}).get("current_course") or {}
-        if self.mode == "course" and course.get("subject") not in (None, "english"):
+        if self.mode == "course" and course.get("subject") in (None, "english"):
+            opening = (
+                "Greet them warmly. In plain English, connect today's goal to one real situation "
+                "and give a short preview of what you will do together. Follow the current phase; "
+                "ask for agreement before an exam. Leave space if they want to chat or ask why."
+            )
+        elif self.mode == "course":
             opening = "Greet them in the teaching language. Ask one short question about their goal for this lesson, then listen."
         await session.generate_reply(
             instructions=self.with_note(opening), allow_interruptions=True

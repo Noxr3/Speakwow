@@ -219,3 +219,25 @@ def test_numeric_check_accepts_only_a_typed_answer_for_current_experiment():
     assert flow.experiment_passed
     flow.set_experiment("new", -1.0)
     assert not flow.experiment_passed
+
+
+def test_selected_lesson_is_active_on_entry_but_exam_awaits_consent():
+    assert StudyFlow(UNIT, selected=True).phase == "teaching"
+    exam = {**UNIT, "session_progress": {"learn": {"status": "mastered"}}}
+    assert StudyFlow(exam, selected=True).phase == "welcome"
+
+
+async def test_assessment_phase_is_published_while_save_is_running():
+    seen = []
+
+    async def publish():
+        seen.append(flow.phase)
+
+    async def save(*args):
+        assert seen == ["assessing"]
+        return None
+
+    flow = StudyFlow(UNIT, selected=True, save=save)
+    flow.observe(Turn("user", "A coffee, please."))
+    await flow.change("finish", on_assessing=publish)
+    assert flow.phase == "teaching"

@@ -370,7 +370,11 @@ async def entrypoint(ctx: JobContext) -> None:
             session_id, study_unit["id"], step["id"], attempt_id, reflection
         )
 
-    study = StudyFlow(unit, save=save_study) if unit else None
+    study = (
+        StudyFlow(unit, save=save_study, selected=job.channel != "phone")
+        if unit
+        else None
+    )
 
     # set when the interview's memories were written during this call
     intake_saved = [False]
@@ -482,23 +486,35 @@ async def entrypoint(ctx: JobContext) -> None:
     if speech.supported:
         tools.append(make_speed_tool(speech))
 
-    async def study_changed():
-        await teacher.set_study_flow(study)
-        if job.channel != "phone":
-            await ctx.room.local_participant.publish_data(
-                json.dumps(
-                    {
-                        "phase": study.phase,
-                        "title": study.unit.get("title"),
-                        "session": (study.step or {}).get("title"),
-                    }
-                ).encode(),
-                topic="speakwow.study",
-                reliable=True,
+    study_publish_lock = asyncio.Lock()
+
+    async def publish_study():
+        if job.channel == "phone":
+            return
+        async with study_publish_lock:
+            payload = json.dumps(
+                {
+                    "phase": study.phase,
+                    "title": study.unit.get("title"),
+                    "session": (study.step or {}).get("title"),
+                    "kind": (study.step or {}).get("kind"),
+                    "awaitingStart": study.awaiting_start,
+                    "attempt": study.attempt_id,
+                }
+            )
+            participant = ctx.room.local_participant
+            await participant.set_attributes({"speakwow.study": payload})
+            # Existing classroom tabs still listen on the data channel.
+            await participant.publish_data(
+                payload.encode(), topic="speakwow.study", reliable=True
             )
 
+    async def study_changed():
+        await publish_study()
+        await teacher.set_study_flow(study)
+
     if study:
-        tools.append(make_lesson_tool(study, study_changed))
+        tools.append(make_lesson_tool(study, study_changed, publish_study))
     teacher = Teacher(
         persona,
         snapshot,
@@ -609,10 +625,20 @@ async def entrypoint(ctx: JobContext) -> None:
             ):
                 return
             try:
-                action = json.loads(bytes(packet.data).decode()).get("action")
+                request = json.loads(bytes(packet.data).decode())
+                action = request.get("action")
+                if (
+                    request.get("phase", study.phase) != study.phase
+                    or request.get("attempt", study.attempt_id) != study.attempt_id
+                ):
+                    return
             except (ValueError, AttributeError):
                 return
-            if action not in ("start", "pause", "chat", "resume") or pending_study:
+            if (
+                action not in ("start", "pause", "chat", "resume")
+                or pending_study
+                or study.phase in ("assessing", "complete")
+            ):
                 return
             task = asyncio.create_task(control_study(action), name="study-control")
             pending_study.add(task)
@@ -668,33 +694,31 @@ def attach_pacing(
     nudges, never a sentence starter."""
 
     async def nudge(note: str) -> None:
-        if _busy(session) or (study and study.quiet):
-            return  # a requested break never expires into a silence nudge
+        if _busy(session):
+            return
         session.generate_reply(user_input=QUIET, instructions=teacher.with_note(note))
 
     warm_up_steps = warm_up_silence_steps(news_today(teacher.persona), first_meeting)
 
     def steps() -> tuple[str, ...]:
-        if study:
-            if study.step and study.step.get("kind") == "exam":
-                return (
-                    "Give them time to answer independently. Offer to repeat the question, without hints or the answer.",
-                    "There is no rush. Wait quietly.",
-                )
-            return SILENCE_STEPS
         if warming_up(transcript(session), first_meeting):
             return warm_up_steps
         return SILENCE_STEPS
 
     ladder = SilenceLadder(nudge, steps=steps, held=busy_on_screen)
-    session.on("agent_state_changed", lambda ev: ladder.on_agent_state(ev.new_state))
-    session.on("user_state_changed", lambda ev: ladder.on_user_state(ev.new_state))
+    # In a structured lesson, silence is time to think. A synthetic student
+    # turn can displace their actual question with another practice prompt.
+    if study is None:
+        session.on(
+            "agent_state_changed", lambda ev: ladder.on_agent_state(ev.new_state)
+        )
+        session.on("user_state_changed", lambda ev: ladder.on_user_state(ev.new_state))
 
-    @session.on("conversation_item_added")
-    def _on_goodbye(event) -> None:
-        # after a goodbye, silence is the end of the call, not a cue to nudge
-        if said_goodbye(getattr(event.item, "text_content", None)):
-            ladder.close()
+        @session.on("conversation_item_added")
+        def _on_goodbye(event) -> None:
+            # after a goodbye, silence is the end of the call, not a cue to nudge
+            if said_goodbye(getattr(event.item, "text_content", None)):
+                ladder.close()
 
     async def suggest_break() -> None:
         await asyncio.sleep(BREAK_AFTER_S)

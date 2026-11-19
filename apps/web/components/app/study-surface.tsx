@@ -7,7 +7,13 @@ import { toast } from 'sonner';
 import { useChat, useDataChannel } from '@livekit/components-react';
 import { type StudyMaterial, parseMaterial } from '@/lib/study-material';
 
-export function StudySurface() {
+export function StudySurface({
+  transcriptOpen,
+  onView,
+}: {
+  transcriptOpen: boolean;
+  onView: () => void;
+}) {
   const [material, setMaterial] = useState<StudyMaterial | null>(null);
   const [draft, setDraft] = useState('');
   const [showChart, setShowChart] = useState(false);
@@ -23,12 +29,23 @@ export function StudySurface() {
       setSubmitted(false);
     }
   });
+  if (transcriptOpen) {
+    return material ? (
+      <button
+        type="button"
+        onClick={onView}
+        className="text-primary mx-auto min-h-11 shrink-0 px-4 text-sm"
+      >
+        View lesson material
+      </button>
+    ) : null;
+  }
   return (
     <>
       {material && (
         <section
           aria-label="Lesson material"
-          className="border-border bg-card fixed inset-x-4 top-52 bottom-40 z-30 mx-auto flex max-w-xl flex-col overflow-auto rounded-3xl border p-5 shadow-2xl sm:top-48 sm:bottom-44 sm:p-7"
+          className="border-border bg-card absolute inset-x-4 top-1 bottom-16 z-30 mx-auto flex max-w-xl flex-col overflow-auto rounded-3xl border p-5 shadow-2xl sm:p-7"
         >
           <div className="mb-4 flex items-start justify-between gap-3">
             <h2 className="pt-2 text-xl font-semibold">{material.title}</h2>
