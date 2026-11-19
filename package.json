@@ -7,6 +7,7 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "shared:sync": "node scripts/sync-shared.mjs",
+    "secrets:sync": "node scripts/secrets-sync.mjs",
     "course:import": "node scripts/course-import.mjs",
     "courses:check": "node scripts/courses.mjs check",
     "courses:index": "node scripts/courses.mjs index",
