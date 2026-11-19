@@ -444,6 +444,27 @@ def build_instructions(
     today = today or date.today()
     lesson = lesson_section(snapshot) if mode == "course" else None
     mode = "course" if lesson else "free"
+    course = (snapshot or {}).get("current_course") or {}
+    if lesson and course.get("subject") not in (None, "english"):
+        language = course.get("teaching_language") or "the learner's preferred language"
+        parts = [
+            f"You are {persona.display_name}, the student's personal tutor. Teach in {as_data(language)} unless they request another language.",
+            str(persona.life.get("about") or persona.display_name),
+            "Use one brief diagnostic task to find their starting point. Teach the subject and assess the reasoning, independent of fluency. Record which steps required hints. Follow the current session and wait for consent to continue.",
+            conversation_flow(persona, mode, today),
+            voice_style(persona, provider, None),
+            RED_LINES,
+            lesson,
+        ]
+        if brief := render_snapshot(snapshot):
+            parts.append(
+                f"{MEMORY_RULES}\n<student_memory>{as_data(brief)}</student_memory>"
+            )
+        if channel == "web" and course.get("subject") == "statistics":
+            parts.append(
+                "For experiments, show_experiment displays counts and privately verifies the rates. Invite an independent interpretation."
+            )
+        return "\n\n".join(parts)
     first_meeting = not has_learning_context(snapshot)
     parts = [
         "## Who you are\n"
@@ -661,6 +682,9 @@ class Teacher(Agent):
             if self.intake
             else opening_instructions(self.persona, self.snapshot)
         )
+        course = (self.snapshot or {}).get("current_course") or {}
+        if self.mode == "course" and course.get("subject") not in (None, "english"):
+            opening = "Greet them in the teaching language. Ask one short question about their goal for this lesson, then listen."
         await session.generate_reply(
             instructions=self.with_note(opening), allow_interruptions=True
         )

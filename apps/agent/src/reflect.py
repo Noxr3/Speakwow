@@ -212,6 +212,7 @@ class Reflector:
         student: str | None = None,
         memories: list[dict] | None = None,
         min_student_turns: int = MIN_STUDENT_TURNS,
+        subject: str | None = None,
     ) -> Reflection | None:
         if student_turns(turns) < min_student_turns:
             return None
@@ -238,6 +239,13 @@ class Reflector:
             transcript=format_transcript(turns, teacher),
             existing_memories=as_data(json.dumps(memories or [], ensure_ascii=False)),
         )
+        domain_lesson = bool(subject and subject != "english")
+        if domain_lesson:
+            prompt += (
+                "\nThis was a subject lesson. Report the learner's subject reasoning and specific "
+                "evidence in the summary. Identify work completed with hints versus independently. "
+                "Return null for level, no language weaknesses, and no language-level memory operations."
+            )
         body = {
             "model": self.model,
             "temperature": 0.2,
@@ -260,6 +268,12 @@ class Reflector:
             logger.exception("reflection request failed")
             return None
         reflection = parse_reflection(content, {g["id"] for g in goals})
+        if domain_lesson and reflection:
+            reflection.level = None
+            reflection.weaknesses.clear()
+            reflection.memories = [
+                m for m in reflection.memories if m.get("key") != "english-level"
+            ]
         if reflection is None:
             logger.warning("reflection reply was not usable JSON")
         return reflection

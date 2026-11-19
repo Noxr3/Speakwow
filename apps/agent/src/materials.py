@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 from typing import Literal
 
 from livekit.agents import function_tool, get_job_context
@@ -55,3 +56,40 @@ def make_material_tool(publish=None):
         return "Material is on screen. Give them time; wait for their response."
 
     return show_material
+
+
+def make_experiment_tool(publish=None, on_show=None):
+    @function_tool
+    async def show_experiment(
+        a_total: int, a_success: int, b_total: int, b_success: int
+    ) -> str:
+        """Present two groups of trial counts for a conversion experiment. The private result
+        verifies arithmetic. Let the learner interpret the counts before sharing feedback."""
+        groups = [[a_total, a_success], [b_total, b_success]]
+        if any(
+            not 0 <= success <= total or not 1 <= total <= 1000000
+            for total, success in groups
+        ):
+            return "Use positive totals up to one million and successes between zero and total."
+        key = uuid.uuid4().hex
+        payload = json.dumps(
+            {
+                "type": "material",
+                "kind": "experiment",
+                "title": "A/B",
+                "groups": groups,
+                "exercise": key,
+            }
+        )
+        if publish:
+            await publish(payload)
+        else:
+            await get_job_context().room.local_participant.publish_data(
+                payload.encode(), topic="speakwow.material", reliable=True
+            )
+        a, b = [100 * success / total for total, success in groups]
+        if on_show:
+            on_show(key, b - a)
+        return f"Private reference: A {a:.2f}%, B {b:.2f}%, B minus A {b - a:.2f} percentage points. Counts alone do not establish causality."
+
+    return show_experiment

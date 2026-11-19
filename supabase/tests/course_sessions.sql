@@ -1,7 +1,7 @@
 begin;
 insert into auth.users(id, email) values ('aa110000-0000-4000-8000-000000000001', 'course-test@example.test'), ('aa110000-0000-4000-8000-000000000002', 'other-test@example.test');
 insert into public.profiles(id) values ('aa110000-0000-4000-8000-000000000001'), ('aa110000-0000-4000-8000-000000000002') on conflict do nothing;
-insert into public.courses(id,title,subject) values ('cc110000-0000-4000-8000-000000000001','Course one','english'), ('cc110000-0000-4000-8000-000000000002','Course two','english');
+insert into public.courses(id,title,subject) values ('cc110000-0000-4000-8000-000000000001','Course one','english'), ('cc110000-0000-4000-8000-000000000002','Course two','statistics');
 insert into public.course_units(id,course_id,position,title,goals) values
 ('dd110000-0000-4000-8000-000000000001','cc110000-0000-4000-8000-000000000001',1,'First','[{"id":"u1-g1","text":"Speak independently","kind":"speaking"}]'),
 ('dd110000-0000-4000-8000-000000000002','cc110000-0000-4000-8000-000000000001',2,'Next','[{"id":"u2-g1","text":"Speak independently","kind":"speaking"}]'),
@@ -53,6 +53,10 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"aa110000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select public.select_course('cc110000-0000-4000-8000-000000000002');
+do $$ begin
+ if public.get_student_snapshot(auth.uid()) #>> '{current_course,subject}' is distinct from 'statistics'
+ then raise exception 'subject missing from teaching snapshot'; end if;
+end $$;
 select public.select_course('cc110000-0000-4000-8000-000000000001');
 do $$ begin
  if (select count(*) from public.enrollments where status='active') <> 1 then raise exception 'multiple active courses'; end if;

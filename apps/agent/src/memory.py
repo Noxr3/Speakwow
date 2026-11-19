@@ -394,10 +394,11 @@ class SupabaseMemory:
         enrolled, units = await asyncio.gather(
             self._request(
                 "GET",
-                f"/enrollments?student_id=eq.{student_id}&course_id=eq.{course_id}&select=course_id,course:courses(title)",
+                f"/enrollments?student_id=eq.{student_id}&course_id=eq.{course_id}&select=course_id,course:courses(title,subject,teaching_language)",
             ),
             self._request(
-                "GET", f"/course_units?id=eq.{unit_id}&course_id=eq.{course_id}&select=id"
+                "GET",
+                f"/course_units?id=eq.{unit_id}&course_id=eq.{course_id}&select=id",
             ),
         )
         if enrolled is None or not enrolled.json() or units is None or not units.json():
@@ -409,7 +410,7 @@ class SupabaseMemory:
             return None
         return {
             "id": course_id,
-            "title": enrolled.json()[0]["course"]["title"],
+            **enrolled.json()[0]["course"],
             "current_unit": response.json(),
         }
 

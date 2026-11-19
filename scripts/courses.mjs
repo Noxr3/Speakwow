@@ -187,6 +187,8 @@ export function toRows(course) {
       title: d.title,
       description: d.description ?? null,
       subject: d.subject,
+      teaching_language: d.teaching_language,
+      course_level: d.level ?? null,
       grade: d.grade ?? null,
       term: d.term ?? null,
       region: d.region ?? null,
@@ -206,7 +208,7 @@ export function toRows(course) {
         goals: u.data.goals,
         content: {
           ...Object.fromEntries(LIST_FIELDS.map((f) => [f, u.data[f] ?? []])),
-          sources: u.data.sources ?? [],
+          sources: u.data.sources ?? d.sources ?? [],
           ...(u.data.sessions ? { sessions: u.data.sessions } : {}),
         },
         source_ref: `courses/${d.slug}/units/${u.file}`,

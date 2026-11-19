@@ -26,6 +26,7 @@ import {
   courseCategory,
   courseLevelHref,
   courseLevelLabel,
+  hasCefrFilter,
   matchesCourseLevel,
 } from '@/lib/course-categories';
 import { ensureGuestSession } from '@/lib/guest';
@@ -70,7 +71,7 @@ export function CoursePicker({
   const categories = COURSE_CATEGORIES.map((item) => ({
     ...item,
     courses: library.courses.filter((course) => courseCategory(course) === item.id),
-  })).filter((item) => item.id !== 'more-english' || item.courses.length > 0);
+  })).filter((item) => item.id === 'ielts-toefl' || item.courses.length > 0);
   const selectCourse = async (courseId: string, unitId?: string) => {
     if (busy) return;
     if (!unitId && courseId === library.selectedId) {
@@ -148,7 +149,7 @@ export function CoursePicker({
           ))}
         </nav>
       )}
-      {!browsingCategories && categoryId !== 'school-english' && (
+      {!browsingCategories && hasCefrFilter(categoryId) && (
         <div className="space-y-3">
           <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-3 text-sm">
             <span>CEFR level</span>

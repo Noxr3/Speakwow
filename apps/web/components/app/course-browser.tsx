@@ -4,14 +4,15 @@ import { useSearchParams } from 'next/navigation';
 import { CourseFilterLink } from '@/components/app/course-filter-link';
 import { CoursePicker } from '@/components/app/course-picker';
 import { PageShell } from '@/components/app/page-shell';
-import { findCefrLevel, findCourseCategory } from '@/lib/course-categories';
+import { findCefrLevel, findCourseCategory, hasCefrFilter } from '@/lib/course-categories';
 import type { HomeLibrary } from '@/lib/study-plan';
 
 export function CourseBrowser({ library }: { library: HomeLibrary }) {
   const params = useSearchParams();
   const category = findCourseCategory(params.get('category') ?? undefined);
-  const level =
-    category?.id === 'school-english' ? null : findCefrLevel(params.get('level') ?? undefined);
+  const level = !hasCefrFilter(category?.id)
+    ? null
+    : findCefrLevel(params.get('level') ?? undefined);
   const rawGrade = params.get('grade');
   const grade =
     category?.id === 'school-english' && rawGrade && /^(?:[1-9]|1[0-2])$/.test(rawGrade)

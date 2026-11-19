@@ -39,6 +39,8 @@ export interface HomeUnit {
 export interface HomeCourse {
   id: string;
   slug?: string | null;
+  subject?: string | null;
+  course_level?: string | null;
   grade?: string | null;
   title: string;
   description: string | null;

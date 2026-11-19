@@ -1,7 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import 'server-only';
 import { createClient } from '@supabase/supabase-js';
-import { OFFERED_SUBJECTS } from '@/lib/course-catalog';
 import { type CatalogCourse, publicCourse } from '@/lib/course-library';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 
@@ -15,14 +14,13 @@ export const publicCourses = unstable_cache(
     const { data, error } = await client
       .from('courses')
       .select(
-        'id,slug,grade,title,description,units:course_units(id,title,position,sessions:content->sessions,goals)'
+        'id,slug,subject,course_level,grade,title,description,units:course_units(id,title,position,sessions:content->sessions,goals)'
       )
-      .in('subject', OFFERED_SUBJECTS)
       .order('title')
       .limit(100);
     if (error) throw new Error('Courses could not be loaded. Please try again.');
     return (data as unknown as CatalogCourse[]).map(publicCourse);
   },
-  ['public-course-navigation-v1', SUPABASE_URL ?? 'unconfigured'],
+  ['public-course-navigation-v2', SUPABASE_URL ?? 'unconfigured'],
   { revalidate: 60, tags: ['public-courses'] }
 );

@@ -8,6 +8,8 @@ import {
 export interface CatalogCourse {
   id: string;
   slug: string | null;
+  subject?: string | null;
+  course_level?: string | null;
   grade: string | null;
   title: string;
   description: string | null;
@@ -55,6 +57,8 @@ export function publicCourse(course: CatalogCourse): HomeCourse {
   return {
     id: course.id,
     slug: course.slug,
+    subject: course.subject,
+    course_level: course.course_level,
     grade: course.grade,
     title: course.title,
     description: course.description,

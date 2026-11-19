@@ -57,7 +57,7 @@ from intake import (  # noqa: E402
 )
 from lesson import current_unit, unit_goals  # noqa: E402
 from life import news_today  # noqa: E402
-from materials import make_material_tool  # noqa: E402
+from materials import make_experiment_tool, make_material_tool  # noqa: E402
 from memory import SupabaseMemory, is_uuid  # noqa: E402
 from pacing import (  # noqa: E402
     BREAK_AFTER_S,
@@ -277,6 +277,9 @@ async def entrypoint(ctx: JobContext) -> None:
             return
     unit = current_unit(snapshot) if job.mode == "course" else None
     mode = "course" if unit else "free"
+    subject = (
+        ((snapshot or {}).get("current_course") or {}).get("subject") if unit else None
+    )
     if memory and student_id:
         session_id = await memory.start_session(
             student_id,
@@ -338,7 +341,12 @@ async def entrypoint(ctx: JobContext) -> None:
             t.role == "user" and t.text.startswith("[Written response]") for t in turns
         ):
             return None
+        if step.get("activity") == "experiment" and not study.experiment_passed:
+            return None
         goals = session_goals(study_unit, step)
+        if subject and subject != "english":
+            rubric = "; ".join((study_unit.get("content") or {}).get("points", []))
+            goals = [{**g, "text": f"{g['text']}. Criteria: {rubric}"} for g in goals]
         if step.get("kind") == "exam":
             goals = [
                 {
@@ -349,7 +357,12 @@ async def entrypoint(ctx: JobContext) -> None:
                 for g in goals
             ]
         reflection = await reflector.reflect(
-            turns, persona.display_name, goals, memories=[], min_student_turns=1
+            turns,
+            persona.display_name,
+            goals,
+            memories=[],
+            min_student_turns=1,
+            subject=subject,
         )
         if not reflection or not reflection.goal_scores:
             return None
@@ -399,6 +412,7 @@ async def entrypoint(ctx: JobContext) -> None:
                         persona.display_name,
                         [] if study else unit_goals(unit),
                         memories=memory_snapshot,
+                        subject=subject,
                     )
                 return None
 
@@ -461,6 +475,8 @@ async def entrypoint(ctx: JobContext) -> None:
             make_material_tool(),
         ]
     )
+    if subject == "statistics" and job.channel != "phone":
+        tools.append(make_experiment_tool(on_show=study.set_experiment))
     if intake:
         tools.append(make_profile_tool(intake, save_profile))
     if speech.supported:

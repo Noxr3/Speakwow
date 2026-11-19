@@ -7,6 +7,33 @@ part of a session or several sessions; time spent chatting is not evidence of ma
 课程以可审读的 Markdown 大纲维护，每门课包含有序单元、稳定目标和课节。
 一次通话与一节课并不是同一个概念；闲聊时长不代表掌握程度。
 
+## 中文创始人课程
+
+[客户访谈与需求判断](founder-customer-discovery/index.md) 与 [产品实验与统计判断](founder-product-experiments/index.md) 各含四个教学单元和一次独立综合考核。每门共 13 节，按学科目标评估。统计课的计算题在 A/B 数据卡提交，课堂继续讨论推理和决策。
+
+## English for AI Founders · AI 创始人英语
+
+Original task-based drafts for founders speaking with international customers,
+investors and partners. Public YC, a16z and Sequoia materials inform the business
+tasks; the institutions do not endorse or certify these courses. Read the
+[audience research and curriculum design](../docs/AI_FOUNDER_CURRICULUM.md) for
+evidence, source mapping, teaching choices and implementation limits.
+
+| Course | Teaching units | Integrated assessments | Sessions |
+| --- | --- | --- | --- |
+| [B1 · Start the Conversation](ai-founder-english-b1/index.md) | 12 | 3 | 51 |
+| [B2 · Lead the Conversation](ai-founder-english-b2/index.md) | 12 | 3 | 51 |
+| [C1 · Shape the Conversation](ai-founder-english-c1/index.md) | 12 | 3 | 51 |
+| [C2 · Navigate Nuance](ai-founder-english-c2/index.md) | 12 | 3 | 51 |
+
+Each teaching unit contains learning, targeted practice, role application and an
+independent check. All eight existing practice forms appear across each course.
+CEFR labels describe intended task difficulty; learner testing and scoring
+calibration remain pending. The [level alignment review](../docs/AI_FOUNDER_LEVEL_ALIGNMENT.md)
+defines task conditions, audits every B1/B2 unit and distinguishes language
+performance from business reasoning. Micro-drills alone do not establish the
+course's target level. These files have not been imported into production.
+
 ## Language-skill series · 语言技能系列
 
 Each series contains four topic units and an independent assessment unit. Topic
