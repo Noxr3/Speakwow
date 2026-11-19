@@ -123,3 +123,34 @@ def test_lesson_plan_reads_subject_neutral_course_pages() -> None:
     assert "Things to do together: explain why leaves are green" in plan
     assert "Common mistakes to watch for: thinking plants eat soil" in plan
     assert "old word list" not in plan
+
+
+def test_teacher_can_explain_the_route_and_the_reason_for_the_current_task():
+    unit = {
+        **UNIT,
+        "content": {
+            "sessions": [
+                {
+                    "id": "learn",
+                    "title": "Ask a buyer",
+                    "brief": "Find out who uses the product.",
+                    "kind": "lesson",
+                },
+                {
+                    "id": "check",
+                    "title": "Independent call",
+                    "brief": "Try a fresh buyer case.",
+                    "kind": "exam",
+                },
+            ]
+        },
+    }
+    course = {**SNAPSHOT["current_course"], "current_unit": unit}
+    prompt = build_instructions(
+        load_personas()["lucy"], {"current_course": course}, mode="course"
+    )
+    assert prompt.index("1. Ask a buyer") < prompt.index("2. Independent call")
+    assert "Find out who uses the product." in prompt
+    assert "answer in this turn" in prompt
+    assert "end every turn with one hand-off" not in prompt
+    assert "every turn ends with exactly one hand-off" not in prompt

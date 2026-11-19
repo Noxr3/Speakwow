@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from curriculum import active_session, session_goals
+from curriculum import active_session, session_goals, sessions_for
 from promptdata import as_data
 
 MASTERED_AT = 0.8
@@ -87,12 +87,18 @@ def lesson_section(snapshot: dict | None) -> str | None:
         header += (
             f" ({' / '.join(x for x in (unit.get('theme'), unit.get('topic')) if x)})"
         )
+    route = [
+        f"{i}. {session.get('title') or session['id']} ({session.get('kind', 'lesson')}): {session.get('brief', '')}"
+        for i, session in enumerate(sessions_for(unit), start=1)
+    ]
     body = "\n".join(
         [
             f"Course: {course.get('title')}. Current unit: {header}.",
             f"Unit mastery so far: {round(float(unit.get('mastery') or 0) * 100)}% "
             f"after {unit.get('sessions') or 0} lessons.",
             f"Teaching session: {(active_session(unit) or {}).get('title', 'Complete')}",
+            "Unit sequence (distinguish this session from later work):",
+            *route,
             "Last work in this session: "
             + str(
                 (unit.get("session_progress") or {})

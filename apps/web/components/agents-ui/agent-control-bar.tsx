@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentProps, useEffect, useRef, useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { Track } from 'livekit-client';
 import { Loader, MessageSquareTextIcon, SendHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -35,10 +35,9 @@ const TOGGLE_VARIANT_2 = [
   'data-[state=off]:border-border data-[state=off]:hover:border-foreground/12',
   'data-[state=off]:focus-visible:border-ring data-[state=off]:focus-visible:ring-foreground/12',
   'data-[state=off]:text-foreground data-[state=off]:hover:text-foreground data-[state=off]:focus:text-foreground',
-  'data-[state=on]:bg-blue-500/20 data-[state=on]:hover:bg-blue-500/30',
-  'data-[state=on]:border-blue-700/10 data-[state=on]:text-blue-700 data-[state=on]:ring-blue-700/30',
+  'data-[state=on]:bg-primary/15 data-[state=on]:hover:bg-primary/20',
+  'data-[state=on]:border-primary/20 data-[state=on]:text-primary data-[state=on]:ring-primary/30',
   'data-[state=on]:focus-visible:border-blue-700/50',
-  'dark:data-[state=on]:bg-blue-500/20 dark:data-[state=on]:text-blue-300',
 ];
 
 const MOTION_PROPS = {
@@ -68,7 +67,6 @@ interface AgentChatInputProps {
 }
 
 function AgentChatInput({ chatOpen, onSend = async () => {}, className }: AgentChatInputProps) {
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState<string>('');
 
@@ -88,25 +86,18 @@ function AgentChatInput({ chatOpen, onSend = async () => {}, className }: AgentC
 
   const isDisabled = isSending || message.trim().length === 0;
 
-  useEffect(() => {
-    if (chatOpen) return;
-    // when not disabled refocus on input
-    inputRef.current?.focus();
-  }, [chatOpen]);
-
   return (
     <form
       onSubmit={handleSubmit}
       className={cn('mb-3 flex grow items-end gap-2 rounded-md pl-1 text-sm', className)}
     >
       <textarea
-        autoFocus
-        ref={inputRef}
+        aria-label="Message your teacher"
         value={message}
         disabled={!chatOpen}
         placeholder="Type something..."
         onChange={(e) => setMessage(e.target.value)}
-        className="field-sizing-content max-h-16 min-h-8 flex-1 py-2 [scrollbar-width:thin] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="field-sizing-content max-h-16 min-h-8 min-w-0 flex-1 resize-none py-2 [scrollbar-width:thin] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       />
       <Button
         size="icon"

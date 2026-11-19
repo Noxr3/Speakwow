@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useSessionContext, useSessionMessages } from '@livekit/components-react';
+import {
+  useSessionContext,
+  useSessionMessages,
+  useVoiceAssistant,
+} from '@livekit/components-react';
 import type { PersonaSummary } from '@speakwow/shared';
 import type { AppConfig } from '@/app-config';
 import DotGrid from '@/components/DotGrid';
@@ -105,7 +109,14 @@ export const SessionView = ({
   const session = useSessionContext();
   const { messages } = useSessionMessages(session);
   const [chatOpen, setChatOpen] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { agent, state: teacherState } = useVoiceAssistant();
+  const joining = teacherState === 'connecting' || teacherState === 'initializing';
+  const teacherIdentity = (
+    <>
+      <TeacherAvatar id={persona.id} className="size-8" />
+      <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
+    </>
+  );
 
   const controls: AgentControlBarControls = {
     leave: true,
@@ -115,48 +126,55 @@ export const SessionView = ({
     screenShare: appConfig.supportsScreenShare,
   };
 
-  useEffect(() => {
-    const lastMessage = messages.at(-1);
-    const lastMessageIsLocal = lastMessage?.from?.isLocal === true;
-
-    if (scrollAreaRef.current && lastMessageIsLocal) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
-    <section className="relative z-10 h-svh w-svw overflow-hidden" {...props}>
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: -10,
-          pointerEvents: 'none',
-        }}
-      >
-        <DotGrid
-          dotSize={5}
-          gap={15}
-          baseColor="#163c36"
-          activeColor="#00d997"
-          proximity={120}
-          shockRadius={250}
-          shockStrength={5}
-          resistance={750}
-          returnDuration={1.5}
-        />
-      </div>
-      <Fade top className="absolute inset-x-4 top-0 z-10 h-40" />
+    <section
+      {...props}
+      className={cn(
+        'relative z-10 grid h-dvh w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden',
+        chatOpen && 'bg-background',
+        props.className
+      )}
+    >
+      {!chatOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: -10,
+            pointerEvents: 'none',
+          }}
+        >
+          <DotGrid
+            dotSize={5}
+            gap={15}
+            baseColor="#163c36"
+            activeColor="#00d997"
+            proximity={120}
+            shockRadius={250}
+            shockStrength={5}
+            resistance={750}
+            returnDuration={1.5}
+          />
+        </div>
+      )}
+      {!chatOpen && <Fade top className="absolute inset-x-4 top-0 z-10 h-40" />}
       {/* Agent indicator: prominently identifies the current teacher
           so users with multiple tabs open never continue a session in the wrong context. */}
-      <div className="pointer-events-none absolute inset-x-0 top-20 z-20 flex justify-center">
+      <div className="pointer-events-none relative z-20 flex justify-center px-3 pt-[calc(max(1rem,env(safe-area-inset-top))+4rem)] pb-2">
         <LiquidGlass radius={999} width="auto">
           <div className="flex items-center gap-2.5 px-4 py-1.5">
-            <TeacherAvatar id={persona.id} className="size-8" />
-            <span className="text-foreground text-sm font-medium">{persona.display_name}</span>
+            {mode === 'course' ? (
+              <LessonControls
+                raw={session.isConnected ? agent?.attributes['speakwow.study'] : undefined}
+              >
+                {teacherIdentity}
+              </LessonControls>
+            ) : (
+              teacherIdentity
+            )}
             {mode !== 'course' && (
               <span className="label-caption text-muted-foreground">Free talk</span>
             )}
@@ -164,28 +182,22 @@ export const SessionView = ({
           </div>
         </LiquidGlass>
       </div>
-      <StudySurface />
-      {/* transcript */}
-      <ChatTranscript
-        hidden={!chatOpen}
-        messages={messages}
-        className="space-y-3 transition-opacity duration-300 ease-out"
-      />
-      {/* Tile layout */}
-      <TileLayout chatOpen={chatOpen} />
-      {/* Bottom */}
+      <div className="relative isolate flex min-h-0 flex-col overflow-hidden">
+        <StudySurface transcriptOpen={chatOpen} onView={() => setChatOpen(false)} />
+        <LiveOverlays transcriptOpen={chatOpen} onView={() => setChatOpen(false)} />
+        {chatOpen ? <ChatTranscript messages={messages} /> : <TileLayout chatOpen={false} />}
+      </div>
       <MotionBottom
         {...BOTTOM_VIEW_MOTION_PROPS}
-        className="fixed inset-x-3 bottom-0 z-50 md:inset-x-12"
+        className="relative z-50 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] md:px-12 md:pb-6"
       >
         {/* Pre-connect message */}
         {appConfig.isPreConnectBufferEnabled && (
           <AnimatePresence>
-            {messages.length === 0 && (
+            {joining && (
               <MotionMessage
                 key="pre-connect-message"
                 duration={2}
-                aria-hidden={messages.length > 0}
                 {...SHIMMER_MOTION_PROPS}
                 className="pointer-events-none mx-auto block w-full max-w-2xl pb-4 text-center text-sm font-semibold"
               >
@@ -194,9 +206,8 @@ export const SessionView = ({
             )}
           </AnimatePresence>
         )}
-        <LiveOverlays />
-        <div className="relative mx-auto max-w-2xl pb-3 md:pb-12">
-          <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
+        <div className="relative mx-auto max-w-2xl">
+          {!chatOpen && <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />}
           <AgentControlBar
             variant="livekit"
             controls={controls}
@@ -204,9 +215,7 @@ export const SessionView = ({
             isConnected={session.isConnected}
             onDisconnect={session.end}
             onIsChatOpenChange={setChatOpen}
-          >
-            {mode === 'course' && <LessonControls connected={session.isConnected} />}
-          </AgentControlBar>
+          />
         </div>
       </MotionBottom>
     </section>

@@ -83,13 +83,16 @@ Save = Callable[[dict, dict, list[Turn], str], Awaitable[dict | None]]
 
 
 class StudyFlow:
-    def __init__(self, unit: dict, save: Save | None = None):
+    def __init__(self, unit: dict, save: Save | None = None, *, selected: bool = False):
         self.unit = deepcopy(unit)
         self.step = active_session(self.unit)
         self.review_mode = not self.step and bool(sessions_for(self.unit))
         if self.review_mode:
             self.step = sessions_for(self.unit)[-1]
         self.phase = "welcome" if self.step else "complete"
+        if selected and self.step and self.step.get("kind") != "exam":
+            self.phase = "teaching"
+        self.awaiting_start = self.phase == "welcome"
         self.written: set[str] = set()
         self.turns: list[Turn] = []
         self.detour_turns = 0
@@ -156,15 +159,23 @@ class StudyFlow:
         }.get(self.phase, "")
         return f"{phase}\nCurrent session data: {detail}\n{guide}\n{rules}\n{self.feedback}"
 
-    async def change(self, action: Action) -> str:
+    async def change(
+        self,
+        action: Action,
+        *,
+        on_assessing: Callable[[], Awaitable[None]] | None = None,
+    ) -> str:
         async with self.lock:
+            if not self.step:
+                return self.note()
             if action == "pause":
                 self.phase = "break"
             elif action == "chat":
                 self.phase = "chat"
                 self.detour_turns = 0
             elif action in ("start", "resume"):
-                self.phase = "teaching" if self.step else "complete"
+                self.phase = "teaching"
+                self.awaiting_start = False
             elif action == "finish":
                 if (
                     self.phase != "teaching"
@@ -188,6 +199,8 @@ class StudyFlow:
                     return "Progress could not be checked. Keep this session open and do not claim completion."
                 self.phase = "assessing"
                 try:
+                    if on_assessing:
+                        await on_assessing()
                     result = await self.save(
                         self.unit, self.step, list(self.turns), self.attempt_id
                     )
@@ -213,6 +226,7 @@ class StudyFlow:
                     if passed and self.step
                     else ("complete" if not self.step else "teaching")
                 )
+                self.awaiting_start = self.phase == "between"
                 self.turns = []
                 self.written.clear()
                 self.experiment = None
@@ -221,15 +235,20 @@ class StudyFlow:
             return self.note()
 
 
-def make_lesson_tool(flow: StudyFlow, changed: Callable[[], Awaitable[None]]):
+def make_lesson_tool(
+    flow: StudyFlow,
+    changed: Callable[[], Awaitable[None]],
+    publish: Callable[[], Awaitable[None]] | None = None,
+):
     @function_tool
     async def lesson_step(action: Action) -> str:
         """Change phase after the student's choice. start/resume: planned work;
         pause: silent rest; chat: a short tangent; finish: assess and save actual work.
         Never finish from attendance or small talk. Claim completion only after passing.
         """
-        result = await flow.change(action)
-        await changed()
-        return result
+        try:
+            return await flow.change(action, on_assessing=publish)
+        finally:
+            await changed()
 
     return lesson_step

@@ -53,7 +53,13 @@ function StickerImage({ sticker, size }: { sticker: Sticker; size: number }) {
  * (the tray, sent as an emoji chat message the teacher reads), plus the
  * teacher's interactive card.
  */
-export function LiveOverlays() {
+export function LiveOverlays({
+  transcriptOpen,
+  onView,
+}: {
+  transcriptOpen: boolean;
+  onView: () => void;
+}) {
   const [bursts, setBursts] = useState<Burst[]>([]);
   const [widget, setWidget] = useState<Widget | null>(null);
   const [cardUpdate, setCardUpdate] = useState<CardUpdate | null>(null);
@@ -98,9 +104,20 @@ export function LiveOverlays() {
     }
   };
 
+  if (transcriptOpen) {
+    return widget ? (
+      <button
+        type="button"
+        onClick={onView}
+        className="text-primary mx-auto min-h-11 shrink-0 px-4 text-sm"
+      >
+        View exercise
+      </button>
+    ) : null;
+  }
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 z-40" aria-live="polite">
+      <div className="pointer-events-none absolute inset-0 z-40" aria-live="polite">
         <AnimatePresence>
           {bursts.map(({ key, sticker, fromStudent }) => (
             <motion.div
@@ -129,7 +146,7 @@ export function LiveOverlays() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
-            className="fixed inset-x-3 top-16 z-40 mx-auto max-h-[60svh] max-w-md overflow-y-auto rounded-[28px] md:top-20"
+            className="absolute inset-x-3 top-1 z-40 mx-auto max-h-[calc(100%-4rem)] max-w-md overflow-y-auto rounded-[28px]"
           >
             <WidgetCard
               widget={widget}
@@ -145,7 +162,7 @@ export function LiveOverlays() {
         )}
       </AnimatePresence>
 
-      <div className="mx-auto mb-3 w-fit max-w-full">
+      <div className="absolute inset-x-0 bottom-2 z-20 mx-auto w-fit max-w-full">
         <LiquidGlass radius={999} width="auto">
           <div
             className="flex flex-wrap justify-center gap-0.5 p-1"
